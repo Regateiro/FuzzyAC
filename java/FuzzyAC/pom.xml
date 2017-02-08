@@ -10,6 +10,9 @@
     </properties>
     <name>FuzzyAC</name>
     <modules>
-        <module>FuzzyMessagingInterface</module>
+        <module>FAC_Messaging</module>
+        <module>FAC_FLEngine</module>
+        <module>FAC_Client</module>
+        <module>FAC_Module_Enforcement</module>
     </modules>
 </project>
