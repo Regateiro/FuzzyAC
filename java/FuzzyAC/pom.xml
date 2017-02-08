@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>dregateiro</groupId>
+    <groupId>av.it.fac</groupId>
     <artifactId>FuzzyAC</artifactId>
     <version>0.0.1</version>
     <packaging>pom</packaging>
@@ -12,11 +12,11 @@
     <modules>
         <module>FAC_Messaging</module>
         <module>FAC_FLEngine</module>
-        <module>FAC_Client</module>
         <module>FAC_Module_Enforcement</module>
         <module>FAC_Module_Decision</module>
         <module>FAC_Module_Information</module>
         <module>FAC_Module_Administration</module>
         <module>FAC_Module_PolicyRetrieval</module>
+        <module>FAC_Driver</module>
     </modules>
 </project>
