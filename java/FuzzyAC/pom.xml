@@ -14,5 +14,9 @@
         <module>FAC_FLEngine</module>
         <module>FAC_Client</module>
         <module>FAC_Module_Enforcement</module>
+        <module>FAC_Module_Decision</module>
+        <module>FAC_Module_Information</module>
+        <module>FAC_Module_Administration</module>
+        <module>FAC_Module_PolicyRetrieval</module>
     </modules>
 </project>
