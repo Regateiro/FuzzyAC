@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.messaging.interfaces.client;
+package it.av.fac.messaging.interfaces;
 
 import java.io.Serializable;
 

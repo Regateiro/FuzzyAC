@@ -14,5 +14,5 @@ public abstract class PublicQueues {
      * The queue that is used to handle user queries.
      * Client applications should use this queue.
      */
-    public static final Queue QUERY_QUEUE = Queue.QUERY;
+    public static final Queue QUEUE_QUERY = Queue.QUERY;
 }

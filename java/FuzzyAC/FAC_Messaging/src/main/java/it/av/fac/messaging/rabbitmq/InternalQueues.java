@@ -10,5 +10,8 @@ package it.av.fac.messaging.rabbitmq;
  * @author Diogo Regateiro
  */
 abstract class InternalQueues extends PublicQueues {
-    
+    /**
+     * The queue that is used to handle administration requests.
+     */
+    public static final Queue QUEUE_ADMIN = Queue.ADMIN;
 }

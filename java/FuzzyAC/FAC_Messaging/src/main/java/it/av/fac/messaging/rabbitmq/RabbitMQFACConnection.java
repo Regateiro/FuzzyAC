@@ -6,7 +6,7 @@
 package it.av.fac.messaging.rabbitmq;
 
 import java.io.Serializable;
-import it.av.fac.messaging.interfaces.client.IFACConnection;
+import it.av.fac.messaging.interfaces.IFACConnection;
 
 /**
  * Allows to send and receive messages within the FAC architecture.

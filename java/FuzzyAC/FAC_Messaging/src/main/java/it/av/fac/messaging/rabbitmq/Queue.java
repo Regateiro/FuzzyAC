@@ -11,7 +11,8 @@ package it.av.fac.messaging.rabbitmq;
  * @author Diogo Regateiro
  */
 public enum Queue {
-    QUERY("Query");
+    QUERY("Query"), 
+    ADMIN("Admin");
 
     private Queue(String queue_id) {
         this.queue_id = queue_id;
