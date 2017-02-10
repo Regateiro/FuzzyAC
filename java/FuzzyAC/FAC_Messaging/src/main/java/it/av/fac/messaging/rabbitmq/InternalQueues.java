@@ -13,5 +13,5 @@ abstract class InternalQueues extends PublicQueues {
     /**
      * The queue that is used to handle administration requests.
      */
-    public static final Queue QUEUE_ADMIN = Queue.ADMIN;
+    public static final String QUEUE_ADMIN = Queue.ADMIN.toString();
 }

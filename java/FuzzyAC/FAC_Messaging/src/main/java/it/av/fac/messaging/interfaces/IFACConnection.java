@@ -5,6 +5,7 @@
  */
 package it.av.fac.messaging.interfaces;
 
+import java.io.Closeable;
 import java.io.Serializable;
 
 /**
@@ -12,7 +13,7 @@ import java.io.Serializable;
  * @author Diogo Regateiro
  * @param <T> The type of the message to send and receive.
  */
-public interface IFACConnection<T extends Serializable> {
+public interface IFACConnection<T extends Serializable> extends Closeable {
     /**
      * Sends a message.
      * @param message The message to send.
