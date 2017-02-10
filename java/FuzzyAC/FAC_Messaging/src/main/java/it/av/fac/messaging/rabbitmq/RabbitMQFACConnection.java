@@ -41,32 +41,31 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
     /**
      * Initializes the FACConnection object.
      *
-     * Important Properties: "provider.queue" - REQUIRED - String with the name
-     * of the queue to bind the connection to. "provider.consumer" - REQUIRED -
-     * Boolean that indicates whether this connection should consume from the
-     * queue or just produce.
-     *
-     * @param msgProps The properties necessary to establish a connection.
+     * @param addr
+     * @param port
+     * @param username
+     * @param password
+     * @param queue
+     * @param isConsumer
      * @throws java.io.IOException If the connection to the rabbitmq server
      * fails.
      */
-    public RabbitMQFACConnection(Properties msgProps) throws Exception {
-        if (Boolean.parseBoolean(msgProps.getProperty("messaging", "true"))) {
+    public RabbitMQFACConnection(String addr, int port, String username, String password, String queue, boolean isConsumer) throws Exception {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(msgProps.getProperty("provider.addr", "127.0.0.1"));
-            factory.setPort(Integer.valueOf(msgProps.getProperty("provider.port", "5672")));
-            factory.setUsername(msgProps.getProperty("provider.auth.user", "guest"));
-            factory.setPassword(msgProps.getProperty("provider.auth.pass", "guest"));
+            factory.setHost(addr);
+            factory.setPort(port);
+            factory.setUsername(username);
+            factory.setPassword(password);
 
-            QUEUE = msgProps.getProperty("provider.queue");
-            receiveBuffer = new ConcurrentLinkedQueue<>();
+            this.QUEUE = queue;
+            this.receiveBuffer = new ConcurrentLinkedQueue<>();
 
-            connection = factory.newConnection();
-            channel = connection.createChannel();
-            channel.queueDeclare(QUEUE, false, false, false, null);
+            this.connection = factory.newConnection();
+            this.channel = connection.createChannel();
+            this.channel.queueDeclare(this.QUEUE, false, false, false, null);
 
-            if (Boolean.parseBoolean(msgProps.getProperty("provider.consumer", "true"))) {
-                channel.basicConsume(QUEUE, true, new DefaultConsumer(channel) {
+            if (isConsumer) {
+                this.channel.basicConsume(this.QUEUE, true, new DefaultConsumer(this.channel) {
                     @Override
                     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                             throws IOException {
@@ -78,9 +77,6 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
                     }
                 });
             }
-        } else {
-            throw new Exception("Messaging is disabled and an FACConnection requiring messaging was attempted to be instantiated.");
-        }
     }
 
     @Override
@@ -88,7 +84,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(message);
-            channel.basicPublish("", QUEUE, null, baos.toByteArray());
+            channel.basicPublish("", this.QUEUE, null, baos.toByteArray());
         } catch (IOException ex) {
             Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -113,10 +109,13 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
         try {
             Properties msgProperties = new Properties();
             msgProperties.load(new FileInputStream("messaging.properties"));
-            msgProperties.put("provider.queue", PublicQueues.QUEUE_QUERY);
-            msgProperties.put("provider.consumer", true);
 
-            try (IFACConnection<String> conn = new RabbitMQFACConnection<>(msgProperties)) {
+            try (IFACConnection<String> conn = new RabbitMQFACConnection<>(
+                    msgProperties.getProperty("provider.addr", "127.0.0.1"),
+                    Integer.valueOf(msgProperties.getProperty("provider.port", "5672")),
+                    msgProperties.getProperty("provider.auth.user", "guest"),
+                    msgProperties.getProperty("provider.auth.pass", "guest"),
+                    PublicQueues.QUEUE_QUERY, true)) {
                 conn.send("Hello, this is patrick!");
 
                 String reply = null;
