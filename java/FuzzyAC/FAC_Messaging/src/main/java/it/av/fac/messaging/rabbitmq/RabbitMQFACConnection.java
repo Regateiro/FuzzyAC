@@ -15,11 +15,9 @@ import java.io.Serializable;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,36 +43,48 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
      * @param username
      * @param password
      * @param queue
-     * @param callback Callback to execute when new messages are available. 
      * @throws java.io.IOException If the connection to the rabbitmq server
      * fails.
      */
+    public RabbitMQFACConnection(String addr, int port, String username, String password, String queue) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(addr);
+        factory.setPort(port);
+        factory.setUsername(username);
+        factory.setPassword(password);
+
+        this.QUEUE = queue;
+
+        this.connection = factory.newConnection();
+        this.channel = connection.createChannel();
+        this.channel.exchangeDeclare(RMQInternalConstants.EXCHANGE, "direct", true);
+        this.channel.queueDeclare(this.QUEUE, true, false, false, null);
+        this.channel.queueBind(this.QUEUE, RMQInternalConstants.EXCHANGE, this.QUEUE);
+    }
+
+    /**
+     *
+     * @param addr
+     * @param port
+     * @param username
+     * @param password
+     * @param queue
+     * @param callback
+     * @throws Exception
+     */
     public RabbitMQFACConnection(String addr, int port, String username, String password, String queue, Callback<T, Void> callback) throws Exception {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(addr);
-            factory.setPort(port);
-            factory.setUsername(username);
-            factory.setPassword(password);
-
-            this.QUEUE = queue;
-
-            this.connection = factory.newConnection();
-            this.channel = connection.createChannel();
-            this.channel.queueDeclare(this.QUEUE, false, false, false, null);
-
-            if (callback != null) {
-                this.channel.basicConsume(this.QUEUE, true, new DefaultConsumer(this.channel) {
-                    @Override
-                    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-                            throws IOException {
-                        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(body))) {
-                            callback.call((T) ois.readObject());
-                        } catch (Exception ex) {
-                            Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                });
+        this(addr, port, username, password, queue);
+        this.channel.basicConsume(this.QUEUE, true, new DefaultConsumer(this.channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+                    throws IOException {
+                try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(body))) {
+                    callback.call((T) ois.readObject());
+                } catch (Exception ex) {
+                    Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+        });
     }
 
     @Override
@@ -82,7 +92,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(message);
-            channel.basicPublish("", this.QUEUE, null, baos.toByteArray());
+            this.channel.basicPublish(RMQInternalConstants.EXCHANGE, this.QUEUE, null, baos.toByteArray());
         } catch (IOException ex) {
             Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -90,6 +100,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
 
     /**
      * METHOD NOT IMPLEMENTED
+     *
      * @return EXCEPTION
      * @deprecated Use the callback in the class constructor to read data.
      */
@@ -106,30 +117,6 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
             connection.close();
         } catch (TimeoutException ex) {
             throw new IOException(ex);
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            Properties msgProperties = new Properties();
-            msgProperties.load(new FileInputStream("messaging.properties"));
-            
-            Callback<String, Void> callback = (String param) -> {
-                System.out.println(param);
-                return null;
-            };
-
-            try (IFACConnection<String> conn = new RabbitMQFACConnection<>(
-                    msgProperties.getProperty("provider.addr", "127.0.0.1"),
-                    Integer.valueOf(msgProperties.getProperty("provider.port", "5672")),
-                    msgProperties.getProperty("provider.auth.user", "guest"),
-                    msgProperties.getProperty("provider.auth.pass", "guest"),
-                    PublicQueues.QUEUE_QUERY, callback)) {
-                conn.send("Hello, this is patrick!");
-                System.in.read();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

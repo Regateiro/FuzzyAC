@@ -9,9 +9,12 @@ package it.av.fac.messaging.rabbitmq;
  * Complete list of queues to use by the architecture.
  * @author Diogo Regateiro
  */
-abstract class InternalQueues extends PublicQueues {
+abstract class RMQInternalConstants extends RMQPublicConstants {
+    
+    public static final String EXCHANGE = "FAC";
+    
     /**
      * The queue that is used to handle administration requests.
      */
-    public static final String QUEUE_ADMIN = Queue.ADMIN.toString();
+    public static final String QUEUE_ADMIN = "Admin";
 }
