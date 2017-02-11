@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.util.Callback;
 
 /**
  * Allows to send and receive messages within the FAC architecture.
@@ -36,7 +36,6 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
     private final Connection connection;
     private final Channel channel;
     private final String QUEUE;
-    private final java.util.Queue<T> receiveBuffer;
 
     /**
      * Initializes the FACConnection object.
@@ -46,11 +45,11 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
      * @param username
      * @param password
      * @param queue
-     * @param isConsumer
+     * @param callback Callback to execute when new messages are available. 
      * @throws java.io.IOException If the connection to the rabbitmq server
      * fails.
      */
-    public RabbitMQFACConnection(String addr, int port, String username, String password, String queue, boolean isConsumer) throws Exception {
+    public RabbitMQFACConnection(String addr, int port, String username, String password, String queue, Callback<T, Void> callback) throws Exception {
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost(addr);
             factory.setPort(port);
@@ -58,19 +57,18 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
             factory.setPassword(password);
 
             this.QUEUE = queue;
-            this.receiveBuffer = new ConcurrentLinkedQueue<>();
 
             this.connection = factory.newConnection();
             this.channel = connection.createChannel();
             this.channel.queueDeclare(this.QUEUE, false, false, false, null);
 
-            if (isConsumer) {
+            if (callback != null) {
                 this.channel.basicConsume(this.QUEUE, true, new DefaultConsumer(this.channel) {
                     @Override
                     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                             throws IOException {
                         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(body))) {
-                            receiveBuffer.add((T) ois.readObject());
+                            callback.call((T) ois.readObject());
                         } catch (Exception ex) {
                             Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -90,9 +88,15 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
         }
     }
 
+    /**
+     * METHOD NOT IMPLEMENTED
+     * @return EXCEPTION
+     * @deprecated Use the callback in the class constructor to read data.
+     */
     @Override
+    @Deprecated
     public T receive() {
-        return receiveBuffer.poll();
+        throw new UnsupportedOperationException("Not supported. Use the constructor callback for receiving messages.");
     }
 
     @Override
@@ -109,20 +113,20 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
         try {
             Properties msgProperties = new Properties();
             msgProperties.load(new FileInputStream("messaging.properties"));
+            
+            Callback<String, Void> callback = (String param) -> {
+                System.out.println(param);
+                return null;
+            };
 
             try (IFACConnection<String> conn = new RabbitMQFACConnection<>(
                     msgProperties.getProperty("provider.addr", "127.0.0.1"),
                     Integer.valueOf(msgProperties.getProperty("provider.port", "5672")),
                     msgProperties.getProperty("provider.auth.user", "guest"),
                     msgProperties.getProperty("provider.auth.pass", "guest"),
-                    PublicQueues.QUEUE_QUERY, true)) {
+                    PublicQueues.QUEUE_QUERY, callback)) {
                 conn.send("Hello, this is patrick!");
-
-                String reply = null;
-                while ((reply = conn.receive()) == null) {
-                    Thread.sleep(1000);
-                }
-                System.out.println(reply);
+                System.in.read();
             }
         } catch (Exception ex) {
             Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
