@@ -9,7 +9,7 @@ package it.av.fac.messaging.rabbitmq;
  * Complete list of queues to use by the architecture.
  * @author Diogo Regateiro
  */
-abstract class RMQInternalConstants extends RMQPublicConstants {
+abstract class RabbitMQInternalConstants extends RabbitMQPublicConstants {
     
     public static final String EXCHANGE = "FAC";
     

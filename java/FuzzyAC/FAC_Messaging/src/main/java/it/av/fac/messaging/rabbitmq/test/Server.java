@@ -6,7 +6,7 @@
 package it.av.fac.messaging.rabbitmq.test;
 
 import it.av.fac.messaging.interfaces.IFACConnection;
-import it.av.fac.messaging.rabbitmq.RMQPublicConstants;
+import it.av.fac.messaging.rabbitmq.RabbitMQPublicConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQFACConnection;
 import java.io.FileInputStream;
 import java.util.Properties;
@@ -19,7 +19,7 @@ import javafx.util.Callback;
  * @author Regateiro
  */
 public class Server {
-    private static IFACConnection<Integer> conn_in, conn_out;
+    private static IFACConnection<Integer> conn;
     
     public static void main(String[] args) {
         try {
@@ -30,7 +30,7 @@ public class Server {
                 //System.out.println(String.format("Client requested [%d].", request));
                 int reply = request + 1;
                 //System.out.println(String.format("Sending new request: [%d]", reply));
-                conn_out.send(reply);
+                conn.send(reply);
                 return null;
             };
 
@@ -39,11 +39,12 @@ public class Server {
             String username = msgProperties.getProperty("provider.auth.user", "guest");
             String password = msgProperties.getProperty("provider.auth.pass", "guest");
 
-            conn_out = new RabbitMQFACConnection<>(addr, port, username, password, RMQPublicConstants.QUEUE_QUERY_RESPONSE);
-            conn_in = new RabbitMQFACConnection<>(addr, port, username, password, RMQPublicConstants.QUEUE_QUERY_REQUEST, callback);
+            conn = new RabbitMQFACConnection<>(addr, port, username, password, 
+                    RabbitMQPublicConstants.QUEUE_QUERY_RESPONSE, 
+                    RabbitMQPublicConstants.QUEUE_QUERY_REQUEST, callback);
+            
             System.in.read();
-            conn_out.close();
-            conn_in.close();
+            conn.close();
         } catch (Exception ex) {
             Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
         }

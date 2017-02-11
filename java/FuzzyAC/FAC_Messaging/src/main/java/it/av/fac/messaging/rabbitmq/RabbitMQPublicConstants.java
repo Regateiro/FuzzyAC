@@ -9,7 +9,7 @@ package it.av.fac.messaging.rabbitmq;
  * Public list of queues to use by the clients.
  * @author Diogo Regateiro
  */
-public abstract class RMQPublicConstants {
+public abstract class RabbitMQPublicConstants {
     /**
      * The queue that is used to handle user queries.
      * Client applications should use this queue.

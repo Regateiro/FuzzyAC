@@ -33,48 +33,39 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
 
     private final Connection connection;
     private final Channel channel;
-    private final String QUEUE;
+    private final String QUEUE_IN;
+    private final String QUEUE_OUT;
 
     /**
-     * Initializes the FACConnection object.
      *
      * @param addr
      * @param port
      * @param username
      * @param password
-     * @param queue
-     * @throws java.io.IOException If the connection to the rabbitmq server
-     * fails.
+     * @param queueOut
+     * @param queueIn
+     * @param callback
+     * @throws Exception
      */
-    public RabbitMQFACConnection(String addr, int port, String username, String password, String queue) throws Exception {
+    public RabbitMQFACConnection(String addr, int port, String username, String password, String queueOut, String queueIn, Callback<T, Void> callback) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(addr);
         factory.setPort(port);
         factory.setUsername(username);
         factory.setPassword(password);
 
-        this.QUEUE = queue;
+        this.QUEUE_IN = queueIn;
+        this.QUEUE_OUT = queueOut;
 
         this.connection = factory.newConnection();
         this.channel = connection.createChannel();
-        this.channel.exchangeDeclare(RMQInternalConstants.EXCHANGE, "direct", true);
-        this.channel.queueDeclare(this.QUEUE, true, false, false, null);
-        this.channel.queueBind(this.QUEUE, RMQInternalConstants.EXCHANGE, this.QUEUE);
-    }
-
-    /**
-     *
-     * @param addr
-     * @param port
-     * @param username
-     * @param password
-     * @param queue
-     * @param callback
-     * @throws Exception
-     */
-    public RabbitMQFACConnection(String addr, int port, String username, String password, String queue, Callback<T, Void> callback) throws Exception {
-        this(addr, port, username, password, queue);
-        this.channel.basicConsume(this.QUEUE, true, new DefaultConsumer(this.channel) {
+        this.channel.exchangeDeclare(RabbitMQInternalConstants.EXCHANGE, "direct", true);
+        this.channel.queueDeclare(this.QUEUE_IN, true, false, false, null);
+        this.channel.queueDeclare(this.QUEUE_OUT, true, false, false, null);
+        this.channel.queueBind(this.QUEUE_IN, RabbitMQInternalConstants.EXCHANGE, this.QUEUE_IN);
+        this.channel.queueBind(this.QUEUE_OUT, RabbitMQInternalConstants.EXCHANGE, this.QUEUE_OUT);
+        
+        this.channel.basicConsume(this.QUEUE_IN, true, new DefaultConsumer(this.channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                     throws IOException {
@@ -92,7 +83,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(message);
-            this.channel.basicPublish(RMQInternalConstants.EXCHANGE, this.QUEUE, null, baos.toByteArray());
+            this.channel.basicPublish(RabbitMQInternalConstants.EXCHANGE, this.QUEUE_OUT, null, baos.toByteArray());
         } catch (IOException ex) {
             Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
