@@ -19,7 +19,7 @@ import javafx.util.Callback;
  * @author Regateiro
  */
 public class Server {
-    private static IFACConnection<Integer> conn;
+    private static IFACConnection<Integer, Integer> conn;
     
     public static void main(String[] args) {
         try {

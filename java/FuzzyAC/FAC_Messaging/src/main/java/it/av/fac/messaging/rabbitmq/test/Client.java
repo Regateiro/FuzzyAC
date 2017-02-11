@@ -20,7 +20,7 @@ import javafx.util.Callback;
  */
 public class Client {
 
-    private static IFACConnection<Integer> conn;
+    private static IFACConnection<Integer, Integer> conn;
 
     public static void main(String[] args) {
         try {

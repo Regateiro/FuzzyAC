@@ -11,18 +11,19 @@ import java.io.Serializable;
 /**
  * User connection interface to connect to the central messaging node.
  * @author Diogo Regateiro
- * @param <T> The type of the message to send and receive.
+ * @param <S> The type of the message to send.
+ * @param <R> The type of the message to receive.
  */
-public interface IFACConnection<T extends Serializable> extends Closeable {
+public interface IFACConnection<S extends Serializable, R extends Serializable> extends Closeable {
     /**
      * Sends a message.
      * @param message The message to send.
      */
-    public void send(T message);
+    public void send(S message);
     
     /**
      * Receives a message.
      * @return The message read.
      */
-    public T receive();
+    public R receive();
 }

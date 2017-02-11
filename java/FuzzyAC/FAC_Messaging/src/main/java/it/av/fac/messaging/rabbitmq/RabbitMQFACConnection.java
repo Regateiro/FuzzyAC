@@ -27,9 +27,10 @@ import javafx.util.Callback;
  * Allows to send and receive messages within the FAC architecture.
  *
  * @author Diogo Regateiro
- * @param <T> The type of the message to send/receive.
+ * @param <S> The type of the message to send.
+ * @param <R> The type of the message to receive.
  */
-public class RabbitMQFACConnection<T extends Serializable> implements IFACConnection<T> {
+public class RabbitMQFACConnection<S extends Serializable, R extends Serializable> implements IFACConnection<S, R> {
 
     private final Connection connection;
     private final Channel channel;
@@ -37,17 +38,18 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
     private final String QUEUE_OUT;
 
     /**
-     *
-     * @param addr
-     * @param port
-     * @param username
-     * @param password
-     * @param queueOut
-     * @param queueIn
-     * @param callback
-     * @throws Exception
+     * Instantiates a RabbitMQ connection and binds it to two queues.
+     * 
+     * @param addr The address of the RabbitMQ server.
+     * @param port The port where the RabbitMQ server is running.
+     * @param username The username to connect to the RabbitMQ server.
+     * @param password The password to connect to the RabbitMQ server.
+     * @param queueOut The queue where this connection should send messages to.
+     * @param queueIn The queue where this connection should read messages from.
+     * @param callback The callback method to execute when new messages are available in the queueIn. Replaces the receive method.
+     * @throws Exception If there is a connection issue to the RabbitMQ server.
      */
-    public RabbitMQFACConnection(String addr, int port, String username, String password, String queueOut, String queueIn, Callback<T, Void> callback) throws Exception {
+    public RabbitMQFACConnection(String addr, int port, String username, String password, String queueOut, String queueIn, Callback<R, Void> callback) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(addr);
         factory.setPort(port);
@@ -70,7 +72,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                     throws IOException {
                 try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(body))) {
-                    callback.call((T) ois.readObject());
+                    callback.call((R) ois.readObject());
                 } catch (Exception ex) {
                     Logger.getLogger(RabbitMQFACConnection.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -79,7 +81,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
     }
 
     @Override
-    public void send(T message) {
+    public void send(S message) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(message);
@@ -97,7 +99,7 @@ public class RabbitMQFACConnection<T extends Serializable> implements IFACConnec
      */
     @Override
     @Deprecated
-    public T receive() {
+    public R receive() {
         throw new UnsupportedOperationException("Not supported. Use the constructor callback for receiving messages.");
     }
 
