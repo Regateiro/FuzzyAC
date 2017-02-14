@@ -32,7 +32,7 @@ import javafx.util.Callback;
  */
 public class RabbitMQFACConnection<S extends Serializable, R extends Serializable> implements IFACConnection<S, R> {
 
-    private final Connection connection;
+    private final Connection conn;
     private final Channel channel;
     private final String QUEUE_IN;
     private final String QUEUE_OUT;
@@ -59,8 +59,8 @@ public class RabbitMQFACConnection<S extends Serializable, R extends Serializabl
         this.QUEUE_IN = queueIn;
         this.QUEUE_OUT = queueOut;
 
-        this.connection = factory.newConnection();
-        this.channel = connection.createChannel();
+        this.conn = factory.newConnection();
+        this.channel = conn.createChannel();
         this.channel.exchangeDeclare(RabbitMQInternalConstants.EXCHANGE, "direct", true);
         this.channel.queueDeclare(this.QUEUE_IN, true, false, false, null);
         this.channel.queueDeclare(this.QUEUE_OUT, true, false, false, null);
@@ -107,7 +107,7 @@ public class RabbitMQFACConnection<S extends Serializable, R extends Serializabl
     public void close() throws IOException {
         try {
             channel.close();
-            connection.close();
+            conn.close();
         } catch (TimeoutException ex) {
             throw new IOException(ex);
         }
