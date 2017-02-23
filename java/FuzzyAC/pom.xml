@@ -22,5 +22,6 @@
         <module>FAC_CognitiveEngine</module>
         <module>FAC_Module_RIaC</module>
     <module>FAC_Webserver</module>
-  </modules>
+        <module>FAC_Datasources</module>
+    </modules>
 </project>
