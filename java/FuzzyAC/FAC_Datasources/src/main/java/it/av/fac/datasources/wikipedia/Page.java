@@ -5,11 +5,14 @@
  */
 package it.av.fac.datasources.wikipedia;
 
+import com.alibaba.fastjson.JSONObject;
+import it.av.fac.driver.messages.interfaces.JSONConvertible;
+
 /**
  *
  * @author Diogo Regateiro
  */
-public class Page {
+public class Page implements JSONConvertible {
 
     private boolean redirecting;
     private String title;
@@ -46,5 +49,16 @@ public class Page {
 
     public String getText() {
         return text;
+    }
+    
+    @Override
+    public JSONObject toJSONObject() {
+        JSONObject ret = new JSONObject();
+        
+        ret.put("redirecting", redirecting);
+        ret.put("title", title);
+        ret.put("text", text);
+        
+        return ret;
     }
 }

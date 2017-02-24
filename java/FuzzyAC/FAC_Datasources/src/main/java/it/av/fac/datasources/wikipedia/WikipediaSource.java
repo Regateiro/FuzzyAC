@@ -5,8 +5,11 @@
  */
 package it.av.fac.datasources.wikipedia;
 
+import it.av.fac.driver.APIClient;
+import it.av.fac.driver.messages.AdminReply;
+import it.av.fac.driver.messages.AdminRequest;
+import it.av.fac.driver.messages.AdminRequest.AdminRequestType;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,12 +35,21 @@ public class WikipediaSource {
 
     public void parse() {
         try {
-            //this.parser.parse(new File(XMLFilePath), new SiteInfoHandler());
-            this.parser.parse(new File(XMLFilePath), new CategoryTaxonomyHandler("E:\\taxonomy.txt"));
-        } catch (SAXException | IOException  ex) {
+            this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
+                APIClient fac = new APIClient("http://localhost:8084/FAC_Webserver");
+                AdminRequest request = new AdminRequest(AdminRequestType.ADD_DOCUMENT);
+                request.setPayload(page);
+                AdminReply reply = fac.adminRequest(request);
+            }));
+            
+            //this.parser.parse(new File(XMLFilePath), new CategoryTaxonomyHandler("E:\\taxonomy.txt"));
+        } catch (SAXException | IOException ex) {
             Logger.getLogger(WikipediaSource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
+
+    public static void main(String[] args) throws ParserConfigurationException, SAXException {
+        WikipediaSource src = new WikipediaSource("E:\\articles.xml");
+        src.parse();
+    }
 }

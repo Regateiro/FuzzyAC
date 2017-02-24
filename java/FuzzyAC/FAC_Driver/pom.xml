@@ -13,4 +13,21 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <name>FAC_Driver</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.20</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>FAC_Messaging</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

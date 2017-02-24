@@ -3,12 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.driver;
+package it.av.fac.driver.messages.interfaces;
+
+import com.alibaba.fastjson.JSONObject;
 
 /**
  *
- * @author Regateiro
+ * @author Diogo Regateiro
  */
-public class NewClass {
-    
+public interface JSONConvertible {
+    public JSONObject toJSONObject();
 }
