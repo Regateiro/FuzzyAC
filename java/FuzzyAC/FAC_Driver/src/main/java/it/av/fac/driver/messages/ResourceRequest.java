@@ -13,12 +13,12 @@ import it.av.fac.driver.messages.interfaces.JSONConvertible;
  *
  * @author Diogo Regateiro
  */
-public class AdminRequest implements IRequest {
+public class ResourceRequest implements IRequest {
 
-    private final AdminRequestType requestType;
+    private final ResourceRequestType requestType;
     private JSONObject payload;
 
-    public AdminRequest(AdminRequestType requestType) {
+    public ResourceRequest(ResourceRequestType requestType) {
         this.requestType = requestType;
     }
     
@@ -42,6 +42,7 @@ public class AdminRequest implements IRequest {
         this.payload = JSONObject.parseObject(jsonString);
     }
     
-    public enum AdminRequestType {
+    public enum ResourceRequestType {
+        ADD_DOCUMENT
     };
 }

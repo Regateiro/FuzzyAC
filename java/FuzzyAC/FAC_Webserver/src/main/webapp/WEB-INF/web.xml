@@ -5,16 +5,16 @@
         <servlet-class>it.av.fac.webserver.RequestAPI</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>AdminAPI</servlet-name>
-        <servlet-class>it.av.fac.webserver.AdminAPI</servlet-class>
+        <servlet-name>ResourceAPI</servlet-name>
+        <servlet-class>it.av.fac.webserver.ResourceAPI</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>RequestAPI</servlet-name>
         <url-pattern>/RequestAPI</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>AdminAPI</servlet-name>
-        <url-pattern>/AdminAPI</url-pattern>
+        <servlet-name>ResourceAPI</servlet-name>
+        <url-pattern>/ResourceAPI</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

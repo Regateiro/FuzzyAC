@@ -5,7 +5,6 @@
  */
 package it.av.fac.datasources.wikipedia;
 
-import java.util.ArrayList;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;

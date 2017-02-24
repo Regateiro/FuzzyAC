@@ -6,7 +6,7 @@
 package it.av.fac.webserver;
 
 import com.alibaba.fastjson.JSONObject;
-import it.av.fac.webserver.handlers.AdminHandler;
+import it.av.fac.webserver.handlers.ResourceHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -15,10 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
- * @author Regateiro
+ * Endpoint for serving admin requests.
+ * @author Diogo Regateiro
  */
-public class AdminAPI extends HttpServlet {
+public class ResourceAPI extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -37,7 +37,7 @@ public class AdminAPI extends HttpServlet {
         
         JSONObject clientRequest = JSONObject.parseObject((String) request.getAttribute("request"));
         try (PrintWriter out = response.getWriter()) {
-            out.println((new AdminHandler()).handle(clientRequest).toJSONString());
+            out.println((new ResourceHandler()).handle(clientRequest).toJSONString());
         }
     }
 

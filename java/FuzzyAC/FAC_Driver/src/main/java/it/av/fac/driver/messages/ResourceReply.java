@@ -11,9 +11,9 @@ import it.av.fac.driver.messages.interfaces.IReply;
  *
  * @author Diogo Regateiro
  */
-public class QueryReply implements IReply {
+public class ResourceReply implements IReply {
 
-    public QueryReply(String reply) {
+    public ResourceReply(String reply) {
         System.out.println(reply);
     }
     

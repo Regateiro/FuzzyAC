@@ -5,8 +5,10 @@
  */
 package it.av.fac.driver;
 
-import it.av.fac.driver.messages.AdminRequest;
 import it.av.fac.driver.messages.AdminReply;
+import it.av.fac.driver.messages.AdminRequest;
+import it.av.fac.driver.messages.ResourceRequest;
+import it.av.fac.driver.messages.ResourceReply;
 import it.av.fac.driver.messages.QueryRequest;
 import it.av.fac.driver.messages.QueryReply;
 import java.io.IOException;
@@ -34,6 +36,7 @@ public class APIClient {
 
     private final static String REQUEST_PATH = "/RequestAPI";
     private final static String ADMIN_PATH = "/AdminAPI";
+    private final static String RESOURCE_PATH = "/ResourceAPI";
     private final String endpoint;
 
     public APIClient(String endpoint) {
@@ -66,9 +69,35 @@ public class APIClient {
         }
     }
     
+    public ResourceReply resourceRequest(ResourceRequest request) {
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(endpoint + RESOURCE_PATH);
+
+            List<NameValuePair> nvps = new ArrayList<>();
+            nvps.add(new BasicNameValuePair("request", request.buildJSON()));
+            httpPost.setEntity(new UrlEncodedFormEntity(nvps));
+
+            // Create a custom response handler
+            ResponseHandler<String> responseHandler = (final HttpResponse response) -> {
+                int status = response.getStatusLine().getStatusCode();
+                if (status >= 200 && status < 300) {
+                    HttpEntity entity = response.getEntity();
+                    return entity != null ? EntityUtils.toString(entity) : null;
+                } else {
+                    throw new ClientProtocolException("Unexpected response status: " + status);
+                }
+            };
+
+            return new ResourceReply(httpclient.execute(httpPost, responseHandler));
+        } catch (IOException ex) {
+            Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
     public AdminReply adminRequest(AdminRequest request) {
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(endpoint + ADMIN_PATH);
+            HttpPost httpPost = new HttpPost(endpoint + RESOURCE_PATH);
 
             List<NameValuePair> nvps = new ArrayList<>();
             nvps.add(new BasicNameValuePair("request", request.buildJSON()));

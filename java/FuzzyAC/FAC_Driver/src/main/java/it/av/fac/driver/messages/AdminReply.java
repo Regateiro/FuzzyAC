@@ -13,8 +13,8 @@ import it.av.fac.driver.messages.interfaces.IReply;
  */
 public class AdminReply implements IReply {
 
-    public AdminReply(String execute) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public AdminReply(String reply) {
+        System.out.println(reply);
     }
     
 }

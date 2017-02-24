@@ -11,7 +11,7 @@ import com.alibaba.fastjson.JSONObject;
  * Class responsible for handling AdminAPI requests.
  * @author Diogo Regateiro
  */
-public class AdminHandler implements Handler {
+public class ResourceHandler implements Handler {
 
     @Override
     public JSONObject handle(JSONObject request) {
