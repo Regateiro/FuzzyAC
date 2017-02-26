@@ -23,5 +23,6 @@
         <module>FAC_Module_RIaC</module>
         <module>FAC_Webserver</module>
         <module>FAC_Datasources</module>
+        <module>FAC_Module_DBI</module>
     </modules>
 </project>

@@ -5,14 +5,15 @@
  */
 package it.av.fac.messaging.rabbitmq.test;
 
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQClient;
+import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQPublicConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,37 +23,27 @@ import java.util.logging.Logger;
  */
 public class Client {
 
-    private static final String CLIENT_KEY = "messaging.5";
+    private static final String CLIENT_KEY = "messaging.1";
 
     public static void main(String[] args) {
         System.out.println(CLIENT_KEY);
         
-        try {
-            Properties msgProperties = new Properties();
-            msgProperties.load(new FileInputStream("messaging.properties"));
-
-            String addr = msgProperties.getProperty("provider.addr", "127.0.0.1");
-            int port = Integer.valueOf(msgProperties.getProperty("provider.port", "5672"));
-            String username = msgProperties.getProperty("provider.auth.user", "guest");
-            String password = msgProperties.getProperty("provider.auth.pass", "guest");
-
-            IClientHandler<Integer> handler = (Integer reply) -> {
-                System.out.println(" :: Received [" + reply + "]");
+        try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()){
+            IClientHandler<String> handler = (String reply) -> {
             };
 
-            try (IFACConnection<Integer, Integer> conn = new RabbitMQClient<>(
-                    addr, port, username, password, RabbitMQPublicConstants.QUEUE_QUERY_RESPONSE,
+            try (IFACConnection conn = new RabbitMQClient(connWrapper,
+                    RabbitMQPublicConstants.QUEUE_QUERY_RESPONSE,
                     RabbitMQPublicConstants.QUEUE_QUERY_REQUEST, CLIENT_KEY, handler)) {
+                JSONObject request = new JSONObject();
+                request.put("request", "ping");
                 while (true) {
-                    int request = (int) (Math.random() * 50) * 2;
-                    System.out.print("Sent [" + request + "]");
-                    conn.send(request);
-                    Thread.sleep((long)(Math.random() * 1000) + 1000);
+                    conn.send(request.toJSONString());
                 }
             } catch (Exception ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (IOException | NumberFormatException ex) {
+        } catch (NumberFormatException | IOException | TimeoutException ex) {
             Logger.getLogger(RabbitMQServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

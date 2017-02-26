@@ -6,24 +6,21 @@
 package it.av.fac.messaging.interfaces;
 
 import java.io.Closeable;
-import java.io.Serializable;
 
 /**
  * User connection interface to connect to the central messaging node.
  * @author Diogo Regateiro
- * @param <S> The type of the message to send.
- * @param <R> The type of the message to receive.
  */
-public interface IFACConnection<S extends Serializable, R extends Serializable> extends Closeable {
+public interface IFACConnection extends Closeable {
     /**
      * Sends a message.
      * @param message The message to send.
      */
-    public void send(S message);
+    public void send(String message);
     
     /**
      * Receives a message.
      * @return The message read.
      */
-    public R receive();
+    public String receive();
 }
