@@ -9,9 +9,14 @@ import it.av.fac.messaging.client.interfaces.IReply;
 import it.av.fac.messaging.client.interfaces.IRequest;
 
 /**
- * Interface for the Web request Handler objects.
+ * Class responsible for handling AdminAPI requests.
  * @author Diogo Regateiro
  */
-public interface Handler {
-    public IReply handle(IRequest request);
+public class StorageHandler implements Handler {
+
+    @Override
+    public IReply handle(IRequest request) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
 }

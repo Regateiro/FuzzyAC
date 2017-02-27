@@ -6,36 +6,40 @@
 package it.av.fac.datasources.wikipedia;
 
 import com.alibaba.fastjson.JSONObject;
-import it.av.fac.driver.messages.interfaces.JSONConvertible;
 
 /**
  *
  * @author Diogo Regateiro
  */
-public class Page implements JSONConvertible {
+public class Page {
 
     private boolean redirecting;
     private String title;
-    private int id;
     private String text;
 
-    void setRedirecting(boolean redirecting) {
+    public Page() {
+    }
+
+    public Page(String jsonPage) {
+        JSONObject obj = JSONObject.parseObject(jsonPage);
+        this.redirecting = obj.getBooleanValue("redirecting");
+        this.title = obj.getString("title");
+        this.text = obj.getString("text");
+    }
+    
+    public void setRedirecting(boolean redirecting) {
         this.redirecting = redirecting;
     }
 
-    boolean isRedirecting() {
+    public boolean isRedirecting() {
         return this.redirecting;
     }
 
-    void setTitle(String title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
-    void setId(int id) {
-        this.id = id;
-    }
-
-    void setText(String text) {
+    public void setText(String text) {
         this.text = text;
     }
 
@@ -43,22 +47,7 @@ public class Page implements JSONConvertible {
         return title;
     }
 
-    public int getId() {
-        return id;
-    }
-
     public String getText() {
         return text;
-    }
-    
-    @Override
-    public JSONObject toJSONObject() {
-        JSONObject ret = new JSONObject();
-        
-        ret.put("redirecting", redirecting);
-        ret.put("title", title);
-        ret.put("text", text);
-        
-        return ret;
     }
 }

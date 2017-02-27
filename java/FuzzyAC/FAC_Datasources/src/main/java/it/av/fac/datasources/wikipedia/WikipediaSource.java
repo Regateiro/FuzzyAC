@@ -6,9 +6,9 @@
 package it.av.fac.datasources.wikipedia;
 
 import it.av.fac.driver.APIClient;
-import it.av.fac.driver.messages.ResourceReply;
-import it.av.fac.driver.messages.ResourceRequest;
-import it.av.fac.driver.messages.ResourceRequest.ResourceRequestType;
+import it.av.fac.messaging.client.StorageReply;
+import it.av.fac.messaging.client.StorageRequest;
+import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -37,9 +37,13 @@ public class WikipediaSource {
         try {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
                 APIClient fac = new APIClient("http://localhost:8084/FAC_Webserver");
-                ResourceRequest request = new ResourceRequest(ResourceRequestType.ADD_DOCUMENT);
-                request.setPayload(page);
-                ResourceReply reply = fac.resourceRequest(request);
+                
+                StorageRequest request = new StorageRequest();
+                request.setRequestType(StorageRequestType.StoreDocument);
+                request.setDocument(page.getText());
+                request.setAditionalInfo("title", page.getTitle());
+                request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
+                StorageReply reply = fac.storageRequest(request);
             }));
             
             //this.parser.parse(new File(XMLFilePath), new CategoryTaxonomyHandler("E:\\taxonomy.txt"));

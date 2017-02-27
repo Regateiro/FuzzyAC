@@ -1,0 +1,23 @@
+Enforcement Query Protocol
+ -> Document Query Request
+   - request_type: query
+   - query: <String>
+   - token: <auth token>
+
+RIaC Storage Protocol
+ -> Document Storage Request
+   - request_type: storage
+   - storage_id: <storage identifier>
+   - document: <byte array>
+   - aditional_info: <jsonString> //depends on the storage used
+ 
+ -> Document Storage Reply
+   - status: <ok|error>
+   - error_msg:
+
+Administration Command Protocol
+ -> Authentication Request (uploads subject attributes to the system)
+   - request_type: auth
+   - subject: <subject identifier>
+   - attributes: {}
+   - attribute_sig: <signature>

@@ -50,12 +50,6 @@ public class PageHandler extends DefaultHandler {
                 case "title":
                     page.setTitle(stringBuilder.toString());
                     break;
-                case "id":
-                    if (!idSet) {
-                        page.setId(Integer.parseInt(stringBuilder.toString()));
-                        idSet = true;
-                    }
-                    break;
                 case "text":
                     String articleText = stringBuilder.toString();
                     articleText = articleText.replaceAll("(?s)<ref(.+?)</ref>", " "); //remove references

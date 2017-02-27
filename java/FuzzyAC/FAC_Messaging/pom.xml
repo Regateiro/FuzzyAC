@@ -24,5 +24,10 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.20</version>
         </dependency>
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.1.2.4</version>
+        </dependency>
     </dependencies>
 </project>

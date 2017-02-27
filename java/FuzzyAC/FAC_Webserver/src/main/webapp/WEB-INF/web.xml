@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
     <servlet>
-        <servlet-name>RequestAPI</servlet-name>
-        <servlet-class>it.av.fac.webserver.RequestAPI</servlet-class>
+        <servlet-name>QueryAPI</servlet-name>
+        <servlet-class>it.av.fac.webserver.QueryAPI</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>ResourceAPI</servlet-name>
-        <servlet-class>it.av.fac.webserver.ResourceAPI</servlet-class>
+        <servlet-name>StorageAPI</servlet-name>
+        <servlet-class>it.av.fac.webserver.StorageAPI</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>RequestAPI</servlet-name>
-        <url-pattern>/RequestAPI</url-pattern>
+        <servlet-name>QueryAPI</servlet-name>
+        <url-pattern>/QueryAPI</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>ResourceAPI</servlet-name>
-        <url-pattern>/ResourceAPI</url-pattern>
+        <servlet-name>StorageAPI</servlet-name>
+        <url-pattern>/StorageAPI</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
