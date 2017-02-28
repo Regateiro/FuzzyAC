@@ -14,7 +14,7 @@ import org.xerial.snappy.Snappy;
  *
  * @author Diogo Regateiro
  */
-public class StorageReply implements IReply {
+public class StorageReply implements IReply<StorageReply> {
     
     private ReplyStatus status;
     
@@ -48,7 +48,7 @@ public class StorageReply implements IReply {
     }
 
     @Override
-    public IReply readFromBytes(byte[] bytes) throws IOException {
+    public StorageReply readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
         

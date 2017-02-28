@@ -24,13 +24,13 @@ public class Server {
 
     public static void main(String[] args) {
         try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()){
-            IServerHandler<String, String> handler = (String request, String clientKey) -> {
+            IServerHandler<byte[], String> handler = (byte[] request, String clientKey) -> {
                 try (IFACConnection clientConn = new RabbitMQServer(
                         connWrapper, RabbitMQPublicConstants.QUEUE_QUERY_RESPONSE, clientKey)) {
                     JSONObject reply = new JSONObject();
                     reply.put("reply", "pong");
                     reply.put("status", "ok");
-                    clientConn.send(reply.toJSONString());
+                    clientConn.send(reply.toJSONString().getBytes());
                 } catch (Exception ex) {
                     Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                 }

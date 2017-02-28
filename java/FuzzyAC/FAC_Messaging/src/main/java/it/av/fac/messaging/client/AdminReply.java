@@ -12,7 +12,7 @@ import java.io.IOException;
  *
  * @author Diogo Regateiro
  */
-public class AdminReply implements IReply {
+public class AdminReply implements IReply<AdminReply> {
 
     @Override
     public void setStatus(ReplyStatus status) {
@@ -25,7 +25,7 @@ public class AdminReply implements IReply {
     }
 
     @Override
-    public IReply readFromBytes(byte[] bytes) throws IOException {
+    public AdminReply readFromBytes(byte[] bytes) throws IOException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

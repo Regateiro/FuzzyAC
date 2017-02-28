@@ -11,14 +11,10 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import it.av.fac.messaging.interfaces.IFACConnection;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import it.av.fac.messaging.interfaces.IServerHandler;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 
 /**
  * Allows to send and receive messages within the FAC architecture.
@@ -67,7 +63,7 @@ public class RabbitMQServer implements IFACConnection {
      * queueIn. Replaces the receive method.
      * @throws Exception If there is a connection issue to the RabbitMQ server.
      */
-    public RabbitMQServer(RabbitMQConnectionWrapper connWrapper, String queueIn, IServerHandler<String, String> handler) throws Exception {
+    public RabbitMQServer(RabbitMQConnectionWrapper connWrapper, String queueIn, IServerHandler<byte[], String> handler) throws Exception {
         this.queueIn = queueIn;
         this.queueOut = null;
         this.routingKeyIn = queueIn + ".#";
@@ -81,22 +77,18 @@ public class RabbitMQServer implements IFACConnection {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                     throws IOException {
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body)))) {
-                    String clientKey = envelope.getRoutingKey().substring(queueIn.length() + 1);
-                    handler.handle(in.readLine(), clientKey);
-                } catch (Exception ex) {
-                    Logger.getLogger(RabbitMQServer.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                String clientKey = envelope.getRoutingKey().substring(queueIn.length() + 1);
+                handler.handle(body, clientKey);
             }
 
         });
     }
 
     @Override
-    public void send(String message) {
+    public void send(byte[] message) {
         if (canSend) {
             try {
-                this.channel.basicPublish(RabbitMQInternalConstants.EXCHANGE, this.routingKeyOut, null, message.getBytes(Charset.forName("UTF-8")));
+                this.channel.basicPublish(RabbitMQInternalConstants.EXCHANGE, this.routingKeyOut, null, message);
             } catch (IOException ex) {
                 Logger.getLogger(RabbitMQServer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -111,7 +103,7 @@ public class RabbitMQServer implements IFACConnection {
      */
     @Override
     @Deprecated
-    public String receive() {
+    public byte[] receive() {
         throw new UnsupportedOperationException("Not supported. Use the constructor callback for receiving messages.");
     }
 

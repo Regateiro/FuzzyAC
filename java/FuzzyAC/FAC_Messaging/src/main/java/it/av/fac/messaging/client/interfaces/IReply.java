@@ -11,9 +11,10 @@ import java.io.IOException;
 /**
  *
  * @author Diogo Regateiro
+ * @param <R>
  */
-public interface IReply {
+public interface IReply<R extends IReply> {
     public void setStatus(ReplyStatus status);
     public byte[] convertToBytes() throws IOException;
-    public IReply readFromBytes(byte[] bytes) throws IOException;
+    public R readFromBytes(byte[] bytes) throws IOException;
 }

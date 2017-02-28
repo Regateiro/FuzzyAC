@@ -10,9 +10,11 @@ import java.io.IOException;
 /**
  * Interface for the Request objects.
  * @author Diogo Regateiro
+ * @param <R>
+ * @param <T>
  */
-public interface IRequest {
-    public void setRequestType(IRequestType requestType);
+public interface IRequest<R extends IRequest, T extends IRequestType> {
+    public void setRequestType(T requestType);
     public byte[] convertToBytes() throws IOException;
-    public IRequest readFromBytes(byte[] bytes) throws IOException;
+    public R readFromBytes(byte[] bytes) throws IOException;
 }

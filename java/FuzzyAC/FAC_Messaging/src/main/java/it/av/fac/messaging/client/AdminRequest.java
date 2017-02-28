@@ -15,12 +15,12 @@ import org.xerial.snappy.Snappy;
  *
  * @author Diogo Regateiro
  */
-public class AdminRequest implements IRequest {
+public class AdminRequest implements IRequest<AdminRequest, AdminRequest.AdminRequestType> {
 
     /**
      * The type of the request. Used by the system to know what to do.
      */
-    private IRequestType requestType;
+    private AdminRequestType requestType;
     
     /**
      * The query to run on the datastore.
@@ -45,7 +45,7 @@ public class AdminRequest implements IRequest {
     }
 
     @Override
-    public IRequest readFromBytes(byte[] bytes) throws IOException {
+    public AdminRequest readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
         
@@ -56,7 +56,7 @@ public class AdminRequest implements IRequest {
     }
 
     @Override
-    public void setRequestType(IRequestType requestType) {
+    public void setRequestType(AdminRequestType requestType) {
         this.requestType = requestType;
     }
     

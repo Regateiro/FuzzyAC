@@ -11,7 +11,9 @@ import it.av.fac.messaging.client.interfaces.IRequest;
 /**
  * Interface for the Web request Handler objects.
  * @author Diogo Regateiro
+ * @param <R>
+ * @param <P>
  */
-public interface Handler {
-    public IReply handle(IRequest request);
+public interface Handler<R extends IRequest, P extends IReply> {
+    public P handle(R request);
 }

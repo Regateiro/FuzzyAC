@@ -15,12 +15,12 @@ import org.xerial.snappy.Snappy;
  *
  * @author Diogo Regateiro
  */
-public class QueryRequest implements IRequest {
+public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRequestType> {
 
     /**
      * The type of the request. Used by the system to know what to do.
      */
-    private IRequestType requestType;
+    private QueryRequestType requestType;
     
     /**
      * The query to run on the datastore.
@@ -45,7 +45,7 @@ public class QueryRequest implements IRequest {
     }
 
     @Override
-    public void setRequestType(IRequestType requestType) {
+    public void setRequestType(QueryRequestType requestType) {
         this.requestType = requestType;
     }
 
@@ -61,7 +61,7 @@ public class QueryRequest implements IRequest {
     }
 
     @Override
-    public IRequest readFromBytes(byte[] bytes) throws IOException {
+    public QueryRequest readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
         

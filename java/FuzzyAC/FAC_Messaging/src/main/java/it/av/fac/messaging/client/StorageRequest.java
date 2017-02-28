@@ -17,12 +17,12 @@ import org.xerial.snappy.Snappy;
  *
  * @author Diogo Regateiro
  */
-public class StorageRequest implements IRequest {
+public class StorageRequest implements IRequest<StorageRequest, StorageRequest.StorageRequestType> {
 
     /**
      * The type of the request. Used by the system to know what to do.
      */
-    private IRequestType requestType;
+    private StorageRequestType requestType;
     
     /**
      * A document payload to store.
@@ -55,7 +55,7 @@ public class StorageRequest implements IRequest {
         return (String) aditionalInfo.get(key);
     }
 
-    public IRequestType getRequestType() {
+    public StorageRequestType getRequestType() {
         return requestType;
     }
 
@@ -77,7 +77,7 @@ public class StorageRequest implements IRequest {
     }
 
     @Override
-    public void setRequestType(IRequestType requestType) {
+    public void setRequestType(StorageRequestType requestType) {
         this.requestType = requestType;
     }
 
@@ -94,7 +94,7 @@ public class StorageRequest implements IRequest {
     }
 
     @Override
-    public IRequest readFromBytes(byte[] bytes) throws IOException {
+    public StorageRequest readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
         
@@ -112,6 +112,6 @@ public class StorageRequest implements IRequest {
     }
     
     public enum StorageRequestType implements IRequestType {
-        Query, StoreDocument, StoreGraphNode;
+        StoreDocument, StoreGraphNode;
     };
 }

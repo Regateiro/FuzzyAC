@@ -16,11 +16,11 @@ public interface IFACConnection extends Closeable {
      * Sends a message.
      * @param message The message to send.
      */
-    public void send(String message);
+    public void send(byte[] message);
     
     /**
      * Receives a message.
      * @return The message read.
      */
-    public String receive();
+    public byte[] receive();
 }

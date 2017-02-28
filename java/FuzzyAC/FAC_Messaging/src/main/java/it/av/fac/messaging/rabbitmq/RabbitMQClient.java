@@ -12,11 +12,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,7 +42,7 @@ public class RabbitMQClient implements IFACConnection {
      * queueIn. Replaces the receive method.
      * @throws Exception If there is a connection issue to the RabbitMQ server.
      */
-    public RabbitMQClient(RabbitMQConnectionWrapper connWrapper, String queueIn, String queueOut, String clientKey, IClientHandler<String> handler) throws Exception {
+    public RabbitMQClient(RabbitMQConnectionWrapper connWrapper, String queueIn, String queueOut, String clientKey, IClientHandler<byte[]> handler) throws Exception {
         this.queueIn = queueIn + "." + clientKey;
         this.queueOut = queueOut;
         this.routingKeyIn = this.queueIn;
@@ -59,19 +55,15 @@ public class RabbitMQClient implements IFACConnection {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                     throws IOException {
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body)))) {
-                    handler.handle(in.readLine());
-                } catch (Exception ex) {
-                    Logger.getLogger(RabbitMQClient.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                handler.handle(body);
             }
         });
     }
 
     @Override
-    public void send(String message) {
+    public void send(byte[] message) {
         try {
-            this.channel.basicPublish(RabbitMQInternalConstants.EXCHANGE, this.routingKeyOut, null, message.getBytes(Charset.forName("UTF-8")));
+            this.channel.basicPublish(RabbitMQInternalConstants.EXCHANGE, this.routingKeyOut, null, message);
         } catch (IOException ex) {
             Logger.getLogger(RabbitMQServer.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -85,7 +77,7 @@ public class RabbitMQClient implements IFACConnection {
      */
     @Override
     @Deprecated
-    public String receive() {
+    public byte[] receive() {
         throw new UnsupportedOperationException("Not supported. Use the constructor callback for receiving messages.");
     }
 
