@@ -8,7 +8,6 @@ package it.av.fac.riac.listener;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQInternalConstants;
-import it.av.fac.messaging.rabbitmq.RabbitMQPublicConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
 import it.av.fac.riac.handlers.RIaCHandler;

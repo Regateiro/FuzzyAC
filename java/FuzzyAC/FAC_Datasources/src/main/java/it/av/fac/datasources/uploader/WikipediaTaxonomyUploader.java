@@ -5,13 +5,11 @@
  */
 package it.av.fac.datasources.uploader;
 
-import com.alibaba.fastjson.JSONArray;
 import it.av.fac.driver.APIClient;
 import it.av.fac.messaging.client.StorageReply;
 import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;

@@ -5,11 +5,8 @@
  */
 package it.av.fac.webserver;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.QueryRequest;
-import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.webserver.handlers.QueryHandler;
-import it.av.fac.webserver.handlers.StorageHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;

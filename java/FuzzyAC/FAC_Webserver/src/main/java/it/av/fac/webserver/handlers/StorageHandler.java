@@ -8,7 +8,6 @@ package it.av.fac.webserver.handlers;
 import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.StorageReply;
 import it.av.fac.messaging.client.StorageRequest;
-import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQClient;

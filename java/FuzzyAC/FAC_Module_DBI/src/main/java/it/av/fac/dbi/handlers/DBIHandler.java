@@ -9,17 +9,12 @@ import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.StorageReply;
 import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
-import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
-import it.av.fac.messaging.rabbitmq.RabbitMQClient;
 import it.av.fac.messaging.rabbitmq.RabbitMQInternalConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
-import java.io.IOException;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
