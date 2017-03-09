@@ -9,6 +9,7 @@ import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.client.interfaces.IRequestType;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.xerial.snappy.Snappy;
@@ -50,9 +51,9 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
     public String getDocument() {
         return this.document;
     }
-
-    public String getAditionalInfo(String key) {
-        return (String) aditionalInfo.get(key);
+    
+    public Map<String, Object> getAditionalInfo() {
+        return Collections.unmodifiableMap(aditionalInfo);
     }
 
     public StorageRequestType getRequestType() {
@@ -85,7 +86,7 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
     public byte[] convertToBytes() throws IOException {
         JSONObject ret = new JSONObject();
         
-        ret.put("request_type", requestType.name().toLowerCase());
+        ret.put("request_type", requestType.name());
         ret.put("document", document);
         ret.put("storage_id", storageId);
         ret.put("aditional_info", new JSONObject(aditionalInfo));

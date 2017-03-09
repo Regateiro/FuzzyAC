@@ -5,10 +5,14 @@
  */
 package it.av.fac.webserver;
 
+import it.av.fac.messaging.client.ReplyStatus;
+import it.av.fac.messaging.client.StorageReply;
 import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.webserver.handlers.StorageHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -34,16 +38,28 @@ public class StorageAPI extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/application;base64");
-
+        
         /**
          * TODO: authentication *
          */
         StorageRequest storageRequest = new StorageRequest();
-        storageRequest.readFromBytes(Base64.decodeBase64((String) request.getAttribute("request")));
+        storageRequest.readFromBytes(Base64.decodeBase64(request.getParameter("request")));
+        System.out.println("Received request for " + storageRequest.getAditionalInfo().getOrDefault("title", "no title"));
+        
         try (PrintWriter out = response.getWriter()) {
-            out.println(Base64.encodeBase64URLSafeString((new StorageHandler()).handle(storageRequest).convertToBytes()));
+            StorageReply reply;
+            try {
+                reply = StorageHandler.getInstance().handle(storageRequest);
+            } catch (Exception ex) {
+                reply = new StorageReply();
+                reply.setStatus(ReplyStatus.ERROR);
+                reply.setErrorMsg(ex.getMessage());
+            }
+            System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
+            out.println(Base64.encodeBase64URLSafeString(reply.convertToBytes()));
         }
     }
+
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.

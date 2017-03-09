@@ -38,7 +38,7 @@ public class AdminRequest implements IRequest<AdminRequest, AdminRequest.AdminRe
     public byte[] convertToBytes() throws IOException {
         JSONObject ret = new JSONObject();
         
-        ret.put("request_type", requestType.name().toLowerCase());
+        ret.put("request_type", requestType.name());
         ret.put("query", query);
         
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));

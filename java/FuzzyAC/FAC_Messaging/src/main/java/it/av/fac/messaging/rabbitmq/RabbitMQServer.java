@@ -109,6 +109,5 @@ public class RabbitMQServer implements IFACConnection {
 
     @Override
     public void close() throws IOException {
-        RabbitMQChannelPool.release(this.queueIn, this.queueOut, this.routingKeyIn, this.routingKeyOut);
     }
 }

@@ -10,5 +10,6 @@ package it.av.fac.dbi.handlers;
  * @author Diogo Regateiro
  */
 public class DBIConfig {
+    public static final String PROPERTIES_FILE = "C:\\Users\\Regateiro\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_DBI\\dbi.properties";
     public static final String MODULE_KEY = "riac";
 }

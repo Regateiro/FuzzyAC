@@ -20,6 +20,10 @@ public class StorageReply implements IReply<StorageReply> {
     
     private String errorMsg;
 
+    public StorageReply() {
+        this.errorMsg = "";
+    }
+
     public ReplyStatus getStatus() {
         return status;
     }
@@ -41,7 +45,7 @@ public class StorageReply implements IReply<StorageReply> {
     public byte[] convertToBytes() throws IOException {
         JSONObject ret = new JSONObject();
         
-        ret.put("status", status.name().toLowerCase());
+        ret.put("status", status.name());
         ret.put("error_msg", errorMsg);
         
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));

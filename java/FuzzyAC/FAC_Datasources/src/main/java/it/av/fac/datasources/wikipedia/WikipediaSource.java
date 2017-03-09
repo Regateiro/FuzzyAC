@@ -27,25 +27,30 @@ public class WikipediaSource {
 
     private final SAXParser parser;
     private final String XMLFilePath;
+    private final APIClient fac;
 
     public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();
         this.XMLFilePath = XMLFilePath;
+        this.fac = new APIClient("http://localhost:8084/FAC_Webserver");
     }
 
     public void parse() {
         try {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
-                APIClient fac = new APIClient("http://localhost:8084/FAC_Webserver");
-                
-                StorageRequest request = new StorageRequest();
-                request.setRequestType(StorageRequestType.StoreDocument);
-                request.setDocument(page.getText());
-                request.setAditionalInfo("title", page.getTitle());
-                request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
-                StorageReply reply = fac.storageRequest(request);
+                if ((int) (Math.random() * 10000) == 0) {
+                    StorageRequest request = new StorageRequest();
+                    request.setRequestType(StorageRequestType.StoreDocument);
+                    request.setDocument(page.getText());
+                    request.setStorageId("randwikipages");
+                    request.setAditionalInfo("title", page.getTitle());
+                    request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
+                    System.out.print("Storing: " + page.getTitle() + " ... ");
+                    StorageReply reply = fac.storageRequest(request);
+                    System.out.println("[" + reply.getStatus().name() + "] " + reply.getErrorMsg());
+                }
             }));
-            
+
             //this.parser.parse(new File(XMLFilePath), new CategoryTaxonomyHandler("E:\\taxonomy.txt"));
         } catch (SAXException | IOException ex) {
             Logger.getLogger(WikipediaSource.class.getName()).log(Level.SEVERE, null, ex);

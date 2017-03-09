@@ -24,5 +24,6 @@
         <module>FAC_Webserver</module>
         <module>FAC_Datasources</module>
         <module>FAC_Module_DBI</module>
+        <module>FAC_Module_Monitor</module>
     </modules>
 </project>

@@ -5,6 +5,8 @@
  */
 package it.av.fac.dbi.handlers;
 
+import it.av.fac.dbi.drivers.DocumentDBI;
+import it.av.fac.dbi.drivers.GraphDBI;
 import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.StorageReply;
 import it.av.fac.messaging.client.StorageRequest;
@@ -15,6 +17,7 @@ import it.av.fac.messaging.rabbitmq.RabbitMQInternalConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +33,9 @@ public class DBIHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQInternalConstants.QUEUE_DBI_RESPONSE, clientKey)) {
-            clientConn.send(handle(new StorageRequest().readFromBytes(requestBytes)).convertToBytes());
+            StorageReply reply = handle(new StorageRequest().readFromBytes(requestBytes));
+            System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
+            clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -40,6 +45,7 @@ public class DBIHandler implements IServerHandler<byte[], String> {
         StorageReply errorReply = new StorageReply();
         errorReply.setStatus(ReplyStatus.ERROR);
 
+        System.out.println("Processing " + request.getAditionalInfo().getOrDefault("title", "no title"));
         StorageRequestType requestType = StorageRequestType.valueOf(request.getRequestType().name());
 
         switch (requestType) {
@@ -56,24 +62,39 @@ public class DBIHandler implements IServerHandler<byte[], String> {
 
     /**
      * Forwards the request to store a node in a graph.
+     *
      * @param request The request with the node store.
      * @return The storage process status.
      */
     private StorageReply requestNodeStorage(StorageRequest request) {
         StorageReply reply = new StorageReply();
-
-        // access the database and store.
-        
+        try {
+            GraphDBI graphDBI = new GraphDBI();
+            graphDBI.storeNode(request);
+            reply.setStatus(ReplyStatus.OK);
+        } catch (IOException ex) {
+            reply.setErrorMsg(ex.getMessage());
+            reply.setStatus(ReplyStatus.ERROR);
+        }
         return reply;
     }
 
     /**
      * Classify and send the document to the DBI.
+     *
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
     private StorageReply requestDocumentStorage(StorageRequest request) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        StorageReply reply = new StorageReply();
+        try {
+            DocumentDBI.getInstance(request.getStorageId()).storeDocument(request);
+            reply.setStatus(ReplyStatus.OK);
+        } catch (IOException ex) {
+            reply.setErrorMsg(ex.getMessage());
+            reply.setStatus(ReplyStatus.ERROR);
+        }
+        return reply;
     }
 
 }

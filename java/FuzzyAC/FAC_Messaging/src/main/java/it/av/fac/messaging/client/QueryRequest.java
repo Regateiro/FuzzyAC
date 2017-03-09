@@ -53,7 +53,7 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
     public byte[] convertToBytes() throws IOException {
         JSONObject ret = new JSONObject();
         
-        ret.put("request_type", requestType.name().toLowerCase());
+        ret.put("request_type", requestType.name());
         ret.put("query", query);
         ret.put("token", token);
         

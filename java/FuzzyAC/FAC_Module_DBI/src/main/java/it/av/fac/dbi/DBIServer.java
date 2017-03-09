@@ -25,8 +25,8 @@ public class DBIServer {
         try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()){
             try (IFACConnection serverConn = new RabbitMQServer(
                     connWrapper, RabbitMQInternalConstants.QUEUE_DBI_REQUEST, new DBIHandler())) {
-                System.out.println("RIaC Server is now running... enter 'q' to quit.");
-                System.in.read();
+                System.out.println("DBI Server is now running... enter 'q' to quit.");
+                while(System.in.read() != 'q');
             } catch (Exception ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
