@@ -32,22 +32,25 @@ public class WikipediaSource {
     public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();
         this.XMLFilePath = XMLFilePath;
-        this.fac = new APIClient("http://localhost:8084/FAC_Webserver");
+        this.fac = new APIClient("http://localhost:8080/FAC_Webserver");
     }
 
     public void parse() {
         try {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
-                if ((int) (Math.random() * 10000) == 0) {
-                    StorageRequest request = new StorageRequest();
-                    request.setRequestType(StorageRequestType.StoreDocument);
-                    request.setDocument(page.getText());
-                    request.setStorageId("randwikipages");
-                    request.setAditionalInfo("title", page.getTitle());
-                    request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
-                    System.out.print("Storing: " + page.getTitle() + " ... ");
-                    StorageReply reply = fac.storageRequest(request);
-                    System.out.println("[" + reply.getStatus().name() + "] " + reply.getErrorMsg());
+                if (!page.getTitle().startsWith("File:") && !page.getTitle().startsWith("Wikipedia:") 
+                        && !page.getTitle().startsWith("Category:") && !page.getTitle().startsWith("Template:")) {
+                    if ((int) (Math.random() * 10000) == 0) {
+                        StorageRequest request = new StorageRequest();
+                        request.setRequestType(StorageRequestType.StoreDocument);
+                        request.setDocument(page.getText());
+                        request.setStorageId("randwikipages");
+                        request.setAditionalInfo("title", page.getTitle());
+                        request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
+                        System.out.print("Storing: " + page.getTitle() + " ... ");
+                        StorageReply reply = fac.storageRequest(request);
+                        System.out.println("[" + reply.getStatus().name() + "] " + reply.getErrorMsg());
+                    }
                 }
             }));
 
@@ -58,7 +61,7 @@ public class WikipediaSource {
     }
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException {
-        WikipediaSource src = new WikipediaSource("E:\\articles.xml");
+        WikipediaSource src = new WikipediaSource("G:\\articles.xml");
         src.parse();
     }
 }

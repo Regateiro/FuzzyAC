@@ -8,7 +8,7 @@ package it.av.fac.dbi.drivers;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import it.av.fac.dbi.handlers.DBIConfig;
+import it.av.fac.dbi.util.DBIConfig;
 import it.av.fac.messaging.client.StorageRequest;
 import java.io.Closeable;
 import java.io.FileInputStream;
