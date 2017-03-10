@@ -10,7 +10,7 @@ import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQClient;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
-import it.av.fac.messaging.rabbitmq.RabbitMQPublicConstants;
+import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -33,8 +33,8 @@ public class Client {
             };
 
             try (IFACConnection conn = new RabbitMQClient(connWrapper,
-                    RabbitMQPublicConstants.QUEUE_QUERY_RESPONSE,
-                    RabbitMQPublicConstants.QUEUE_QUERY_REQUEST, CLIENT_KEY, handler)) {
+                    RabbitMQConstants.QUEUE_QUERY_RESPONSE,
+                    RabbitMQConstants.QUEUE_QUERY_REQUEST, CLIENT_KEY, handler)) {
                 JSONObject request = new JSONObject();
                 request.put("request", "ping");
                 while (true) {

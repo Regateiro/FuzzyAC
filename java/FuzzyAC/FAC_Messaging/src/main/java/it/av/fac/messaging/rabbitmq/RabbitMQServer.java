@@ -88,7 +88,7 @@ public class RabbitMQServer implements IFACConnection {
     public void send(byte[] message) {
         if (canSend) {
             try {
-                this.channel.basicPublish(RabbitMQInternalConstants.EXCHANGE, this.routingKeyOut, null, message);
+                this.channel.basicPublish(RabbitMQConstants.EXCHANGE, this.routingKeyOut, null, message);
             } catch (IOException ex) {
                 Logger.getLogger(RabbitMQServer.class.getName()).log(Level.SEVERE, null, ex);
             }

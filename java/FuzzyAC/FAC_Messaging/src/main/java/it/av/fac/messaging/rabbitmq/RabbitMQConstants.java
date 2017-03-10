@@ -9,9 +9,16 @@ package it.av.fac.messaging.rabbitmq;
  * Complete list of queues to use by the architecture.
  * @author Diogo Regateiro
  */
-public abstract class RabbitMQInternalConstants extends RabbitMQPublicConstants {
+public abstract class RabbitMQConstants {
     
     public static final String EXCHANGE = "FAC";
+    
+    /**
+     * The queue that is used to handle user queries.
+     * Client applications should use this queue.
+     */
+    public static final String QUEUE_QUERY_REQUEST = ":query_request";
+    public static final String QUEUE_QUERY_RESPONSE = ":query_response";
     
     /**
      * The queue that is used to handle administration requests.
@@ -29,4 +36,10 @@ public abstract class RabbitMQInternalConstants extends RabbitMQPublicConstants 
      */
     public static final String QUEUE_DBI_REQUEST = ":dbi_request";
     public static final String QUEUE_DBI_RESPONSE = ":dbi_response";
+    
+    /**
+     * Queues for Enforcement.
+     */
+    public static final String QUEUE_DECISION_REQUEST = ":enforcement_request";
+    public static final String QUEUE_DECISION_RESPONSE = ":enforcement_response";
 }

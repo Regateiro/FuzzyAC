@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.riac.handlers;
+package it.av.fac.enforcement.handlers;
 
+import it.av.fac.enforcement.util.EnforcementConfig;
+import it.av.fac.messaging.client.QueryReply;
+import it.av.fac.messaging.client.QueryRequest;
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
@@ -16,37 +17,33 @@ import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
-import it.av.fac.riac.classifier.IClassifier;
 import java.io.IOException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Class responsible for handling RIaC requests.
+ * Class responsible for handling query requests.
  *
  * @author Diogo Regateiro
  */
-public class RIaCHandler implements IServerHandler<byte[], String> {
+public class EnforcementHandler implements IServerHandler<byte[], String> {
 
-    private final IClassifier classifier;
-    private final SynchronousQueue<StorageReply> queue = new SynchronousQueue<>();
+    private final SynchronousQueue<QueryReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
 
-    public RIaCHandler(IClassifier classifier) throws Exception {
-        System.out.println("Using classifier: " + classifier.getClass().getSimpleName());
-        this.classifier = classifier;
+    public EnforcementHandler() throws Exception {
         this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
-                RabbitMQConstants.QUEUE_DBI_RESPONSE,
-                RabbitMQConstants.QUEUE_DBI_REQUEST, RIaCConfig.MODULE_KEY, handler);
+                RabbitMQConstants.QUEUE_DECISION_RESPONSE,
+                RabbitMQConstants.QUEUE_DECISION_REQUEST, EnforcementConfig.MODULE_KEY, handler);
     }
 
     @Override
     public void handle(byte[] requestBytes, String clientKey) {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
-                RabbitMQConstants.QUEUE_RIAC_RESPONSE, clientKey)) {
-            StorageReply reply = handle(new StorageRequest().readFromBytes(requestBytes));
+                RabbitMQConstants.QUEUE_QUERY_RESPONSE, clientKey)) {
+            QueryReply reply = handle(new QueryRequest().readFromBytes(requestBytes));
             System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
@@ -54,24 +51,28 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
         }
     }
 
-    private StorageReply handle(StorageRequest request) {
-        StorageReply errorReply = new StorageReply();
+    private QueryReply handle(QueryRequest request) {
+        QueryReply errorReply = new QueryReply();
         errorReply.setStatus(ReplyStatus.ERROR);
 
-        // classify the document in the request
-        System.out.println("Classifying " + request.getAditionalInfo().getOrDefault("title", "no title"));
-        classifier.classify(request);
-        return requestStorage(request);
-    }
+        System.out.println("Processing query: " + request.getQuery());
+        System.out.println("Requesting documents...");
+        System.out.println("Requesting access control decision for each document labels..."); //FAC_Module_Decision will verify the user attributes
+        System.out.println("Filtering documents to which the user does not have read permission...");
+        System.out.println("Replying with ");
 
+        return errorReply;
+
+    }
+    
     /**
      * Classify and send the document to the DBI.
      *
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private StorageReply requestStorage(StorageRequest request) {
-        StorageReply errorReply = new StorageReply();
+    private QueryReply requestDecision(QueryRequest request) {
+        QueryReply errorReply = new QueryReply();
 
         try {
             conn.send(request.convertToBytes());
@@ -83,9 +84,9 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
 
         return errorReply;
     }
-
+    
     private final IClientHandler<byte[]> handler = (byte[] replyBytes) -> {
-        StorageReply reply = new StorageReply();
+        QueryReply reply = new QueryReply();
         try {
             reply.readFromBytes(replyBytes);
         } catch (IOException ex) {

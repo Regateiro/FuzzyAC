@@ -5,8 +5,10 @@
  */
 package it.av.fac.messaging.client;
 
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IReply;
 import java.io.IOException;
+import org.xerial.snappy.Snappy;
 
 /**
  *
@@ -14,18 +16,49 @@ import java.io.IOException;
  */
 public class QueryReply implements IReply<QueryReply> {
 
+    private ReplyStatus status;
+    
+    private String errorMsg;
+
+    public QueryReply() {
+        this.errorMsg = "";
+    }
+
+    public ReplyStatus getStatus() {
+        return status;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
+
     @Override
     public void setStatus(ReplyStatus status) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.status = status;
     }
 
     @Override
     public byte[] convertToBytes() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        JSONObject ret = new JSONObject();
+        
+        ret.put("status", status.name());
+        ret.put("error_msg", errorMsg);
+        
+        return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
     }
 
     @Override
     public QueryReply readFromBytes(byte[] bytes) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String data = Snappy.uncompressString(bytes, "UTF-8");
+        JSONObject obj = JSONObject.parseObject(data);
+        
+        setStatus(ReplyStatus.valueOf(obj.getString("status")));
+        setErrorMsg(obj.getString("error_msg"));
+        
+        return this;
     }
 }

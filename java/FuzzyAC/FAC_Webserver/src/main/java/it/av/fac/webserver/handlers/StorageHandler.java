@@ -11,7 +11,7 @@ import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQClient;
-import it.av.fac.messaging.rabbitmq.RabbitMQInternalConstants;
+import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.webserver.WebserverConfig;
 import java.io.IOException;
@@ -32,8 +32,8 @@ public class StorageHandler implements Handler<StorageRequest, StorageReply> {
 
     private StorageHandler() throws Exception {
         this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
-                RabbitMQInternalConstants.QUEUE_RIAC_RESPONSE,
-                RabbitMQInternalConstants.QUEUE_RIAC_REQUEST, WebserverConfig.MODULE_KEY, handler);
+                RabbitMQConstants.QUEUE_RIAC_RESPONSE,
+                RabbitMQConstants.QUEUE_RIAC_REQUEST, WebserverConfig.MODULE_KEY, handler);
     }
     
     public static StorageHandler getInstance() throws Exception {

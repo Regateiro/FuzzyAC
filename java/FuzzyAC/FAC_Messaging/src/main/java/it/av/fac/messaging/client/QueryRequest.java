@@ -9,6 +9,8 @@ import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.client.interfaces.IRequestType;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import org.xerial.snappy.Snappy;
 
 /**
@@ -28,7 +30,7 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
     private String query;
     
     /**
-     * The query to run on the datastore.
+     * The token which identifies the user in the system. Used for caching.
      */
     private String token;
 
@@ -49,6 +51,18 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
         this.requestType = requestType;
     }
 
+    public QueryRequestType getRequestType() {
+        return requestType;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public String getToken() {
+        return token;
+    }
+    
     @Override
     public byte[] convertToBytes() throws IOException {
         JSONObject ret = new JSONObject();

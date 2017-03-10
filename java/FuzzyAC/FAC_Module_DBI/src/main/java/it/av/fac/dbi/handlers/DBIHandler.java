@@ -13,7 +13,7 @@ import it.av.fac.messaging.client.StorageRequest;
 import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
-import it.av.fac.messaging.rabbitmq.RabbitMQInternalConstants;
+import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
@@ -32,7 +32,7 @@ public class DBIHandler implements IServerHandler<byte[], String> {
     public void handle(byte[] requestBytes, String clientKey) {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
-                RabbitMQInternalConstants.QUEUE_DBI_RESPONSE, clientKey)) {
+                RabbitMQConstants.QUEUE_DBI_RESPONSE, clientKey)) {
             StorageReply reply = handle(new StorageRequest().readFromBytes(requestBytes));
             System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
             clientConn.send(reply.convertToBytes());

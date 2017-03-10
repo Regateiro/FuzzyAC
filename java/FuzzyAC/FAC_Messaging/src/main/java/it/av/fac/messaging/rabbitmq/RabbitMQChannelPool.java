@@ -27,14 +27,14 @@ public class RabbitMQChannelPool {
 
         if (!POOL.containsKey(UID)) {
             Channel channel = conn.createChannel();
-            channel.exchangeDeclare(RabbitMQInternalConstants.EXCHANGE, "direct", true);
+            channel.exchangeDeclare(RabbitMQConstants.EXCHANGE, "direct", true);
             if (queueIn != null) {
                 channel.queueDeclare(queueIn, false, false, true, null);
-                channel.queueBind(queueIn, RabbitMQInternalConstants.EXCHANGE, routingKeyIn);
+                channel.queueBind(queueIn, RabbitMQConstants.EXCHANGE, routingKeyIn);
             }
             if (queueOut != null) {
                 channel.queueDeclare(queueOut, false, false, true, null);
-                channel.queueBind(queueOut, RabbitMQInternalConstants.EXCHANGE, routingKeyOut);
+                channel.queueBind(queueOut, RabbitMQConstants.EXCHANGE, routingKeyOut);
             }
 
             POOL.put(UID, channel);

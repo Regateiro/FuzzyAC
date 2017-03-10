@@ -10,5 +10,5 @@ package it.av.fac.messaging.util;
  * @author Diogo Regateiro
  */
 public class MessagingConfig {
-    public static final String PROPERTIES_FILE = "C:\\Users\\DiogoJosé\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Messaging\\messaging.properties";
+    public static final String PROPERTIES_FILE = System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_DBI\\dbi.properties";
 }

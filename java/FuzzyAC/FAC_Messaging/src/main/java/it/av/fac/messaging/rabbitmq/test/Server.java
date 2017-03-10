@@ -7,7 +7,7 @@ package it.av.fac.messaging.rabbitmq.test;
 
 import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.interfaces.IFACConnection;
-import it.av.fac.messaging.rabbitmq.RabbitMQPublicConstants;
+import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,7 +26,7 @@ public class Server {
         try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()){
             IServerHandler<byte[], String> handler = (byte[] request, String clientKey) -> {
                 try (IFACConnection clientConn = new RabbitMQServer(
-                        connWrapper, RabbitMQPublicConstants.QUEUE_QUERY_RESPONSE, clientKey)) {
+                        connWrapper, RabbitMQConstants.QUEUE_QUERY_RESPONSE, clientKey)) {
                     JSONObject reply = new JSONObject();
                     reply.put("reply", "pong");
                     reply.put("status", "ok");
@@ -37,7 +37,7 @@ public class Server {
             };
 
             try (IFACConnection serverConn = new RabbitMQServer(
-                    connWrapper, RabbitMQPublicConstants.QUEUE_QUERY_REQUEST, handler)) {
+                    connWrapper, RabbitMQConstants.QUEUE_QUERY_REQUEST, handler)) {
                 System.in.read();
             } catch (Exception ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
