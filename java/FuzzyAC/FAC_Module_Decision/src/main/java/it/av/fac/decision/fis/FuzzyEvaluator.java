@@ -74,11 +74,21 @@ public class FuzzyEvaluator {
 
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
-        
-        vars.put("Number_Of_Publications", 100.0);
-        vars.put("Time_Since_Last_Publication", 2.0);
-        vars.put("Number_Of_Citations", 1000.0);
-        
-        FuzzyEvaluator.evaluateFromFile("test.fcl", vars);
+
+        //String testFile = "test.fcl";
+        String testFile = "test2.fcl";
+
+        switch (testFile) {
+            case "test.fcl":
+                vars.put("Number_Of_Publications", 10.0);
+                vars.put("Time_Since_Last_Publication", 0.0);
+                vars.put("Number_Of_Citations", 8.0);
+                break;
+            case "test2.fcl":
+                vars.put("Number_Of_Publications", 12.0);
+                vars.put("Number_Of_Citations", 50.0);
+        }
+
+        FuzzyEvaluator.evaluateFromFile(testFile, vars);
     }
 }
