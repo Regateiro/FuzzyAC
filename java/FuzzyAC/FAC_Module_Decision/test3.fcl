@@ -1,4 +1,4 @@
-FUNCTION_BLOCK ACADEMIC
+FUNCTION_BLOCK VariableInference
 
 VAR_INPUT
 	Number_Of_Publications	:	REAL; (* RANGE(0 ..) *) 
@@ -42,6 +42,56 @@ RULE 5: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS 
 RULE 6: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
 RULE 7: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS Considerable) THEN Expertise IS Medium;
 RULE 8: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS High) THEN Expertise IS Very_High;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK AccessControl
+
+VAR_INPUT
+	Expertise	:	REAL; (* RANGE(0 ..) *) 
+END_VAR
+
+VAR_OUTPUT
+	Read	:	REAL;
+	Write	: 	REAL;
+END_VAR
+	
+FUZZIFY Expertise
+END_FUZZIFY
+
+DEFUZZIFY Read
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY Write
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+	
+RULEBLOCK Read
+
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Expertise IS Low) THEN Read IS Deny;
+RULE 1: IF (Expertise IS Medium) THEN Read IS Grant;
+RULE 2: IF (Expertise IS High) THEN Read IS Grant;
+RULE 3: IF (Expertise IS Very_High) THEN Read IS Grant;
+
+END_RULEBLOCK
+
+RULEBLOCK Write
+
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Expertise IS Low) THEN Write IS Deny;
+RULE 1: IF (Expertise IS Medium) THEN Write IS Deny;
+RULE 2: IF (Expertise IS High) THEN Write IS Deny;
+RULE 3: IF (Expertise IS Very_High) THEN Write IS Grant;
 
 END_RULEBLOCK
 
