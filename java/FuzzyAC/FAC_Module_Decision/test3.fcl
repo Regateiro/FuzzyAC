@@ -75,6 +75,7 @@ END_DEFUZZIFY
 	
 RULEBLOCK Read
 
+ACT:MIN;
 AND:MIN;
 ACCU:MAX;
 RULE 0: IF (Expertise IS Low) THEN Read IS Deny;

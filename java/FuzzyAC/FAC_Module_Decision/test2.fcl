@@ -31,6 +31,7 @@ END_DEFUZZIFY
 	
 RULEBLOCK Expertise
 
+ACT:MIN;
 AND:MIN;
 ACCU:MAX;
 RULE 0: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
