@@ -10,7 +10,7 @@ VAR_OUTPUT
 END_VAR
 	
 FUZZIFY Number_Of_Publications
-	TERM Low := (0, 0) (3, 1) (5, 0) ;
+	TERM Low := (3, 1) (5, 0) ;
 	TERM Considerable := (3, 0) (5, 1) (13, 1) (18, 0) ;
 	TERM High := (10, 0) (15, 1) ;
 END_FUZZIFY

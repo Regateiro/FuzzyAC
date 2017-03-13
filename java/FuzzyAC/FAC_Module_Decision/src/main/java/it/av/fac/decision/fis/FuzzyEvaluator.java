@@ -5,7 +5,6 @@
  */
 package it.av.fac.decision.fis;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,12 +12,12 @@ import java.util.Map;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
+import net.sourceforge.jFuzzyLogic.membership.MembershipFunction;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionSingleton;
 import net.sourceforge.jFuzzyLogic.membership.Value;
 import net.sourceforge.jFuzzyLogic.plot.JFuzzyChart;
 import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
-import org.antlr.runtime.RecognitionException;
 
 /**
  * Fuzzy Inference System FuzzyEvaluator
@@ -27,43 +26,34 @@ import org.antlr.runtime.RecognitionException;
  */
 public class FuzzyEvaluator {
 
-    /**
-     * Loads the fcl file and evaluates the input into an output.
-     *
-     * @param fclFileName The FCL file path
-     * @param variables The variable inputs.
-     * @throws RecognitionException
-     * @throws java.io.IOException
-     */
-    public static void evaluateFromFile(String fclFileName, Map<String, Double> variables) throws RecognitionException, IOException {
-        evaluate(FIS.load(fclFileName, false), variables);
+    private final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
+    private final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
+
+    private final FIS fis;
+
+    public FuzzyEvaluator(String filepath) {
+        this.fis = FIS.load(filepath, false);
     }
 
-    /**
-     * Loads the fcl file and evaluates the input into an output.
-     *
-     * @param fclString The FCL in string format
-     * @param variables The variable inputs.
-     * @throws RecognitionException
-     */
-    public static void evaluateFrmString(String fclString, Map<String, Double> variables) throws RecognitionException {
-        evaluate(FIS.createFromString(fclString, false), variables);
-    }
-
-    private static void evaluate(FIS fis, Map<String, Double> inVariables) {
+    public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
+        Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
 
         // Error while loading?
         if (fis == null) {
-            System.err.println("Can't read FCL string.");
-            return;
+            System.err.println("Not initialized.");
+            return null;
         }
 
         // Print ruleSet
-        System.out.println(fis);
+        if (debug) {
+            System.out.println(fis);
+        }
 
-        FunctionBlock vifb = fis.getFunctionBlock("VariableInference");
-        FunctionBlock acfb = fis.getFunctionBlock("AccessControl");
+        FunctionBlock vifb = fis.getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME);
+        FunctionBlock acfb = fis.getFunctionBlock(FB_ACCESS_CONTROL_PHASE_NAME);
+        vifb.reset();
+        acfb.reset();
 
         // Set inputs
         inVariables.keySet().forEach((varName) -> {
@@ -71,18 +61,22 @@ public class FuzzyEvaluator {
         });
 
         // Show 
-        JFuzzyChart.get().chart(vifb);
-        
+        if (debug) {
+            JFuzzyChart.get().chart(vifb);
+        }
+
         // Evaluate
         vifb.evaluate();
 
         // Save output variables as input for the next functionblock
         vifb.variables().stream().filter((variable) -> (variable.isOutput())).forEach((outVariable) -> {
-            JFuzzyChart.get().chart(outVariable, outVariable.getDefuzzifier(), true);
-            
+            if (debug) {
+                JFuzzyChart.get().chart(outVariable, outVariable.getDefuzzifier(), true);
+            }
+
             //save the VariableInference output variable to configure the respective AccessControl input.
             outVariables.add(outVariable);
-            
+
             //add the input value for the AccessControl function block
             fis.setVariable(acfb.getName(), outVariable.getName(), outVariable.getLatestDefuzzifiedValue());
         });
@@ -95,7 +89,7 @@ public class FuzzyEvaluator {
                 outVariable.getLinguisticTerms().values().stream().forEach((lt) -> {
                     //Add the linguistic term with x as the defuzzified value and y as the membership degree
                     //This will put all linguistic terms on the same x, which will be the value for the AccessControl input variable
-                    DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons)outVariable.getDefuzzifier();
+                    DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
                     MembershipFunctionSingleton mfunction = new MembershipFunctionSingleton(
                             new Value(outVariable.getValue()),
                             new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
@@ -106,14 +100,22 @@ public class FuzzyEvaluator {
         });
 
         // Show 
-        JFuzzyChart.get().chart(acfb);
-        
+        if (debug) {
+            JFuzzyChart.get().chart(acfb);
+        }
+
         // Evaluate
         acfb.evaluate();
 
         acfb.variables().stream().filter((variable) -> (variable.isOutput())).forEach((variable) -> {
-            JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), true);
+            if (debug) {
+                JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), true);
+            }
+
+            ret.put(variable.getName(), variable);
         });
+
+        return ret;
     }
 
     public static void main(String[] args) throws Exception {
@@ -133,6 +135,65 @@ public class FuzzyEvaluator {
                 vars.put("Number_Of_Citations", 50.0);
         }
 
-        FuzzyEvaluator.evaluateFromFile(testFile, vars);
+        FuzzyEvaluator feval = new FuzzyEvaluator(testFile);
+        System.out.println(feval.evaluate(vars, true));
+//        Map<String, List<Map<String, Double>>> edgeConditions = feval.findEdgeIntegerConditions(0.5, 1, new ArrayList<>(vars.keySet()));
+//        edgeConditions.keySet().forEach((permission) -> {
+//            System.out.println(permission + ": " + edgeConditions.get(permission));
+//        });
+    }
+
+    /**
+     * Finds the input values for which the output weight for the permissions equals alphaCut.
+     * @param alphaCut The value to check the permission weights for equality.
+     * @param precision The step precision to use.
+     * @param variables The name of the variables for the FIS.
+     * @return The list of variables and values for each permission that matches the alphaCut final weight.
+     */
+    public Map<String, List<Map<String, Double>>> findEdgeIntegerConditions(double alphaCut, double precision, List<String> variables) {
+        Map<String, List<Map<String, Double>>> ret = new HashMap<>();
+
+        findEdgeIntegerConditionsRec(alphaCut, precision, ret, new HashMap<>(), variables, 0);
+
+        return ret;
+    }
+
+    private void findEdgeIntegerConditionsRec(double alphaCut, double precision, Map<String, List<Map<String, Double>>> resultAccumulator, Map<String, Double> tempMap, List<String> variables, int varIdx) {
+        double varValue = 0.0;
+
+        if (varIdx < variables.size()) {
+            do {
+                String varName = variables.get(varIdx);
+                tempMap.put(varName, varValue);
+                findEdgeIntegerConditionsRec(alphaCut, precision, resultAccumulator, tempMap, variables, varIdx + 1);
+                varValue += precision;
+                if (varValue > maxXValue(varName)) {
+                    break;
+                }
+            } while (true);
+        } else {
+            Map<String, Variable> evaluation = evaluate(tempMap, false);
+            evaluation.keySet().stream().filter((permission) -> evaluation.get(permission).getValue() == alphaCut).forEach((permission) -> {
+                resultAccumulator.putIfAbsent(permission, new ArrayList<>());
+                resultAccumulator.get(permission).add(new HashMap<>(tempMap));
+            });
+        }
+    }
+
+    private double maxXValue(String varName) {
+        Variable variable = this.fis.getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
+
+        double xmax = 0.0;
+        for (LinguisticTerm lt : variable.getLinguisticTerms().values()) {
+            MembershipFunction mf = lt.getMembershipFunction();
+            for (int i = 0; i < mf.getParametersLength(); i += 2) {
+                double x = mf.getParameter(i);
+                if (x > xmax) {
+                    xmax = x;
+                }
+            }
+        }
+
+        return xmax;
     }
 }
