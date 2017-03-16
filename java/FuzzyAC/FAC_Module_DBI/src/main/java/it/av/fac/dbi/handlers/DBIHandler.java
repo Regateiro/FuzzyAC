@@ -8,9 +8,9 @@ package it.av.fac.dbi.handlers;
 import it.av.fac.dbi.drivers.DocumentDBI;
 import it.av.fac.dbi.drivers.GraphDBI;
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
-import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.DBIRequest.DBIRequestType;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
@@ -33,30 +33,32 @@ public class DBIHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE, clientKey)) {
-            StorageReply reply = handle(new StorageRequest().readFromBytes(requestBytes));
-            System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
+            DBIReply reply = handle(new DBIRequest().readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private StorageReply handle(StorageRequest request) {
-        StorageReply errorReply = new StorageReply();
-        errorReply.setStatus(ReplyStatus.ERROR);
+    private DBIReply handle(DBIRequest request) {
+        DBIReply reply = new DBIReply();
+        reply.setStatus(ReplyStatus.ERROR);
 
-        System.out.println("Processing " + request.getAditionalInfo().getOrDefault("title", "no title"));
-        StorageRequestType requestType = StorageRequestType.valueOf(request.getRequestType().name());
+        DBIRequestType requestType = DBIRequestType.valueOf(request.getRequestType().name());
 
         switch (requestType) {
+            case QueryPolicies:
+                return requestPolicies(request);
+            case QueryDocuments:
+                return requestDocuments(request);
             case StoreGraphNode:
                 return requestNodeStorage(request);
             case StoreDocument:
                 return requestDocumentStorage(request);
         }
 
-        errorReply.setErrorMsg("Not a known request type was received: " + requestType);
-        return errorReply;
+        reply.setErrorMsg("Not a known request type was received: " + requestType);
+        return reply;
 
     }
 
@@ -66,8 +68,8 @@ public class DBIHandler implements IServerHandler<byte[], String> {
      * @param request The request with the node store.
      * @return The storage process status.
      */
-    private StorageReply requestNodeStorage(StorageRequest request) {
-        StorageReply reply = new StorageReply();
+    private DBIReply requestNodeStorage(DBIRequest request) {
+        DBIReply reply = new DBIReply();
         try {
             GraphDBI graphDBI = new GraphDBI();
             graphDBI.storeNode(request);
@@ -85,8 +87,8 @@ public class DBIHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private StorageReply requestDocumentStorage(StorageRequest request) {
-        StorageReply reply = new StorageReply();
+    private DBIReply requestDocumentStorage(DBIRequest request) {
+        DBIReply reply = new DBIReply();
         try {
             DocumentDBI.getInstance(request.getStorageId()).storeDocument(request);
             reply.setStatus(ReplyStatus.OK);
@@ -97,4 +99,37 @@ public class DBIHandler implements IServerHandler<byte[], String> {
         return reply;
     }
 
+    /**
+     * Request documents from the datastore.
+     *
+     * @param request The request with the document to classify and store.
+     * @return The storage process status.
+     */
+    private DBIReply requestDocuments(DBIRequest request) {
+        DBIReply reply = new DBIReply();
+        try {
+            reply = DocumentDBI.getInstance(request.getStorageId()).query(request);
+        } catch (IOException ex) {
+            reply.setErrorMsg(ex.getMessage());
+            reply.setStatus(ReplyStatus.ERROR);
+        }
+        return reply;
+    }
+
+    /**
+     * Request documents from the datastore.
+     *
+     * @param request The request with the document to classify and store.
+     * @return The storage process status.
+     */
+    private DBIReply requestPolicies(DBIRequest request) {
+        DBIReply reply = new DBIReply();
+        try {
+            reply = DocumentDBI.getInstance(request.getStorageId()).find(request);
+        } catch (IOException ex) {
+            reply.setErrorMsg(ex.getMessage());
+            reply.setStatus(ReplyStatus.ERROR);
+        }
+        return reply;
+    }
 }

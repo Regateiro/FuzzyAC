@@ -25,7 +25,7 @@ public class RabbitMQChannelPool {
     public static synchronized Channel createChannel(Connection conn, String queueIn, String queueOut, String routingKeyIn, String routingKeyOut) throws IOException {
         String UID = obtainUniqueId(queueIn, queueOut, routingKeyIn, routingKeyOut);
 
-        if (!POOL.containsKey(UID)) {
+        if (!POOL.containsKey(UID) || !POOL.get(UID).isOpen()) {
             Channel channel = conn.createChannel();
             channel.exchangeDeclare(RabbitMQConstants.EXCHANGE, "direct", true);
             if (queueIn != null) {

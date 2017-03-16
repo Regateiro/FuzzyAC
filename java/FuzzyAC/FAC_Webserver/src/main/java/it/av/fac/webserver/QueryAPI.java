@@ -5,10 +5,16 @@
  */
 package it.av.fac.webserver;
 
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.QueryReply;
 import it.av.fac.messaging.client.QueryRequest;
+import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.webserver.handlers.QueryHandler;
+import it.av.fac.webserver.handlers.StorageHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -34,9 +40,19 @@ public class QueryAPI extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/application;base64");
         QueryRequest queryRequest = new QueryRequest();
-        queryRequest.readFromBytes(Base64.decodeBase64((String) request.getAttribute("request")));
+        queryRequest.readFromBytes(Base64.decodeBase64((String) request.getParameter("request")));
+        System.out.println("Received query: " + queryRequest.getQuery());
+        
         try (PrintWriter out = response.getWriter()) {
-            out.println(Base64.encodeBase64URLSafeString((new QueryHandler()).handle(queryRequest).convertToBytes()));
+            QueryReply reply;
+            try {
+                reply = QueryHandler.getInstance().handle(queryRequest);
+            } catch (Exception ex) {
+                reply = new QueryReply();
+                reply.setStatus(ReplyStatus.ERROR);
+                reply.setErrorMsg(ex.getMessage());
+            }
+            out.println(Base64.encodeBase64URLSafeString(reply.convertToBytes()));
         }
     }
 

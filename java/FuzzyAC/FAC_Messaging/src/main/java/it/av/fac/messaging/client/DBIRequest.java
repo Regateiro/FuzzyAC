@@ -18,17 +18,22 @@ import org.xerial.snappy.Snappy;
  *
  * @author Diogo Regateiro
  */
-public class StorageRequest implements IRequest<StorageRequest, StorageRequest.StorageRequestType> {
+public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestType> {
 
     /**
      * The type of the request. Used by the system to know what to do.
      */
-    private StorageRequestType requestType;
+    private DBIRequestType requestType;
     
     /**
      * A document payload to store.
      */
     private String document;
+    
+    /**
+     * A query to process.
+     */
+    private String query;
     
     /**
      * The storage identifier.
@@ -40,7 +45,7 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
      */
     private final Map<String, Object> aditionalInfo;
 
-    public StorageRequest() {
+    public DBIRequest() {
         this.aditionalInfo = new HashMap<>();
     }
 
@@ -52,11 +57,20 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
         return this.document;
     }
     
+    public void setQuery(String query) {
+        this.query = query;
+    }
+    
+    public String getQuery() {
+        return this.query;
+    }
+    
     public Map<String, Object> getAditionalInfo() {
         return Collections.unmodifiableMap(aditionalInfo);
     }
 
-    public StorageRequestType getRequestType() {
+    @Override
+    public DBIRequestType getRequestType() {
         return requestType;
     }
 
@@ -78,7 +92,7 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
     }
 
     @Override
-    public void setRequestType(StorageRequestType requestType) {
+    public void setRequestType(DBIRequestType requestType) {
         this.requestType = requestType;
     }
 
@@ -89,19 +103,21 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
         ret.put("request_type", requestType.name());
         ret.put("document", document);
         ret.put("storage_id", storageId);
+        ret.put("query", query);
         ret.put("aditional_info", new JSONObject(aditionalInfo));
         
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
     }
 
     @Override
-    public StorageRequest readFromBytes(byte[] bytes) throws IOException {
+    public DBIRequest readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
         
-        setRequestType(StorageRequestType.valueOf(obj.getString("request_type")));
+        setRequestType(DBIRequestType.valueOf(obj.getString("request_type")));
         setDocument(obj.getString("document"));
         setStorageId(obj.getString("storage_id"));
+        setQuery(obj.getString("query"));
         
         this.aditionalInfo.clear();
         JSONObject ainfo = obj.getJSONObject("aditional_info");
@@ -112,7 +128,7 @@ public class StorageRequest implements IRequest<StorageRequest, StorageRequest.S
         return this;
     }
     
-    public enum StorageRequestType implements IRequestType {
-        StoreDocument, StoreGraphNode;
+    public enum DBIRequestType implements IRequestType {
+        StoreDocument, StoreGraphNode, QueryDocuments, QueryPolicies;
     };
 }

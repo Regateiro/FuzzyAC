@@ -9,8 +9,6 @@ import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.client.interfaces.IRequestType;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 import org.xerial.snappy.Snappy;
 
 /**
@@ -33,6 +31,11 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
      * The token which identifies the user in the system. Used for caching.
      */
     private String token;
+    
+    /**
+     * The name of the data to query from.
+     */
+    private String targetData;
 
 
     public QueryRequest() {
@@ -51,6 +54,7 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
         this.requestType = requestType;
     }
 
+    @Override
     public QueryRequestType getRequestType() {
         return requestType;
     }
@@ -62,6 +66,14 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
     public String getToken() {
         return token;
     }
+
+    public void setTargetData(String targetData) {
+        this.targetData = targetData;
+    }
+
+    public String getTargetData() {
+        return this.targetData;
+    }
     
     @Override
     public byte[] convertToBytes() throws IOException {
@@ -70,6 +82,7 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
         ret.put("request_type", requestType.name());
         ret.put("query", query);
         ret.put("token", token);
+        ret.put("target_data", targetData);
         
         return Snappy.compress(ret.toJSONString());
     }
@@ -82,6 +95,7 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
         setRequestType(QueryRequestType.valueOf(obj.getString("request_type")));
         setQuery(obj.getString("query"));
         setToken(obj.getString("token"));
+        setTargetData(obj.getString("target_data"));
         
         return this;
     }

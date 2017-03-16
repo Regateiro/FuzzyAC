@@ -20,26 +20,29 @@ import org.xerial.snappy.Snappy;
  *
  * @author Diogo Regateiro
  */
-public class DecisionRequest implements IRequest<DecisionRequest, DecisionRequest.DecisionRequestType> {
+public class PolicyRequest implements IRequest<PolicyRequest, PolicyRequest.PolicyRetrievalRequestType> {
 
     /**
      * The type of the request. Used by the system to know what to do.
      */
-    private DecisionRequestType requestType;
+    private PolicyRetrievalRequestType requestType;
     
     /**
-     * The security labels to make an access decision upon.
+     * The query to run on the datastore.
      */
-    private final Set<String> securityLabels;
-    
-    /**
-     * The token of the user to retrieve the attributes.
-     */
-    private String userToken;
+    private Set<String> securityLabels;
 
-    public DecisionRequest() {
-        this.securityLabels = new HashSet<>();
-        this.requestType = DecisionRequestType.Normal;
+    public PolicyRequest() {
+        securityLabels = new HashSet<>();
+    }
+
+    @Override
+    public PolicyRetrievalRequestType getRequestType() {
+        return requestType;
+    }
+
+    public Set<String> getSecurityLabels() {
+        return Collections.unmodifiableSet(securityLabels);
     }
     
     public void addSecurityLabel(String securityLabel) {
@@ -51,54 +54,38 @@ public class DecisionRequest implements IRequest<DecisionRequest, DecisionReques
         this.securityLabels.addAll(securityLabels);
     }
 
-    public Set<String> getSecurityLabels() {
-        return Collections.unmodifiableSet(this.securityLabels);
-    }
-    
-    public void setUserToken(String token) {
-        this.userToken = token;
-    }
-    
-    public String getUserToken() {
-        return this.userToken;
-    }
-
     @Override
     public byte[] convertToBytes() throws IOException {
         JSONObject ret = new JSONObject();
         
         ret.put("request_type", requestType.name());
         
-        JSONArray array = new JSONArray();
-        array.addAll(securityLabels);
-        ret.put("security_labels", array);
+        JSONArray labels = new JSONArray();
+        labels.addAll(securityLabels);
+        ret.put("security_labels", labels);
         
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
     }
 
     @Override
-    public DecisionRequest readFromBytes(byte[] bytes) throws IOException {
+    public PolicyRequest readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
-
+        
+        setRequestType(PolicyRetrievalRequestType.valueOf(obj.getString("request_type")));
+        
         this.securityLabels.clear();
-        setRequestType(DecisionRequestType.valueOf(obj.getString("request_type")));
         obj.getJSONArray("security_labels").stream().forEach((slabel) -> addSecurityLabel((String) slabel));
         
         return this;
     }
 
     @Override
-    public void setRequestType(DecisionRequestType requestType) {
+    public void setRequestType(PolicyRetrievalRequestType requestType) {
         this.requestType = requestType;
     }
-
-    @Override
-    public DecisionRequestType getRequestType() {
-        return requestType;
-    }
     
-    public enum DecisionRequestType implements IRequestType {
-        Normal
+    public enum PolicyRetrievalRequestType implements IRequestType {
+        BySecurityLabel
     };
 }

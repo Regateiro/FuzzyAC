@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import it.av.fac.messaging.interfaces.IServerHandler;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Allows to send and receive messages within the FAC architecture.
@@ -109,5 +110,10 @@ public class RabbitMQServer implements IFACConnection {
 
     @Override
     public void close() throws IOException {
+        try {
+            this.channel.close();
+        } catch (TimeoutException ex) {
+            throw new IOException(ex);
+        }
     }
 }

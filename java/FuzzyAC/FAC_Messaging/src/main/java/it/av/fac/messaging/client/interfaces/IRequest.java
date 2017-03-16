@@ -14,6 +14,7 @@ import java.io.IOException;
  * @param <T>
  */
 public interface IRequest<R extends IRequest, T extends IRequestType> {
+    public T getRequestType();
     public void setRequestType(T requestType);
     public byte[] convertToBytes() throws IOException;
     public R readFromBytes(byte[] bytes) throws IOException;

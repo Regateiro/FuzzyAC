@@ -6,9 +6,9 @@
 package it.av.fac.datasources.uploader;
 
 import it.av.fac.driver.APIClient;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
-import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.DBIRequest.DBIRequestType;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -34,13 +34,13 @@ public class WikipediaTaxonomyUploader {
                     continue;
                 }
                         
-                StorageRequest request = new StorageRequest();
-                request.setRequestType(StorageRequestType.StoreGraphNode);
+                DBIRequest request = new DBIRequest();
+                request.setRequestType(DBIRequestType.StoreGraphNode);
                 request.setStorageId("wct");
                 request.setDocument(catcats[0]);
                 request.setAditionalInfo("parents", catcats[1]);
 
-                StorageReply reply = fac.storageRequest(request);
+                DBIReply reply = fac.storageRequest(request);
             }
         } catch (IOException ex) {
             Logger.getLogger(WikipediaTaxonomyUploader.class.getName()).log(Level.SEVERE, null, ex);

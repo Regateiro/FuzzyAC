@@ -6,9 +6,9 @@
 package it.av.fac.datasources.wikipedia;
 
 import it.av.fac.driver.APIClient;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
-import it.av.fac.messaging.client.StorageRequest.StorageRequestType;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.DBIRequest.DBIRequestType;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -41,14 +41,14 @@ public class WikipediaSource {
                 if (!page.getTitle().startsWith("File:") && !page.getTitle().startsWith("Wikipedia:") 
                         && !page.getTitle().startsWith("Category:") && !page.getTitle().startsWith("Template:")) {
                     if ((int) (Math.random() * 10000) == 0) {
-                        StorageRequest request = new StorageRequest();
-                        request.setRequestType(StorageRequestType.StoreDocument);
+                        DBIRequest request = new DBIRequest();
+                        request.setRequestType(DBIRequestType.StoreDocument);
                         request.setDocument(page.getText());
                         request.setStorageId("randwikipages");
                         request.setAditionalInfo("title", page.getTitle());
                         request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
                         System.out.print("Storing: " + page.getTitle() + " ... ");
-                        StorageReply reply = fac.storageRequest(request);
+                        DBIReply reply = fac.storageRequest(request);
                         System.out.println("[" + reply.getStatus().name() + "] " + reply.getErrorMsg());
                     }
                 }

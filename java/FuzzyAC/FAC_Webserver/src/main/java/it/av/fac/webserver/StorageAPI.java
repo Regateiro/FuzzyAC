@@ -6,13 +6,11 @@
 package it.av.fac.webserver;
 
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
 import it.av.fac.webserver.handlers.StorageHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -42,20 +40,19 @@ public class StorageAPI extends HttpServlet {
         /**
          * TODO: authentication *
          */
-        StorageRequest storageRequest = new StorageRequest();
+        DBIRequest storageRequest = new DBIRequest();
         storageRequest.readFromBytes(Base64.decodeBase64(request.getParameter("request")));
         System.out.println("Received request for " + storageRequest.getAditionalInfo().getOrDefault("title", "no title"));
         
         try (PrintWriter out = response.getWriter()) {
-            StorageReply reply;
+            DBIReply reply;
             try {
                 reply = StorageHandler.getInstance().handle(storageRequest);
             } catch (Exception ex) {
-                reply = new StorageReply();
+                reply = new DBIReply();
                 reply.setStatus(ReplyStatus.ERROR);
                 reply.setErrorMsg(ex.getMessage());
             }
-            System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
             out.println(Base64.encodeBase64URLSafeString(reply.convertToBytes()));
         }
     }

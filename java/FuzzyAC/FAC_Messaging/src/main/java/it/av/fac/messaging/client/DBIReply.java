@@ -5,24 +5,31 @@
  */
 package it.av.fac.messaging.client;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IReply;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.xerial.snappy.Snappy;
 
 /**
  *
  * @author Diogo Regateiro
  */
-public class AdminReply implements IReply<AdminReply> {
-
+public class DBIReply implements IReply<DBIReply> {
+    
     private ReplyStatus status;
     
     private String errorMsg;
+    
+    private final List<JSONObject> documents;
 
-    public AdminReply() {
-        this.status = ReplyStatus.OK;
+    public DBIReply() {
+        this.documents = new ArrayList<>();
         this.errorMsg = "";
+        this.status = ReplyStatus.OK;
     }
 
     @Override
@@ -52,17 +59,35 @@ public class AdminReply implements IReply<AdminReply> {
         ret.put("status", status.name());
         ret.put("error_msg", errorMsg);
         
+        JSONArray docarray = new JSONArray();
+        docarray.addAll(this.documents);
+        ret.put("documents", docarray);
+        
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
     }
 
     @Override
-    public AdminReply readFromBytes(byte[] bytes) throws IOException {
+    public DBIReply readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
         JSONObject obj = JSONObject.parseObject(data);
         
         setStatus(ReplyStatus.valueOf(obj.getString("status")));
         setErrorMsg(obj.getString("error_msg"));
+        this.documents.clear();
+        
+        JSONArray docarray = obj.getJSONArray("documents");
+        for(int i = 0; i < docarray.size(); i++) {
+            this.documents.add(docarray.getJSONObject(i));
+        }
         
         return this;
+    }
+
+    public void addDocument(String document) {
+        this.documents.add(JSONObject.parseObject(document));
+    }
+    
+    public List<JSONObject> getDocuments() {
+        return Collections.unmodifiableList(documents);
     }
 }

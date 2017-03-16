@@ -5,7 +5,7 @@
  */
 package it.av.fac.riac.classifier;
 
-import it.av.fac.messaging.client.StorageRequest;
+import it.av.fac.messaging.client.DBIRequest;
 
 /**
  *
@@ -18,7 +18,7 @@ public class RandomClassifier implements IClassifier {
     private static final String[] CLASSES = {"PUBLIC", "ADMINISTRATIVE", "BUSINESS", "ACADEMIC"};
 
     @Override
-    public void classify(StorageRequest request) {
+    public void classify(DBIRequest request) {
         request.setAditionalInfo("security_label", CLASSES[(int)(Math.random() * 4)]);
     }
     

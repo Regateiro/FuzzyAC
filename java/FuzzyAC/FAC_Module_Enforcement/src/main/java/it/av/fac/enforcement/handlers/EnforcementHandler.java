@@ -5,7 +5,12 @@
  */
 package it.av.fac.enforcement.handlers;
 
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.util.EnforcementConfig;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.DecisionReply;
+import it.av.fac.messaging.client.DecisionRequest;
 import it.av.fac.messaging.client.QueryReply;
 import it.av.fac.messaging.client.QueryRequest;
 import it.av.fac.messaging.client.ReplyStatus;
@@ -18,6 +23,7 @@ import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,13 +35,18 @@ import java.util.logging.Logger;
  */
 public class EnforcementHandler implements IServerHandler<byte[], String> {
 
-    private final SynchronousQueue<QueryReply> queue = new SynchronousQueue<>();
-    private final RabbitMQClient conn;
+    private final SynchronousQueue<DecisionReply> decisionQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<DBIReply> dbiQueue = new SynchronousQueue<>();
+    private final RabbitMQClient decisionConn;
+    private final RabbitMQClient dbiConn;
 
     public EnforcementHandler() throws Exception {
-        this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
+        this.decisionConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DECISION_RESPONSE,
-                RabbitMQConstants.QUEUE_DECISION_REQUEST, EnforcementConfig.MODULE_KEY, handler);
+                RabbitMQConstants.QUEUE_DECISION_REQUEST, EnforcementConfig.MODULE_KEY, decisionHandler);
+        this.dbiConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
+                RabbitMQConstants.QUEUE_DBI_RESPONSE,
+                RabbitMQConstants.QUEUE_DBI_REQUEST, EnforcementConfig.MODULE_KEY, dbiHandler);
     }
 
     @Override
@@ -44,55 +55,111 @@ public class EnforcementHandler implements IServerHandler<byte[], String> {
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_QUERY_RESPONSE, clientKey)) {
             QueryReply reply = handle(new QueryRequest().readFromBytes(requestBytes));
-            System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private QueryReply handle(QueryRequest request) {
-        QueryReply errorReply = new QueryReply();
-        errorReply.setStatus(ReplyStatus.ERROR);
+    private QueryReply handle(QueryRequest queryRequest) {
+        QueryReply queryReply = new QueryReply();
+        queryReply.setStatus(ReplyStatus.OK);
 
-        System.out.println("Processing query: " + request.getQuery());
+        System.out.println("Processing query: " + queryRequest.getQuery());
+
         System.out.println("Requesting documents...");
-        System.out.println("Requesting access control decision for each document labels..."); //FAC_Module_Decision will verify the user attributes
-        System.out.println("Filtering documents to which the user does not have read permission...");
-        System.out.println("Replying with ");
+        DBIRequest dbiRequest = new DBIRequest();
+        dbiRequest.setRequestType(DBIRequest.DBIRequestType.QueryDocuments);
+        dbiRequest.setQuery(queryRequest.getQuery());
+        dbiRequest.setStorageId(queryRequest.getTargetData());
+        DBIReply documentsReply = requestDocuments(dbiRequest);
 
-        return errorReply;
+        System.out.println("Requesting access control decision for each document security label...");
+        DecisionRequest decisionRequest = new DecisionRequest();
+        decisionRequest.setRequestType(DecisionRequest.DecisionRequestType.Normal);
+        decisionRequest.setUserToken(queryRequest.getToken());
+        documentsReply.getDocuments().stream().forEach((JSONObject doc) -> {
+            decisionRequest.addSecurityLabel(doc.getString("security_label"));
+        });
+
+        DecisionReply decisionReply = requestDecision(decisionRequest);
+
+        System.out.println("Filtering documents to which the user does not have read permission...");
+        documentsReply.getDocuments().stream().filter((JSONObject doc) -> {
+            String label = doc.getString("security_label");
+            if (!decisionReply.getSecurityLabels().contains(label)) {
+                throw new IllegalStateException("A security label for which a decision was required is not present in the DecisionReply.");
+            }
+            Map<String, Boolean> decision = decisionReply.getSecurityLabelDecision(label);
+            return (decision.keySet().contains("*") && decision.get("*")) || decision.get("Read");
+        }).forEach((JSONObject userAccessibleDocument) -> {
+            queryReply.addDocument(userAccessibleDocument);
+        });
+
+        System.out.println("Replying with the filtered documents.");
+        return queryReply;
 
     }
-    
+
     /**
-     * Classify and send the document to the DBI.
+     * Request documents to the DBI.
      *
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private QueryReply requestDecision(QueryRequest request) {
-        QueryReply errorReply = new QueryReply();
+    private DBIReply requestDocuments(DBIRequest request) {
+        DBIReply reply = new DBIReply();
 
         try {
-            conn.send(request.convertToBytes());
-            return queue.take();
+            dbiConn.send(request.convertToBytes());
+            return dbiQueue.take();
         } catch (IOException | InterruptedException ex) {
-            errorReply.setStatus(ReplyStatus.ERROR);
-            errorReply.setErrorMsg(ex.getMessage());
+            reply.setStatus(ReplyStatus.ERROR);
+            reply.setErrorMsg(ex.getMessage());
         }
 
-        return errorReply;
+        return reply;
     }
-    
-    private final IClientHandler<byte[]> handler = (byte[] replyBytes) -> {
-        QueryReply reply = new QueryReply();
+
+    /**
+     * Request documents to the DBI.
+     *
+     * @param request The request with the document to classify and store.
+     * @return The storage process status.
+     */
+    private DecisionReply requestDecision(DecisionRequest request) {
+        DecisionReply reply = new DecisionReply();
+
+        try {
+            decisionConn.send(request.convertToBytes());
+            reply = decisionQueue.take();
+        } catch (IOException | InterruptedException ex) {
+            reply.setStatus(ReplyStatus.ERROR);
+            reply.setErrorMsg(ex.getMessage());
+        }
+
+        return reply;
+    }
+
+    private final IClientHandler<byte[]> dbiHandler = (byte[] replyBytes) -> {
+        DBIReply reply = new DBIReply();
         try {
             reply.readFromBytes(replyBytes);
         } catch (IOException ex) {
             reply.setStatus(ReplyStatus.ERROR);
             reply.setErrorMsg(ex.getMessage());
         }
-        queue.add(reply);
+        dbiQueue.add(reply);
+    };
+
+    private final IClientHandler<byte[]> decisionHandler = (byte[] replyBytes) -> {
+        DecisionReply reply = new DecisionReply();
+        try {
+            reply.readFromBytes(replyBytes);
+        } catch (IOException ex) {
+            reply.setStatus(ReplyStatus.ERROR);
+            reply.setErrorMsg(ex.getMessage());
+        }
+        decisionQueue.add(reply);
     };
 }

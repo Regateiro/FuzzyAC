@@ -14,7 +14,10 @@ import java.io.IOException;
  * @param <R>
  */
 public interface IReply<R extends IReply> {
+    public ReplyStatus getStatus();
+    public String getErrorMsg();
     public void setStatus(ReplyStatus status);
+    public void setErrorMsg(String msg);
     public byte[] convertToBytes() throws IOException;
     public R readFromBytes(byte[] bytes) throws IOException;
 }

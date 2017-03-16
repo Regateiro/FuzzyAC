@@ -6,8 +6,8 @@
 package it.av.fac.riac.handlers;
 
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 public class RIaCHandler implements IServerHandler<byte[], String> {
 
     private final IClassifier classifier;
-    private final SynchronousQueue<StorageReply> queue = new SynchronousQueue<>();
+    private final SynchronousQueue<DBIReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
 
     public RIaCHandler(IClassifier classifier) throws Exception {
@@ -46,16 +46,15 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_RIAC_RESPONSE, clientKey)) {
-            StorageReply reply = handle(new StorageRequest().readFromBytes(requestBytes));
-            System.out.println("Replying with " + reply.getStatus().name() + " : " + reply.getErrorMsg());
+            DBIReply reply = handle(new DBIRequest().readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private StorageReply handle(StorageRequest request) {
-        StorageReply errorReply = new StorageReply();
+    private DBIReply handle(DBIRequest request) {
+        DBIReply errorReply = new DBIReply();
         errorReply.setStatus(ReplyStatus.ERROR);
 
         // classify the document in the request
@@ -70,8 +69,8 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private StorageReply requestStorage(StorageRequest request) {
-        StorageReply errorReply = new StorageReply();
+    private DBIReply requestStorage(DBIRequest request) {
+        DBIReply errorReply = new DBIReply();
 
         try {
             conn.send(request.convertToBytes());
@@ -85,7 +84,7 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
     }
 
     private final IClientHandler<byte[]> handler = (byte[] replyBytes) -> {
-        StorageReply reply = new StorageReply();
+        DBIReply reply = new DBIReply();
         try {
             reply.readFromBytes(replyBytes);
         } catch (IOException ex) {

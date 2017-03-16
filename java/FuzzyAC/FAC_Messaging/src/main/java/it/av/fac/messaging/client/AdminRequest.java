@@ -59,6 +59,11 @@ public class AdminRequest implements IRequest<AdminRequest, AdminRequest.AdminRe
     public void setRequestType(AdminRequestType requestType) {
         this.requestType = requestType;
     }
+
+    @Override
+    public AdminRequestType getRequestType() {
+        return requestType;
+    }
     
     public enum AdminRequestType implements IRequestType {
     };

@@ -6,9 +6,12 @@
 package it.av.fac.decision.fis;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
@@ -18,6 +21,7 @@ import net.sourceforge.jFuzzyLogic.membership.Value;
 import net.sourceforge.jFuzzyLogic.plot.JFuzzyChart;
 import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
+import org.antlr.runtime.RecognitionException;
 
 /**
  * Fuzzy Inference System FuzzyEvaluator
@@ -31,10 +35,22 @@ public class FuzzyEvaluator {
 
     private final FIS fis;
 
-    public FuzzyEvaluator(String filepath) {
-        this.fis = FIS.load(filepath, false);
+    public FuzzyEvaluator(String fcl, boolean inlineFcl) throws RecognitionException {
+        if (inlineFcl) {
+            this.fis = FIS.createFromString(fcl, false);
+        } else {
+            this.fis = FIS.load(fcl, false);
+        }
     }
 
+    public Collection<String> getVariableNameList() {
+        Set<String> ret = new HashSet<>();
+        this.fis.getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables().stream()
+                .filter((variable) -> variable.isInput())
+                .forEach((variable) -> ret.add(variable.getName()));
+        return ret;
+    }
+    
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
         Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
@@ -121,21 +137,15 @@ public class FuzzyEvaluator {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String testFile = "test3.fcl";
+        String testFile = "academic.fcl";
 
         switch (testFile) {
-            case "test.fcl":
-                vars.put("Number_Of_Publications", 10.0);
-                vars.put("Time_Since_Last_Publication", 0.0);
-                vars.put("Number_Of_Citations", 8.0);
-                break;
-            case "test2.fcl":
-            case "test3.fcl": // works
+            case "academic.fcl": // works
                 vars.put("Number_Of_Publications", 12.0);
                 vars.put("Number_Of_Citations", 50.0);
         }
 
-        FuzzyEvaluator feval = new FuzzyEvaluator(testFile);
+        FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
         System.out.println(feval.evaluate(vars, true));
 //        Map<String, List<Map<String, Double>>> edgeConditions = feval.findEdgeIntegerConditions(0.5, 1, new ArrayList<>(vars.keySet()));
 //        edgeConditions.keySet().forEach((permission) -> {
@@ -144,11 +154,14 @@ public class FuzzyEvaluator {
     }
 
     /**
-     * Finds the input values for which the output weight for the permissions equals alphaCut.
+     * Finds the input values for which the output weight for the permissions
+     * equals alphaCut.
+     *
      * @param alphaCut The value to check the permission weights for equality.
      * @param precision The step precision to use.
      * @param variables The name of the variables for the FIS.
-     * @return The list of variables and values for each permission that matches the alphaCut final weight.
+     * @return The list of variables and values for each permission that matches
+     * the alphaCut final weight.
      */
     public Map<String, List<Map<String, Double>>> findEdgeIntegerConditions(double alphaCut, double precision, List<String> variables) {
         Map<String, List<Map<String, Double>>> ret = new HashMap<>();

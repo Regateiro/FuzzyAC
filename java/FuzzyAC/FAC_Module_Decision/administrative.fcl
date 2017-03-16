@@ -1,0 +1,93 @@
+FUNCTION_BLOCK VariableInference
+
+VAR_INPUT
+	Role				:	REAL; (* RANGE(0 ..) *) 
+	Years_Of_Service	:	REAL; (* RANGE(0 ..) *) 
+END_VAR
+
+VAR_OUTPUT
+	Trust	:	REAL;
+END_VAR
+	
+FUZZIFY Role
+	TERM Receptionist := 1 ;
+	TERM Administrator := 2 ;
+	TERM CEO := 3 ;
+END_FUZZIFY
+
+FUZZIFY Years_Of_Service
+	TERM Few := (3, 1) (10, 0) ;
+	TERM Considerable := (3, 0) (10, 1) (15, 1) (25, 0) ;
+	TERM A_Lot := (10, 0) (20, 1) ;
+END_FUZZIFY
+
+DEFUZZIFY Trust
+	TERM Low := 1 ;
+	TERM Medium := 2 ;
+	TERM High := 3 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+	
+RULEBLOCK Trust
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Role IS Receptionist) THEN Trust IS Low;
+RULE 1: IF (Role IS CEO) THEN Trust IS High;
+RULE 2: IF (Role IS Administrator) AND (Years_Of_Service IS Few) THEN Trust IS Low;
+RULE 3: IF (Role IS Administrator) AND (Years_Of_Service IS Considerable) THEN Trust IS Medium;
+RULE 4: IF (Role IS Administrator) AND (Years_Of_Service IS A_Lot) THEN Trust IS High;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK AccessControl
+
+VAR_INPUT
+	Trust	:	REAL; (* RANGE(0 ..) *) 
+END_VAR
+
+VAR_OUTPUT
+	Read	:	REAL;
+	Write	: 	REAL;
+END_VAR
+	
+FUZZIFY Trust
+END_FUZZIFY
+
+DEFUZZIFY Read
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY Write
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+	
+RULEBLOCK Read
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Trust IS Low) THEN Read IS Deny;
+RULE 1: IF (Trust IS Medium) THEN Read IS Grant;
+RULE 2: IF (Trust IS High) THEN Read IS Grant;
+
+END_RULEBLOCK
+
+RULEBLOCK Write
+
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Trust IS Low) THEN Write IS Deny;
+RULE 1: IF (Trust IS Medium) THEN Write IS Deny;
+RULE 2: IF (Trust IS High) THEN Write IS Grant;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK

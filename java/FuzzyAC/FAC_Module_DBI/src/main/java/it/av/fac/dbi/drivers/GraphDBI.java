@@ -5,7 +5,7 @@
  */
 package it.av.fac.dbi.drivers;
 
-import it.av.fac.messaging.client.StorageRequest;
+import it.av.fac.messaging.client.DBIRequest;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -81,7 +81,7 @@ public class GraphDBI implements Closeable {
         this.driver.close();
     }
 
-    public void storeNode(StorageRequest request) {
+    public void storeNode(DBIRequest request) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

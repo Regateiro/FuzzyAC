@@ -6,8 +6,8 @@
 package it.av.fac.webserver.handlers;
 
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.StorageReply;
-import it.av.fac.messaging.client.StorageRequest;
+import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.messaging.client.DBIRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQClient;
@@ -24,10 +24,10 @@ import java.util.logging.Logger;
  *
  * @author Diogo Regateiro
  */
-public class StorageHandler implements Handler<StorageRequest, StorageReply> {
+public class StorageHandler implements Handler<DBIRequest, DBIReply> {
 
     private static StorageHandler instance;
-    private final SynchronousQueue<StorageReply> queue = new SynchronousQueue<>();
+    private final SynchronousQueue<DBIReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
 
     private StorageHandler() throws Exception {
@@ -45,22 +45,22 @@ public class StorageHandler implements Handler<StorageRequest, StorageReply> {
     }
 
     @Override
-    public StorageReply handle(StorageRequest request) {
-        StorageReply errorReply = new StorageReply();
+    public DBIReply handle(DBIRequest request) {
+        DBIReply reply = new DBIReply();
 
         try {
             conn.send(request.convertToBytes());
             return queue.take();
         } catch (IOException | InterruptedException ex) {
-            errorReply.setStatus(ReplyStatus.ERROR);
-            errorReply.setErrorMsg(ex.getMessage());
+            reply.setStatus(ReplyStatus.ERROR);
+            reply.setErrorMsg(ex.getMessage());
         }
 
-        return errorReply;
+        return reply;
     }
 
     private final IClientHandler<byte[]> handler = (final byte[] replyBytes) -> {
-        StorageReply reply = new StorageReply();
+        DBIReply reply = new DBIReply();
         try {
             reply.readFromBytes(replyBytes);
         } catch (IOException ex) {

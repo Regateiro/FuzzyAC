@@ -59,6 +59,11 @@ public class InformationRequest implements IRequest<InformationRequest, Informat
     public void setRequestType(InformationRequestType requestType) {
         this.requestType = requestType;
     }
+
+    @Override
+    public InformationRequestType getRequestType() {
+        return requestType;
+    }
     
     public enum InformationRequestType implements IRequestType {
     };

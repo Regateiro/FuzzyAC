@@ -13,6 +13,7 @@ import com.rabbitmq.client.Envelope;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,5 +84,10 @@ public class RabbitMQClient implements IFACConnection {
 
     @Override
     public void close() throws IOException {
+        try {
+            this.channel.close();
+        } catch (TimeoutException ex) {
+            throw new IOException(ex);
+        }
     }
 }

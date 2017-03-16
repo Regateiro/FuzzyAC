@@ -7,8 +7,8 @@ package it.av.fac.driver;
 
 import it.av.fac.messaging.client.AdminReply;
 import it.av.fac.messaging.client.AdminRequest;
-import it.av.fac.messaging.client.StorageRequest;
-import it.av.fac.messaging.client.StorageReply;
+import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.DBIReply;
 import it.av.fac.messaging.client.QueryRequest;
 import it.av.fac.messaging.client.QueryReply;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class APIClient {
         }
     }
     
-    public StorageReply storageRequest(StorageRequest request) {
+    public DBIReply storageRequest(DBIRequest request) {
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
             HttpPost httpPost = new HttpPost(endpoint + STORAGE_PATH);
 
@@ -89,7 +89,7 @@ public class APIClient {
                 }
             };
 
-            return (StorageReply) new StorageReply().readFromBytes(httpclient.execute(httpPost, responseHandler));
+            return (DBIReply) new DBIReply().readFromBytes(httpclient.execute(httpPost, responseHandler));
         } catch (IOException ex) {
             Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
             return null;

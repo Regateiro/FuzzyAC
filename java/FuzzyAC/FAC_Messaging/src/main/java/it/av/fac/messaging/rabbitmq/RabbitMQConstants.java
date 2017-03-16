@@ -40,11 +40,18 @@ public abstract class RabbitMQConstants {
     /**
      * Queues for Decision.
      */
-    public static final String QUEUE_DECISION_REQUEST = ":enforcement_request";
-    public static final String QUEUE_DECISION_RESPONSE = ":enforcement_response";
+    public static final String QUEUE_DECISION_REQUEST = ":decision_request";
+    public static final String QUEUE_DECISION_RESPONSE = ":decision_response";
+    
     /**
      * Queues for Information.
      */
     public static final String QUEUE_INFORMATION_REQUEST = ":information_request";
     public static final String QUEUE_INFORMATION_RESPONSE = ":information_response";
+    
+    /**
+     * Queues for Policy Retrieval.
+     */
+    public static final String QUEUE_POLICY_RETRIEVAL_REQUEST = ":policyretrieval_request";
+    public static final String QUEUE_POLICY_RETRIEVAL_RESPONSE = ":policyretrieval_response";
 }
