@@ -15,7 +15,6 @@ import java.util.Set;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
-import net.sourceforge.jFuzzyLogic.membership.MembershipFunction;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionSingleton;
 import net.sourceforge.jFuzzyLogic.membership.Value;
 import net.sourceforge.jFuzzyLogic.plot.JFuzzyChart;
@@ -146,67 +145,12 @@ public class FuzzyEvaluator {
         }
 
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
-        System.out.println(feval.evaluate(vars, true));
-//        Map<String, List<Map<String, Double>>> edgeConditions = feval.findEdgeIntegerConditions(0.5, 1, new ArrayList<>(vars.keySet()));
-//        edgeConditions.keySet().forEach((permission) -> {
-//            System.out.println(permission + ": " + edgeConditions.get(permission));
-//        });
+        //System.out.println(feval.evaluate(vars, true));
+        FuzzyAnalyser fanal = new FuzzyAnalyser(feval);
+        fanal.analyse();
     }
 
-    /**
-     * Finds the input values for which the output weight for the permissions
-     * equals alphaCut.
-     *
-     * @param alphaCut The value to check the permission weights for equality.
-     * @param precision The step precision to use.
-     * @param variables The name of the variables for the FIS.
-     * @return The list of variables and values for each permission that matches
-     * the alphaCut final weight.
-     */
-    public Map<String, List<Map<String, Double>>> findEdgeIntegerConditions(double alphaCut, double precision, List<String> variables) {
-        Map<String, List<Map<String, Double>>> ret = new HashMap<>();
-
-        findEdgeIntegerConditionsRec(alphaCut, precision, ret, new HashMap<>(), variables, 0);
-
-        return ret;
-    }
-
-    private void findEdgeIntegerConditionsRec(double alphaCut, double precision, Map<String, List<Map<String, Double>>> resultAccumulator, Map<String, Double> tempMap, List<String> variables, int varIdx) {
-        double varValue = 0.0;
-
-        if (varIdx < variables.size()) {
-            do {
-                String varName = variables.get(varIdx);
-                tempMap.put(varName, varValue);
-                findEdgeIntegerConditionsRec(alphaCut, precision, resultAccumulator, tempMap, variables, varIdx + 1);
-                varValue += precision;
-                if (varValue > maxXValue(varName)) {
-                    break;
-                }
-            } while (true);
-        } else {
-            Map<String, Variable> evaluation = evaluate(tempMap, false);
-            evaluation.keySet().stream().filter((permission) -> evaluation.get(permission).getValue() == alphaCut).forEach((permission) -> {
-                resultAccumulator.putIfAbsent(permission, new ArrayList<>());
-                resultAccumulator.get(permission).add(new HashMap<>(tempMap));
-            });
-        }
-    }
-
-    private double maxXValue(String varName) {
-        Variable variable = this.fis.getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
-
-        double xmax = 0.0;
-        for (LinguisticTerm lt : variable.getLinguisticTerms().values()) {
-            MembershipFunction mf = lt.getMembershipFunction();
-            for (int i = 0; i < mf.getParametersLength(); i += 2) {
-                double x = mf.getParameter(i);
-                if (x > xmax) {
-                    xmax = x;
-                }
-            }
-        }
-
-        return xmax;
+    FIS getFis() {
+        return fis;
     }
 }
