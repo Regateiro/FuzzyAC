@@ -147,7 +147,9 @@ public class FuzzyEvaluator {
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
         //System.out.println(feval.evaluate(vars, true));
         FuzzyAnalyser fanal = new FuzzyAnalyser(feval);
+        long time = System.nanoTime();
         fanal.analyse();
+        System.out.println("\nAnalysis finished in " + (System.nanoTime() - time) + "ns.");
     }
 
     FIS getFis() {
