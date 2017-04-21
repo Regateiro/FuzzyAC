@@ -6,12 +6,12 @@
 package it.av.fac.decision.fis;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunction;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
@@ -27,10 +27,12 @@ public class FuzzyAnalyser {
     private final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
     private final FuzzyEvaluator feval;
     private final Map<String, String> outputBuffer;
+    private final AtomicInteger numResults;
 
     public FuzzyAnalyser(FuzzyEvaluator feval) {
         this.feval = feval;
         this.outputBuffer = new HashMap<>();
+        this.numResults = new AtomicInteger();
     }
 
     public void analyse() {
@@ -45,6 +47,8 @@ public class FuzzyAnalyser {
 
         //Obtains the edge conditions.
         findEdgeIntegerConditions(0.5, inputVars);
+        
+        System.out.println("Number of permission changes founds: " + this.numResults.get());
     }
 
     /**
@@ -103,9 +107,10 @@ public class FuzzyAnalyser {
 
                 if (outputBuffer.containsKey(permission)) {
                     if (outputBuffer.get(permission).charAt(0) != line.charAt(0)) {
-                        System.out.println(outputBuffer.get(permission));
-                        System.out.println(line);
-                        System.out.println();
+                        this.numResults.incrementAndGet();
+//                        System.out.println(outputBuffer.get(permission));
+//                        System.out.println(line);
+//                        System.out.println();
                     }
                 }
 
