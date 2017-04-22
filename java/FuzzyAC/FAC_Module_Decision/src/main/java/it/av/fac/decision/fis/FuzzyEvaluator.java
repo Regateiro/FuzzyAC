@@ -29,8 +29,8 @@ import org.antlr.runtime.RecognitionException;
  */
 public class FuzzyEvaluator {
 
-    private final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
-    private final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
+    final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
+    final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
 
     private final FIS fis;
 
@@ -146,10 +146,14 @@ public class FuzzyEvaluator {
 
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
         //System.out.println(feval.evaluate(vars, true));
-        FuzzyAnalyser fanal = new FuzzyAnalyser(feval);
-        long time = System.nanoTime();
-        fanal.analyse();
-        System.out.println("\nAnalysis finished in " + (System.nanoTime() - time) + "ns.");
+        
+        //FuzzyAnalyser fanal = new FuzzyAnalyser(feval);
+        //long time = System.nanoTime();
+        //fanal.analyse();
+        //System.out.println("\nAnalysis finished in " + (System.nanoTime() - time) + "ns.");
+        
+        VDA vda = new VDA(feval.getFis());
+        vda.analyse();
     }
 
     FIS getFis() {

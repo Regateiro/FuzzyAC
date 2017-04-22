@@ -5,8 +5,8 @@
  */
 package it.av.fac.decision.fis;
 
+import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,8 +23,6 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  */
 public class FuzzyAnalyser {
 
-    private final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
-    private final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
     private final FuzzyEvaluator feval;
     private final Map<String, String> outputBuffer;
 
