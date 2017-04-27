@@ -136,7 +136,7 @@ public class FuzzyEvaluator {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String testFile = "five_vars.fcl";
+        String testFile = "academic.fcl";
 
         switch (testFile) {
             case "academic.fcl": // works
