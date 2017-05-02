@@ -22,7 +22,7 @@ import net.sourceforge.jFuzzyLogic.rule.RuleTerm;
  *
  * @author Diogo Regateiro
  */
-public class VDA {
+public class VariableDependenceAnalyser {
 
     private final FIS fis;
     
@@ -38,7 +38,7 @@ public class VDA {
     private final Map<String, List<RuleTerm>> onlyGrantingInputRuleTerms;
     private final Map<String, List<RuleTerm>> onlyDenyingInputRuleTerms;
 
-    public VDA(FIS fis) {
+    public VariableDependenceAnalyser(FIS fis) {
         this.fis = fis;
         this.grantingOutputRuleTerms = new HashMap<>();
         this.denyingOutputRuleTerms = new HashMap<>();

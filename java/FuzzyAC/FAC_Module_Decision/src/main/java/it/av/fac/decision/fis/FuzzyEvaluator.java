@@ -49,7 +49,7 @@ public class FuzzyEvaluator {
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
     }
-    
+
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
         Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
@@ -138,6 +138,14 @@ public class FuzzyEvaluator {
 
         String testFile = "academic.fcl";
 
+//        for (int a = 30; a <= 100; a++) {
+//            vars.put("A", (double) a);
+//
+//            FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
+//            Map<String, Variable> eval = feval.evaluate(vars, false);
+//            System.out.println(String.format("%d\t%f\t%f", a, eval.get("Read").getLatestDefuzzifiedValue(), eval.get("Write").getLatestDefuzzifiedValue()));
+//        }
+
         switch (testFile) {
             case "academic.fcl": // works
                 vars.put("Number_Of_Publications", 12.0);
@@ -145,15 +153,13 @@ public class FuzzyEvaluator {
         }
 
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
-        //System.out.println(feval.evaluate(vars, true));
-        
-        //FuzzyAnalyser fanal = new FuzzyAnalyser(feval);
+        //System.out.println(feval.evaluate(vars, false));
+        OptimizedFuzzyAnalyser fanal = new OptimizedFuzzyAnalyser(feval);
         //long time = System.nanoTime();
-        //fanal.analyse();
+        fanal.analyse();
         //System.out.println("\nAnalysis finished in " + (System.nanoTime() - time) + "ns.");
-        
-        VDA vda = new VDA(feval.getFis());
-        vda.analyse();
+        //VDA vda = new VDA(feval.getFis());
+        //vda.analyse();
     }
 
     FIS getFis() {
