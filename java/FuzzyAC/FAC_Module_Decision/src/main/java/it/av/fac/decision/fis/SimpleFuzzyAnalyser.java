@@ -26,8 +26,12 @@ public class SimpleFuzzyAnalyser extends FuzzyAnalyser {
         super(feval);
     }
 
+    /**
+     * 
+     * @param permission Doesn't matter.
+     */
     @Override
-    public void analyse() {
+    public void analyse(String permission) {
         //List of input variable names
         List<String> inputVars = new ArrayList<>();
 

@@ -156,7 +156,7 @@ public class FuzzyEvaluator {
         //System.out.println(feval.evaluate(vars, false));
         OptimizedFuzzyAnalyser fanal = new OptimizedFuzzyAnalyser(feval);
         //long time = System.nanoTime();
-        fanal.analyse();
+        fanal.analyse("Read");
         //System.out.println("\nAnalysis finished in " + (System.nanoTime() - time) + "ns.");
         //VDA vda = new VDA(feval.getFis());
         //vda.analyse();

@@ -28,7 +28,7 @@ public abstract class FuzzyAnalyser {
         this.numResults = new AtomicInteger();
     }
     
-    abstract public void analyse();
+    abstract public void analyse(String permission);
     
     protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
         if (varIdx < variableMap.size()) {

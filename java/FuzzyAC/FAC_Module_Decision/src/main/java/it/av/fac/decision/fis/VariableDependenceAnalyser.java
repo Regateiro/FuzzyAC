@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.rule.Rule;
@@ -179,10 +180,32 @@ public class VariableDependenceAnalyser {
             return o1.getVariable().getName().equals(o2.getVariable().getName())
                     && o1.getTermName().equals(o2.getTermName());
         }
+        
+        public static boolean equals(RuleTerm o1, String varName, String termName) {
+            return o1.getVariable().getName().equals(varName)
+                    && o1.getTermName().equals(termName);
+        }
 
         public static boolean collectionContains(Collection<RuleTerm> col, RuleTerm rt) {
             return col.stream().anyMatch((rtincol) -> (RuleTermComparator.equals(rtincol, rt)));
         }
-
+        
+        public static boolean collectionContains(Collection<RuleTerm> col, String varName, String termName) {
+            return col.stream().anyMatch((rtincol) -> (RuleTermComparator.equals(rtincol, varName, termName)));
+        }
+    }
+    
+    public boolean contributesOnlyToGrant(String permission, String varName, String termName) {
+        return RuleTermComparator.collectionContains(grantingOutputRuleTerms.get(permission), varName, termName);
+    }
+    
+    public boolean contributesOnlyToDeny(String permission, String varName, String termName) {
+        return RuleTermComparator.collectionContains(denyingOutputRuleTerms.get(permission), varName, termName);
+    }
+    
+    public Set<String> getPermissions() {
+        FunctionBlock fb_ac = this.fis.getFunctionBlock(FuzzyEvaluator.FB_ACCESS_CONTROL_PHASE_NAME);
+        HashMap<String, RuleBlock> rb_ac = fb_ac.getRuleBlocks();
+        return rb_ac.keySet();
     }
 }
