@@ -20,7 +20,7 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  *
  * @author Diogo Regateiro
  */
-public class SimpleFuzzyAnalyser extends FuzzyAnalyser {
+public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
     public SimpleFuzzyAnalyser(FuzzyEvaluator feval) {
         super(feval);
@@ -32,6 +32,8 @@ public class SimpleFuzzyAnalyser extends FuzzyAnalyser {
      */
     @Override
     public void analyse(String permission) {
+        this.permissionToAnalyse = permission;
+        
         //List of input variable names
         List<String> inputVars = new ArrayList<>();
 
@@ -44,7 +46,7 @@ public class SimpleFuzzyAnalyser extends FuzzyAnalyser {
         //Obtains the edge conditions.
         findEdgeIntegerConditions(0.5, inputVars);
         
-        System.out.println("Number of permission changes founds: " + this.numResults.get());
+        System.out.println("[SimpleFuzzyAnalyser] - Number of permission changes found: " + this.numResults.get(permissionToAnalyse).get());
     }
 
     /**

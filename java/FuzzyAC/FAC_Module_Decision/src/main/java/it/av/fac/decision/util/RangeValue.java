@@ -19,11 +19,10 @@ import java.util.List;
 public class RangeValue {
 
     private final String varName;
-    private int max;
-    private int min;
+    private final int max;
+    private final int min;
     private String termName;
-    private double slope;
-    private double b;
+    private LinearFunction function;
     private int currVal;
     private int direction;
     private Contribution contribution;
@@ -36,26 +35,24 @@ public class RangeValue {
         this.direction = 1;
     }
 
-    public RangeValue(String varName, String termName, double slope, double b, int min, int max) {
+    public RangeValue(String varName, String termName, LinearFunction function, int min, int max) {
         this.varName = varName;
         this.termName = termName;
-        this.slope = slope;
+        this.function = function;
         this.max = max;
         this.min = min;
         this.currVal = min;
         this.direction = 1;
-        this.b = b;
     }
 
     public RangeValue(RangeValue rv, int min, int max) {
         this.varName = rv.varName;
         this.termName = rv.termName;
-        this.slope = rv.slope;
+        this.function = rv.function;
         this.max = max;
         this.min = min;
         this.currVal = min;
         this.direction = 1;
-        this.b = rv.b;
         this.contribution = rv.contribution;
     }
 
@@ -82,18 +79,20 @@ public class RangeValue {
 
     @Override
     public String toString() {
-        return String.format("(%d-%d;%d)", min, max, currVal);
+        return String.format("(%d-%d; %d)", min, max, currVal);
     }
 
     public void invertDirection() {
         direction *= -1;
     }
 
-    public double getSlope() {
-        return slope;
+    public LinearFunction getFunction() {
+        return function;
     }
 
     public void setContribution(boolean contributesToGrant, boolean contributesToDeny) {
+        double slope = function.getSlope();
+
         if (contributesToGrant && !contributesToDeny) {
             if (slope > 0) {
                 contribution = Contribution.Grant;
@@ -131,61 +130,75 @@ public class RangeValue {
         return min;
     }
 
-    public double getB() {
-        return b;
-    }
-
-    public List<RangeValue> splitFrom(RangeValue rv) {
-        List<RangeValue> extraRanges = new ArrayList<>();
+    public List<RangeValue> splitFrom(RangeValue otherRange) {
+        List<RangeValue> resultingRanges = new ArrayList<>();
 
         //calculate the intersect x
-        double commonMin = Math.max(this.min, rv.min);
-        double commonMax = Math.min(this.max, rv.max);
+        double commonMin = Math.max(this.min, otherRange.min);
+        double commonMax = Math.min(this.max, otherRange.max);
 
-        double rv1y1 = this.slope * commonMin + this.b;
-        double rv1y2 = this.slope * commonMax + this.b;
-        double rv2y1 = rv.slope * commonMin + rv.b;
-        double rv2y2 = rv.slope * commonMax + rv.b;
+        double thisYleft = this.getFunction().getY(commonMin);
+        double thisYright = this.getFunction().getY(commonMax);
+        double otherYleft = otherRange.getFunction().getY(commonMin);
+        double otherYright = otherRange.getFunction().getY(commonMax);
 
-        if (rv1y1 > rv2y1 && rv1y2 > rv2y2) {
+        if (thisYleft > otherYleft && thisYright > otherYright) {
             // they don't intersect, this is always greater
-            // push the other range past this range.
-            rv.min = (int) commonMax;
-            rv.currVal = rv.min;
-        } else if (rv1y1 < rv2y1 && rv1y2 < rv2y2) {
+            // push the other range before and after this range.
+            if (otherRange.min < commonMin) {
+                resultingRanges.add(new RangeValue(otherRange, otherRange.min, (int) commonMin));
+            }
+
+            if (otherRange.max > commonMax) {
+                resultingRanges.add(new RangeValue(otherRange, (int) commonMax, otherRange.max));
+            }
+
+            resultingRanges.add(this);
+        } else if (thisYleft < otherYleft && thisYright < otherYright) {
             // they don't intersect, this is always smaller
-            // pull the this range before the other.
-            this.max = (int) commonMin;
+            // pull the this range before and after the other.
+            if (this.min < commonMin) {
+                resultingRanges.add(new RangeValue(this, this.min, (int) commonMin));
+            }
+
+            if (this.max > commonMax) {
+                resultingRanges.add(new RangeValue(this, (int) commonMax, this.max));
+            }
+
+            resultingRanges.add(otherRange);
         } else {
             // they intersect, so calculate that point
-            double intersect = (rv.b - this.b) / (this.slope - rv.slope);
-
-            if (rv1y1 < rv2y1 && rv1y2 > rv2y2) {
+            Double intersect = function.getIntersect(otherRange.getFunction());
+            
+            if (thisYleft < otherYleft && thisYright > otherYright) {
                 // this intersects from below
+                // other should take the left of intersect, this to the right.
+                // If this has part of a function before the commonmin, it should be saved. Same with the other if it goes past the commonmax.
                 if (this.min < commonMin) {
-                    extraRanges.add(new RangeValue(this, this.min, (int) commonMin));
+                    resultingRanges.add(new RangeValue(this, this.min, (int) commonMin));
                 }
-                if (rv.max > commonMax) {
-                    extraRanges.add(new RangeValue(rv, (int) commonMax, rv.max));
+                if (otherRange.max > commonMax) {
+                    resultingRanges.add(new RangeValue(otherRange, (int) commonMax, otherRange.max));
                 }
-                this.min = (int) Math.ceil(intersect);
-                this.currVal = this.min;
-                rv.max = (int) Math.floor(intersect);
-            } else if (rv1y1 > rv2y1 && rv1y2 < rv2y2) {
+                resultingRanges.add(new RangeValue(otherRange, otherRange.min, (int) Math.round(intersect)));
+                resultingRanges.add(new RangeValue(this, (int) Math.round(intersect), this.max));
+
+            } else if (thisYleft > otherYleft && thisYright < otherYright) {
                 // this intersects from above
-                if (rv.min < commonMin) {
-                    extraRanges.add(new RangeValue(rv, rv.min, (int) commonMin));
+                // other should take the right of intersect, this to the left.
+                // If other has part of a function before the commonmin, it should be saved. Same with this if it goes past the commonmax.
+                if (otherRange.min < commonMin) {
+                    resultingRanges.add(new RangeValue(otherRange, otherRange.min, (int) commonMin));
                 }
                 if (this.max > commonMax) {
-                    extraRanges.add(new RangeValue(this, (int) commonMax, this.max));
+                    resultingRanges.add(new RangeValue(this, (int) commonMax, this.max));
                 }
-                rv.min = (int) Math.ceil(intersect);
-                rv.currVal = rv.min;
-                this.max = (int) Math.floor(intersect);
+                resultingRanges.add(new RangeValue(this, this.min, (int) Math.round(intersect)));
+                resultingRanges.add(new RangeValue(otherRange, (int) Math.round(intersect), otherRange.max));
             }
         }
 
-        return extraRanges;
+        return resultingRanges;
     }
 
     public Contribution getContribution() {

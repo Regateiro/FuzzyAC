@@ -16,20 +16,21 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  *
  * @author DiogoJosé
  */
-public abstract class FuzzyAnalyser {
+public abstract class AbstractFuzzyAnalyser {
 
     protected final FuzzyEvaluator feval;
     protected final Map<String, String> outputBuffer;
-    protected final AtomicInteger numResults;
+    protected final Map<String, AtomicInteger> numResults;
+    protected String permissionToAnalyse;
 
-    protected FuzzyAnalyser(FuzzyEvaluator feval) {
+    protected AbstractFuzzyAnalyser(FuzzyEvaluator feval) {
         this.feval = feval;
         this.outputBuffer = new HashMap<>();
-        this.numResults = new AtomicInteger();
+        this.numResults = new HashMap<>();
     }
-    
+
     abstract public void analyse(String permission);
-    
+
     protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
         if (varIdx < variableMap.size()) {
             do {
@@ -58,13 +59,14 @@ public abstract class FuzzyAnalyser {
             Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
 
             //Adds the variables that resulted on the provided alphaCut
-            evaluation.keySet().stream().forEach((permission) -> {
+            evaluation.keySet().stream().filter((permission) -> permission.equalsIgnoreCase(permissionToAnalyse)).forEach((permission) -> {
                 String decision = (evaluation.get(permission).getValue() > alphaCut ? "Granted" : "Denied");
                 String line = String.format("%s : %s [%s]", decision, permission, variablesToEvaluate);
 
                 if (outputBuffer.containsKey(permission)) {
                     if (outputBuffer.get(permission).charAt(0) != line.charAt(0)) {
-                        this.numResults.incrementAndGet();
+                        this.numResults.putIfAbsent(permission, new AtomicInteger());
+                        this.numResults.get(permission).incrementAndGet();
 //                        System.out.println(outputBuffer.get(permission));
 //                        System.out.println(line);
 //                        System.out.println();

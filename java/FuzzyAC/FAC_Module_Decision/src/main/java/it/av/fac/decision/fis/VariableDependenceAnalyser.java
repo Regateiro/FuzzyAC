@@ -196,11 +196,11 @@ public class VariableDependenceAnalyser {
     }
     
     public boolean contributesOnlyToGrant(String permission, String varName, String termName) {
-        return RuleTermComparator.collectionContains(grantingOutputRuleTerms.get(permission), varName, termName);
+        return RuleTermComparator.collectionContains(onlyGrantingInputRuleTerms.get(permission), varName, termName);
     }
     
     public boolean contributesOnlyToDeny(String permission, String varName, String termName) {
-        return RuleTermComparator.collectionContains(denyingOutputRuleTerms.get(permission), varName, termName);
+        return RuleTermComparator.collectionContains(onlyDenyingInputRuleTerms.get(permission), varName, termName);
     }
     
     public Set<String> getPermissions() {

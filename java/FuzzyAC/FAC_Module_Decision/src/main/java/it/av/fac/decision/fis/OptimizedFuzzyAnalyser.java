@@ -1,6 +1,7 @@
 package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
+import it.av.fac.decision.util.LinearFunction;
 import it.av.fac.decision.util.MultiRangeValue;
 import it.av.fac.decision.util.RangeValue;
 import java.util.ArrayList;
@@ -16,19 +17,19 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  *
  * @author Diogo Regateiro
  */
-public class OptimizedFuzzyAnalyser extends FuzzyAnalyser {
+public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
-    private final Map<String, List<MultiRangeValue>> rangesPerPermission;
 
     public OptimizedFuzzyAnalyser(FuzzyEvaluator feval) {
         super(feval);
         this.vda = new VariableDependenceAnalyser(feval.getFis());
-        this.rangesPerPermission = new HashMap<>();
     }
 
     @Override
     public void analyse(String permission) {
+        this.permissionToAnalyse = permission;
+        
         //Analyse the variable dependences.
         this.vda.analyse();
 
@@ -44,7 +45,7 @@ public class OptimizedFuzzyAnalyser extends FuzzyAnalyser {
         //Obtains the edge conditions.
         findEdgeIntegerConditions(permission, 0.5, inputVars);
 
-        System.out.println("Number of permission changes founds: " + this.numResults.get());
+        System.out.println("[OptimizedFuzzyAnalyser] - Number of permission changes found: " + this.numResults.get(permissionToAnalyse).get());
     }
 
     /**
@@ -94,7 +95,7 @@ public class OptimizedFuzzyAnalyser extends FuzzyAnalyser {
                 if (y1 != y2 && x1 != x2) {
                     // Add to the list.
                     ranges.putIfAbsent(linguisticTerm, new ArrayList<>());
-                    ranges.get(linguisticTerm).add(new RangeValue(varName, linguisticTerm, (y2 - y1) / (x2 - x1), (x2 * y1 - x1 * y2) / (x2 - x1), (int) x1, (int) x2));
+                    ranges.get(linguisticTerm).add(new RangeValue(varName, linguisticTerm, new LinearFunction(x1, x2, y1, y2), (int) x1, (int) x2));
                 }
             }
         });
@@ -143,26 +144,24 @@ public class OptimizedFuzzyAnalyser extends FuzzyAnalyser {
             RangeValue rv1 = finalList.get(i);
             RangeValue rv2 = finalList.get(i + 1);
 
+            // if ranges overlap
             if (rv1.overlapsWith(rv2)) {
+                // add all ranges created from resolving the overlap.
                 finalList.addAll(rv1.splitFrom(rv2));
-                if (rv1.getMin() >= rv1.getMax()) {
-                    finalList.remove(rv1);
-                } else if (rv2.getMin() >= rv2.getMax()) {
-                    finalList.remove(rv2);
-                }
                 
+                // remove the overlapping ranges.
+                finalList.remove(i + 1);
+                finalList.remove(i);
+
+                // sort and then retest.
                 Collections.sort(finalList, (rv1t, rv2t) -> {
                     return Integer.compare(rv1t.getCurrentValue(), rv2t.getCurrentValue());
                 });
             } else {
+                // ranges do not overlap, continue to the next two ranges.
                 i++;
             }
         }
-
-        //sorts the list of ranges
-        Collections.sort(finalList, (rv1, rv2) -> {
-            return Integer.compare(rv1.getCurrentValue(), rv2.getCurrentValue());
-        });
 
         return new MultiRangeValue(finalList);
     }
