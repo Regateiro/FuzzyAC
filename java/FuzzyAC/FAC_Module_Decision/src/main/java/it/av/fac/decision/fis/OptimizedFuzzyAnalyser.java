@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 
@@ -67,6 +68,53 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
         // recursive function call
         findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
+    }
+    
+    protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
+        if (varIdx < variableMap.size()) {
+            do {
+                //recursive call to add the other variable to the list
+                findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1);
+
+                //TODO: Optimize. Breaks the recursive call when the variable is on the range edge
+                if (variableMap.get(varIdx).isOnTheEdge()) {
+                    variableMap.get(varIdx).invertDirection();
+                    break;
+                }
+
+                //Searched the rest of the variable, time to update this one by step.
+                variableMap.get(varIdx).next();
+            } while (true);
+        } else {
+            //Edge case where there are no more variables.
+
+            //Create evaluation variable map
+            Map<String, Double> variablesToEvaluate = new HashMap<>();
+            variableMap.stream().forEach((var) -> {
+                variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
+            });
+
+            //Evaluates the result using the current variable values.
+            Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+
+            //Adds the variables that resulted on the provided alphaCut
+            evaluation.keySet().stream().filter((permission) -> permission.equalsIgnoreCase(permissionToAnalyse)).forEach((permission) -> {
+                String decision = (evaluation.get(permission).getValue() > alphaCut ? "Granted" : "Denied");
+                String line = String.format("%s : %s [%s]", decision, permission, variablesToEvaluate);
+
+                if (outputBuffer.containsKey(permission)) {
+                    if (outputBuffer.get(permission).charAt(0) != line.charAt(0)) {
+                        this.numResults.putIfAbsent(permission, new AtomicInteger());
+                        this.numResults.get(permission).incrementAndGet();
+//                        System.out.println(outputBuffer.get(permission));
+//                        System.out.println(line);
+//                        System.out.println();
+                    }
+                }
+
+                outputBuffer.put(permission, line);
+            });
+        }
     }
 
     /**
