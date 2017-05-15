@@ -5,7 +5,6 @@
  */
 package it.av.fac.decision.util;
 
-import it.av.fac.decision.fis.Contribution;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +20,7 @@ public class RangeValue {
     private final String varName;
     private final int max;
     private final int min;
-    private String termName;
-    private LinearFunction function;
+    private SlopeType slopeType;
     private int currVal;
     private int direction;
     private Contribution contribution;
@@ -35,10 +33,9 @@ public class RangeValue {
         this.direction = 1;
     }
 
-    public RangeValue(String varName, String termName, LinearFunction function, int min, int max) {
+    public RangeValue(String varName, SlopeType slopeType, int min, int max) {
         this.varName = varName;
-        this.termName = termName;
-        this.function = function;
+        this.slopeType = slopeType;
         this.max = max;
         this.min = min;
         this.currVal = min;
@@ -47,8 +44,7 @@ public class RangeValue {
 
     public RangeValue(RangeValue rv, int min, int max) {
         this.varName = rv.varName;
-        this.termName = rv.termName;
-        this.function = rv.function;
+        this.slopeType = rv.slopeType;
         this.max = max;
         this.min = min;
         this.currVal = min;
@@ -69,10 +65,6 @@ public class RangeValue {
         return varName;
     }
 
-    public String getTermName() {
-        return termName;
-    }
-
     public int getCurrentValue() {
         return currVal;
     }
@@ -86,35 +78,41 @@ public class RangeValue {
         direction *= -1;
     }
 
-    public LinearFunction getFunction() {
-        return function;
+    public SlopeType getSlopeType() {
+        return slopeType;
     }
 
     public void setContribution(boolean contributesToGrant, boolean contributesToDeny) {
-        double slope = function.getSlope();
-
         if (contributesToGrant && !contributesToDeny) {
-            if (slope > 0) {
-                contribution = Contribution.Grant;
-            }
-            if (slope < 0) {
-                contribution = Contribution.Deny;
-            }
-            if (slope == 0) {
-                contribution = Contribution.None;
+            switch (slopeType) {
+                case POSITIVE:
+                    contribution = Contribution.GRANT;
+                    break;
+                case NEGATIVE:
+                    contribution = Contribution.DENY;
+                    break;
+                case FLAT:
+                    contribution = Contribution.NONE;
+                    break;
+                case UNKNOWN:
+                    contribution = Contribution.UNKNOWN;
             }
         } else if (!contributesToGrant && contributesToDeny) {
-            if (slope > 0) {
-                contribution = Contribution.Deny;
-            }
-            if (slope < 0) {
-                contribution = Contribution.Grant;
-            }
-            if (slope == 0) {
-                contribution = Contribution.None;
+            switch (slopeType) {
+                case POSITIVE:
+                    contribution = Contribution.DENY;
+                    break;
+                case NEGATIVE:
+                    contribution = Contribution.GRANT;
+                    break;
+                case FLAT:
+                    contribution = Contribution.NONE;
+                    break;
+                case UNKNOWN:
+                    contribution = Contribution.UNKNOWN;
             }
         } else {
-            contribution = Contribution.Unknown;
+            contribution = Contribution.UNKNOWN;
         }
     }
 
@@ -133,68 +131,43 @@ public class RangeValue {
     public List<RangeValue> splitFrom(RangeValue otherRange) {
         List<RangeValue> resultingRanges = new ArrayList<>();
 
-        //calculate the intersect x
-        double commonMin = Math.max(this.min, otherRange.min);
-        double commonMax = Math.min(this.max, otherRange.max);
+        int thisXmin = this.getMin();
+        int thisXmax = this.getMax();
+        int otherXmin = otherRange.getMin();
+        int otherXmax = otherRange.getMax();
 
-        double thisYleft = this.getFunction().getY(commonMin);
-        double thisYright = this.getFunction().getY(commonMax);
-        double otherYleft = otherRange.getFunction().getY(commonMin);
-        double otherYright = otherRange.getFunction().getY(commonMax);
+        int commonXmin = Math.max(thisXmin, otherXmin);
+        int commonXmax = Math.min(thisXmax, otherXmax);
 
-        if (thisYleft > otherYleft && thisYright > otherYright) {
-            // they don't intersect, this is always greater
-            // push the other range before and after this range.
-            if (otherRange.min < commonMin) {
-                resultingRanges.add(new RangeValue(otherRange, otherRange.min, (int) commonMin));
-            }
-
-            if (otherRange.max > commonMax) {
-                resultingRanges.add(new RangeValue(otherRange, (int) commonMax, otherRange.max));
-            }
-
-            resultingRanges.add(this);
-        } else if (thisYleft < otherYleft && thisYright < otherYright) {
-            // they don't intersect, this is always smaller
-            // pull the this range before and after the other.
-            if (this.min < commonMin) {
-                resultingRanges.add(new RangeValue(this, this.min, (int) commonMin));
-            }
-
-            if (this.max > commonMax) {
-                resultingRanges.add(new RangeValue(this, (int) commonMax, this.max));
-            }
-
-            resultingRanges.add(otherRange);
+        // if both ranges have the same contribution, just merge them both
+        if (this.getContribution() == otherRange.getContribution()) {
+            resultingRanges.add(new RangeValue(this, Math.min(thisXmin, otherXmin), Math.max(thisXmax, otherXmax)));
         } else {
-            // they intersect, so calculate that point
-            Double intersect = function.getIntersect(otherRange.getFunction());
-            
-            if (thisYleft < otherYleft && thisYright > otherYright) {
-                // this intersects from below
-                // other should take the left of intersect, this to the right.
-                // If this has part of a function before the commonmin, it should be saved. Same with the other if it goes past the commonmax.
-                if (this.min < commonMin) {
-                    resultingRanges.add(new RangeValue(this, this.min, (int) commonMin));
-                }
-                if (otherRange.max > commonMax) {
-                    resultingRanges.add(new RangeValue(otherRange, (int) commonMax, otherRange.max));
-                }
-                resultingRanges.add(new RangeValue(otherRange, otherRange.min, (int) Math.round(intersect)));
-                resultingRanges.add(new RangeValue(this, (int) Math.round(intersect), this.max));
+            //contributions differ, process ranges outside the overlap
+            if (thisXmin < commonXmin) {
+                resultingRanges.add(new RangeValue(this, thisXmin, commonXmin));
+            } else if (otherXmin < commonXmin) {
+                resultingRanges.add(new RangeValue(otherRange, otherXmin, commonXmin));
+            }
 
-            } else if (thisYleft > otherYleft && thisYright < otherYright) {
-                // this intersects from above
-                // other should take the right of intersect, this to the left.
-                // If other has part of a function before the commonmin, it should be saved. Same with this if it goes past the commonmax.
-                if (otherRange.min < commonMin) {
-                    resultingRanges.add(new RangeValue(otherRange, otherRange.min, (int) commonMin));
-                }
-                if (this.max > commonMax) {
-                    resultingRanges.add(new RangeValue(this, (int) commonMax, this.max));
-                }
-                resultingRanges.add(new RangeValue(this, this.min, (int) Math.round(intersect)));
-                resultingRanges.add(new RangeValue(otherRange, (int) Math.round(intersect), otherRange.max));
+            if (thisXmax > commonXmax) {
+                resultingRanges.add(new RangeValue(this, commonXmax, thisXmax));
+            } else if (otherXmax > commonXmax) {
+                resultingRanges.add(new RangeValue(otherRange, commonXmax, otherXmax));
+            }
+
+            //process the overlapping range
+            //if the slope in any of them has no contribution, use the other
+            if (this.getContribution() == Contribution.NONE) {
+                resultingRanges.add(new RangeValue(otherRange, commonXmin, commonXmax));
+            } else if (otherRange.getContribution() == Contribution.NONE) {
+                resultingRanges.add(new RangeValue(this, commonXmin, commonXmax));
+            } else {
+                // they both differ in contribution and both contribute to at last one decision, then the variable contribution on this range is unknown.
+                RangeValue rv = new RangeValue(this, commonXmin, commonXmax);
+                rv.slopeType = SlopeType.UNKNOWN;
+                rv.contribution = Contribution.UNKNOWN;
+                resultingRanges.add(rv);
             }
         }
 

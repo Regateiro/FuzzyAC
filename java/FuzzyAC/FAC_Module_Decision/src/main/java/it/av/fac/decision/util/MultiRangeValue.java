@@ -5,10 +5,7 @@
  */
 package it.av.fac.decision.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -52,10 +49,6 @@ public class MultiRangeValue {
 
     public String getVarName() {
         return ranges.get(idx).getVarName();
-    }
-
-    public String getTermName() {
-        return ranges.get(idx).getTermName();
     }
 
     public int getCurrentValue() {

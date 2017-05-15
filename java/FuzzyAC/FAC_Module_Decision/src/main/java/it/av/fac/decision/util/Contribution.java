@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.decision.fis;
+package it.av.fac.decision.util;
 
 /**
  *
  * @author Diogo Regateiro
  */
 public enum Contribution {
-    Grant, Deny, None, Unknown;
+    GRANT, DENY, NONE, UNKNOWN;
 }

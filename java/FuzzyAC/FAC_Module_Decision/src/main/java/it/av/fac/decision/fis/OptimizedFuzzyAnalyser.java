@@ -1,7 +1,7 @@
 package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
-import it.av.fac.decision.util.LinearFunction;
+import it.av.fac.decision.util.SlopeType;
 import it.av.fac.decision.util.MultiRangeValue;
 import it.av.fac.decision.util.RangeValue;
 import java.util.ArrayList;
@@ -143,7 +143,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 if (y1 != y2 && x1 != x2) {
                     // Add to the list.
                     ranges.putIfAbsent(linguisticTerm, new ArrayList<>());
-                    ranges.get(linguisticTerm).add(new RangeValue(varName, linguisticTerm, new LinearFunction(x1, x2, y1, y2), (int) x1, (int) x2));
+                    ranges.get(linguisticTerm).add(new RangeValue(varName, SlopeType.getSlope(y1, y2), (int) x1, (int) x2));
                 }
             }
         });
@@ -188,6 +188,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
             return Integer.compare(rv1.getCurrentValue(), rv2.getCurrentValue());
         });
 
+        //clear overlapping ranges
         for (int i = 0; i < finalList.size() - 1;) {
             RangeValue rv1 = finalList.get(i);
             RangeValue rv2 = finalList.get(i + 1);
@@ -198,8 +199,8 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 finalList.addAll(rv1.splitFrom(rv2));
                 
                 // remove the overlapping ranges.
-                finalList.remove(i + 1);
-                finalList.remove(i);
+                finalList.remove(rv1);
+                finalList.remove(rv2);
 
                 // sort and then retest.
                 Collections.sort(finalList, (rv1t, rv2t) -> {
