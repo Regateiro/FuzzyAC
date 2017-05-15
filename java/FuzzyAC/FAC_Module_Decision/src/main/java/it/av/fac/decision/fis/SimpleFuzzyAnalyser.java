@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunction;
 import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
@@ -35,6 +34,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
      */
     @Override
     public void analyse(String permission) {
+        resetAnalyser();
         this.permissionToAnalyse = permission;
         
         //List of input variable names
@@ -48,8 +48,6 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
         //Obtains the edge conditions.
         findEdgeIntegerConditions(0.5, inputVars);
-        
-        System.out.println("[SimpleFuzzyAnalyser] - Number of permission changes found: " + this.numResults.get(permissionToAnalyse).get());
     }
 
     /**
@@ -99,24 +97,25 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
             //Evaluates the result using the current variable values.
             Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+            numberOfEvaluations++;
 
-            //Adds the variables that resulted on the provided alphaCut
-            evaluation.keySet().stream().filter((permission) -> permission.equalsIgnoreCase(permissionToAnalyse)).forEach((permission) -> {
-                String decision = (evaluation.get(permission).getValue() > alphaCut ? "Granted" : "Denied");
-                String line = String.format("%s : %s [%s]", decision, permission, variablesToEvaluate);
+            try {
+                //Adds the variables that resulted on the provided alphaCut
+                String decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? "Granted" : "Denied");
+                String line = String.format("%s : %s [%s]", decision, permissionToAnalyse, variablesToEvaluate);
 
-                if (outputBuffer.containsKey(permission)) {
-                    if (outputBuffer.get(permission).charAt(0) != line.charAt(0)) {
-                        this.numResults.putIfAbsent(permission, new AtomicInteger());
-                        this.numResults.get(permission).incrementAndGet();
-//                        System.out.println(outputBuffer.get(permission));
+                if (outputBuffer.containsKey(permissionToAnalyse)) {
+                    if (outputBuffer.get(permissionToAnalyse).charAt(0) != line.charAt(0)) {
+//                        System.out.println(outputBuffer.get(permissionToAnalyse));
 //                        System.out.println(line);
 //                        System.out.println();
                     }
                 }
 
-                outputBuffer.put(permission, line);
-            });
+                outputBuffer.put(permissionToAnalyse, line);
+            } catch (NullPointerException ex) {
+                System.err.println("[SimpleFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
+            }
         }
     }
     

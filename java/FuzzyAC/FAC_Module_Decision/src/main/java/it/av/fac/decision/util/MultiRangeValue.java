@@ -54,4 +54,8 @@ public class MultiRangeValue {
     public int getCurrentValue() {
         return ranges.get(idx).getCurrentValue();
     }
+
+    public Contribution getContribution() {
+        return ranges.get(idx).getContribution();
+    }
 }

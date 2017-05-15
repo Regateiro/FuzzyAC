@@ -1,6 +1,8 @@
 package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
+import it.av.fac.decision.util.Contribution;
+import it.av.fac.decision.util.DecisionManager;
 import it.av.fac.decision.util.SlopeType;
 import it.av.fac.decision.util.MultiRangeValue;
 import it.av.fac.decision.util.RangeValue;
@@ -10,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 
@@ -21,18 +22,24 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
 public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
+    private Contribution lastChangeContribution;
+    private final DecisionManager decisionManager;
 
     public OptimizedFuzzyAnalyser(FuzzyEvaluator feval) {
         super(feval);
         this.vda = new VariableDependenceAnalyser(feval.getFis());
+        this.lastChangeContribution = Contribution.UNKNOWN;
+        this.decisionManager = new DecisionManager();
     }
 
     @Override
     public void analyse(String permission) {
+        resetAnalyser();
+        decisionManager.clear();
         this.permissionToAnalyse = permission;
-        
+
         //Analyse the variable dependences.
-        this.vda.analyse();
+        this.vda.analyse(permission);
 
         //List of input variable names
         List<String> inputVars = new ArrayList<>();
@@ -41,12 +48,10 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         Collection<Variable> variables = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables();
 
         //Retrieves the variables for the VariableInference function block, filtering for only input variables and adds their name to the inputVars list.
-        variables.stream().filter((var) -> var.isInput()).forEach((var) -> inputVars.add(var.getName()));
+        variables.stream().filter((var) -> var.isInput() && this.vda.variableIsUsed(var.getName())).forEach((var) -> inputVars.add(var.getName()));
 
         //Obtains the edge conditions.
         findEdgeIntegerConditions(permission, 0.5, inputVars);
-
-        System.out.println("[OptimizedFuzzyAnalyser] - Number of permission changes found: " + this.numResults.get(permissionToAnalyse).get());
     }
 
     /**
@@ -69,7 +74,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         // recursive function call
         findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
     }
-    
+
     protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
         if (varIdx < variableMap.size()) {
             do {
@@ -79,41 +84,65 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 //TODO: Optimize. Breaks the recursive call when the variable is on the range edge
                 if (variableMap.get(varIdx).isOnTheEdge()) {
                     variableMap.get(varIdx).invertDirection();
+
+                    //if the last variable just finished a pass, save the current ranges.
+                    if (varIdx == variableMap.size() - 1) {
+                        this.decisionManager.ageDecisions();
+                    }
                     break;
                 }
 
                 //Searched the rest of the variable, time to update this one by step.
                 variableMap.get(varIdx).next();
+
+                // if the variable updated is not the last one on the list
+                if (varIdx < variableMap.size() - 1) {
+                    this.lastChangeContribution = variableMap.get(varIdx).getContribution();
+                }
             } while (true);
         } else {
+            String decision = null;
+
             //Edge case where there are no more variables.
+            //Check to see if an evaluation is required
+            if (this.lastChangeContribution != Contribution.UNKNOWN) {
+                int x = variableMap.get(varIdx - 1).getCurrentValue();
+                if (this.decisionManager.isLastDecisionApplicable(this.lastChangeContribution, x)) {
+                    decision = this.decisionManager.useLastDecision(x);
+                }
+            }
 
-            //Create evaluation variable map
-            Map<String, Double> variablesToEvaluate = new HashMap<>();
-            variableMap.stream().forEach((var) -> {
-                variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
-            });
+            try {
+                //Create evaluation variable map
+                Map<String, Double> variablesToEvaluate = new HashMap<>();
+                variableMap.stream().forEach((var) -> {
+                    variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
+                });
 
-            //Evaluates the result using the current variable values.
-            Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+                if (decision == null) {
+                    //Evaluates the result using the current variable values.
+                    Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
 
-            //Adds the variables that resulted on the provided alphaCut
-            evaluation.keySet().stream().filter((permission) -> permission.equalsIgnoreCase(permissionToAnalyse)).forEach((permission) -> {
-                String decision = (evaluation.get(permission).getValue() > alphaCut ? "Granted" : "Denied");
-                String line = String.format("%s : %s [%s]", decision, permission, variablesToEvaluate);
+                    //Adds the variables that resulted on the provided alphaCut
+                    decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? "Granted" : "Denied");
+                    numberOfEvaluations++;
+                    this.decisionManager.saveDecision(variableMap.get(varIdx - 1).getCurrentValue(), decision);
+                }
 
-                if (outputBuffer.containsKey(permission)) {
-                    if (outputBuffer.get(permission).charAt(0) != line.charAt(0)) {
-                        this.numResults.putIfAbsent(permission, new AtomicInteger());
-                        this.numResults.get(permission).incrementAndGet();
-//                        System.out.println(outputBuffer.get(permission));
+                String line = String.format("%s : %s [%s]", decision, permissionToAnalyse, variablesToEvaluate);
+
+                if (outputBuffer.containsKey(permissionToAnalyse)) {
+                    if (outputBuffer.get(permissionToAnalyse).charAt(0) != line.charAt(0)) {
+//                        System.out.println(outputBuffer.get(permissionToAnalyse));
 //                        System.out.println(line);
 //                        System.out.println();
                     }
                 }
 
-                outputBuffer.put(permission, line);
-            });
+                outputBuffer.put(permissionToAnalyse, line);
+            } catch (NullPointerException ex) {
+                System.err.println("[OptimizedFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
+            }
         }
     }
 
@@ -197,7 +226,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
             if (rv1.overlapsWith(rv2)) {
                 // add all ranges created from resolving the overlap.
                 finalList.addAll(rv1.splitFrom(rv2));
-                
+
                 // remove the overlapping ranges.
                 finalList.remove(rv1);
                 finalList.remove(rv2);

@@ -7,24 +7,32 @@ package it.av.fac.decision.fis;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro
  */
 public abstract class AbstractFuzzyAnalyser {
 
     protected final FuzzyEvaluator feval;
     protected final Map<String, String> outputBuffer;
-    protected final Map<String, AtomicInteger> numResults;
     protected String permissionToAnalyse;
+    protected int numberOfEvaluations;
 
     protected AbstractFuzzyAnalyser(FuzzyEvaluator feval) {
         this.feval = feval;
         this.outputBuffer = new HashMap<>();
-        this.numResults = new HashMap<>();
+        this.numberOfEvaluations = 0;
     }
 
     abstract public void analyse(String permission);
+    
+    public void resetAnalyser() {
+        this.outputBuffer.clear();
+        this.numberOfEvaluations = 0;
+    }
+    
+    public int getNumberOfEvaluations() {
+        return numberOfEvaluations;
+    }
 }

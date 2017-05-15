@@ -8,6 +8,7 @@ package it.av.fac.decision.fis;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,18 +27,23 @@ import net.sourceforge.jFuzzyLogic.rule.RuleTerm;
 public class VariableDependenceAnalyser {
 
     private final FIS fis;
-    
+
     /**
-     * Objects that keep the output rule terms that are used for granting/deny permission. 
+     * Objects that keep the output rule terms that are used for granting/deny
+     * permission.
      */
     private final Map<String, List<RuleTerm>> grantingOutputRuleTerms;
     private final Map<String, List<RuleTerm>> denyingOutputRuleTerms;
-    
+
     /**
-     * Objects that keep the input rule terms that are used for only granting/deny permission. 
+     * Objects that keep the input rule terms that are used for only
+     * granting/deny permission.
      */
     private final Map<String, List<RuleTerm>> onlyGrantingInputRuleTerms;
     private final Map<String, List<RuleTerm>> onlyDenyingInputRuleTerms;
+
+    //A list of variables that appeared in the rulebooks
+    private final Set<String> usedVariables;
 
     public VariableDependenceAnalyser(FIS fis) {
         this.fis = fis;
@@ -45,38 +51,45 @@ public class VariableDependenceAnalyser {
         this.denyingOutputRuleTerms = new HashMap<>();
         this.onlyGrantingInputRuleTerms = new HashMap<>();
         this.onlyDenyingInputRuleTerms = new HashMap<>();
+        this.usedVariables = new HashSet<>();
     }
 
-    public void analyse() {
+    public void analyse(String permAnalyse) {
+        //clear variables
+        this.grantingOutputRuleTerms.clear();
+        this.denyingOutputRuleTerms.clear();
+        this.onlyGrantingInputRuleTerms.clear();
+        this.onlyDenyingInputRuleTerms.clear();
+
         //access the AC rulebook and get the associated rules.
         FunctionBlock fb_ac = this.fis.getFunctionBlock(FuzzyEvaluator.FB_ACCESS_CONTROL_PHASE_NAME);
         HashMap<String, RuleBlock> rb_ac = fb_ac.getRuleBlocks();
-        
-        //for each rulebook
-        rb_ac.keySet().stream().forEach((String permission) -> {
-            RuleBlock rb = rb_ac.get(permission);
-            
-            //fore each rule in the rulebook
-            rb.getRules().stream().forEach((Rule rule) -> {
-                List<RuleTerm> r_rts = new ArrayList<>();
-                
-                //obtain all the rule terms from the rule into r_rts
-                setRuleTermsFromRule(rule.getAntecedents(), r_rts);
 
-                if (rule.getConsequents().size() > 1) {
-                    System.err.println("more than one consequence in a rule. Using only the first one.");
-                }
+        if (!rb_ac.keySet().contains(permAnalyse)) {
+            System.err.println("[VariableDependenceAnalyser] : Permission " + permAnalyse + " not defined.");
+            System.exit(1);
+        }
 
-                //check if the rule results into a grant or deny and adds the rule terms to the revelant list.
-                RuleTerm consequent = rule.getConsequents().getFirst();
-                if (consequent.getLinguisticTerm().getTermName().equalsIgnoreCase("grant")) {
-                    grantingOutputRuleTerms.putIfAbsent(permission, new ArrayList<>());
-                    grantingOutputRuleTerms.get(permission).addAll(r_rts);
-                } else {
-                    denyingOutputRuleTerms.putIfAbsent(permission, new ArrayList<>());
-                    denyingOutputRuleTerms.get(permission).addAll(r_rts);
-                }
-            });
+        //for each rule in the rulebook
+        rb_ac.get(permAnalyse).getRules().stream().forEach((Rule rule) -> {
+            List<RuleTerm> r_rts = new ArrayList<>();
+
+            //obtain all the rule terms from the rule into r_rts
+            setRuleTermsFromRule(rule.getAntecedents(), r_rts);
+
+            if (rule.getConsequents().size() > 1) {
+                System.err.println("more than one consequence in a rule. Using only the first one.");
+            }
+
+            //check if the rule results into a grant or deny and adds the rule terms to the revelant list.
+            RuleTerm consequent = rule.getConsequents().getFirst();
+            if (consequent.getLinguisticTerm().getTermName().equalsIgnoreCase("grant")) {
+                grantingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
+                grantingOutputRuleTerms.get(permAnalyse).addAll(r_rts);
+            } else {
+                denyingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
+                denyingOutputRuleTerms.get(permAnalyse).addAll(r_rts);
+            }
         });
 
         //remove any duplicate ruleterms on each list.
@@ -86,13 +99,13 @@ public class VariableDependenceAnalyser {
         //access the VI rulebook and get the associated rules.
         FunctionBlock fb_vi = this.fis.getFunctionBlock(FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME);
         HashMap<String, RuleBlock> rb_vi = fb_vi.getRuleBlocks();
-        
+
         //for each rulebook
         rb_vi.keySet().stream().forEach((String outputvar) -> {
             RuleBlock rb = rb_vi.get(outputvar);
             rb.getRules().stream().forEach((Rule rule) -> {
                 List<RuleTerm> r_rts = new ArrayList<>();
-                
+
                 //obtain all the rule terms from the rule into r_rts
                 setRuleTermsFromRule(rule.getAntecedents(), r_rts);
 
@@ -121,6 +134,10 @@ public class VariableDependenceAnalyser {
         // remove duplicates
         onlyGrantingInputRuleTerms.values().parallelStream().forEach((ruleTermList) -> removeDuplicateRuleTerms(ruleTermList));
         onlyDenyingInputRuleTerms.values().parallelStream().forEach((ruleTermList) -> removeDuplicateRuleTerms(ruleTermList));
+
+        //add used variables into the used variables set
+        onlyGrantingInputRuleTerms.get(permAnalyse).stream().map((rt) -> rt.getVariable().getName()).forEach((varName) -> usedVariables.add(varName));
+        onlyDenyingInputRuleTerms.get(permAnalyse).stream().map((rt) -> rt.getVariable().getName()).forEach((varName) -> usedVariables.add(varName));
 
         // remove common terms from both sets.
         onlyGrantingInputRuleTerms.keySet().parallelStream()
@@ -155,7 +172,7 @@ public class VariableDependenceAnalyser {
         ruleTermList.clear();
         ruleTermList.addAll(temp);
     }
-    
+
     private void removeCommonTerms(List<RuleTerm> ruleTermList1, List<RuleTerm> ruleTermList2) {
         List<RuleTerm> temp1 = new ArrayList<>();
         List<RuleTerm> temp2 = new ArrayList<>();
@@ -163,7 +180,7 @@ public class VariableDependenceAnalyser {
         ruleTermList1.stream()
                 .filter((rt) -> !RuleTermComparator.collectionContains(ruleTermList2, rt))
                 .forEach((rt) -> temp1.add(rt));
-        
+
         ruleTermList2.stream()
                 .filter((rt) -> !RuleTermComparator.collectionContains(ruleTermList1, rt))
                 .forEach((rt) -> temp2.add(rt));
@@ -174,13 +191,17 @@ public class VariableDependenceAnalyser {
         ruleTermList2.addAll(temp2);
     }
 
+    boolean variableIsUsed(String varName) {
+        return usedVariables.contains(varName);
+    }
+
     private static class RuleTermComparator {
 
         public static boolean equals(RuleTerm o1, RuleTerm o2) {
             return o1.getVariable().getName().equals(o2.getVariable().getName())
                     && o1.getTermName().equals(o2.getTermName());
         }
-        
+
         public static boolean equals(RuleTerm o1, String varName, String termName) {
             return o1.getVariable().getName().equals(varName)
                     && o1.getTermName().equals(termName);
@@ -189,20 +210,20 @@ public class VariableDependenceAnalyser {
         public static boolean collectionContains(Collection<RuleTerm> col, RuleTerm rt) {
             return col.stream().anyMatch((rtincol) -> (RuleTermComparator.equals(rtincol, rt)));
         }
-        
+
         public static boolean collectionContains(Collection<RuleTerm> col, String varName, String termName) {
             return col.stream().anyMatch((rtincol) -> (RuleTermComparator.equals(rtincol, varName, termName)));
         }
     }
-    
+
     public boolean contributesOnlyToGrant(String permission, String varName, String termName) {
         return RuleTermComparator.collectionContains(onlyGrantingInputRuleTerms.get(permission), varName, termName);
     }
-    
+
     public boolean contributesOnlyToDeny(String permission, String varName, String termName) {
         return RuleTermComparator.collectionContains(onlyDenyingInputRuleTerms.get(permission), varName, termName);
     }
-    
+
     public Set<String> getPermissions() {
         FunctionBlock fb_ac = this.fis.getFunctionBlock(FuzzyEvaluator.FB_ACCESS_CONTROL_PHASE_NAME);
         HashMap<String, RuleBlock> rb_ac = fb_ac.getRuleBlocks();
