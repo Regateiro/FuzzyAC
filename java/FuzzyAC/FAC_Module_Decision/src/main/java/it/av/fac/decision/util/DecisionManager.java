@@ -14,8 +14,8 @@ import java.util.Map;
  */
 public class DecisionManager {
 
-    private Map<Integer, String> lastDecisions;
-    private Map<Integer, String> currentDecisions;
+    private Map<Integer, Decision> lastDecisions;
+    private Map<Integer, Decision> currentDecisions;
 
     public DecisionManager() {
         this.lastDecisions = new HashMap<>();
@@ -24,21 +24,21 @@ public class DecisionManager {
 
     public boolean isLastDecisionApplicable(Contribution lastChangeContribution, int x) {
         if (this.lastDecisions.containsKey(x)) {
-            String lastDecision = this.lastDecisions.get(x);
+            Decision lastDecision = this.lastDecisions.get(x);
 
-            if (lastDecision.equalsIgnoreCase("granted") && lastChangeContribution == Contribution.GRANT) {
+            if (lastDecision == Decision.Granted && lastChangeContribution == Contribution.GRANT) {
                 return true;
             }
 
-            if (lastDecision.equalsIgnoreCase("denied") && lastChangeContribution == Contribution.DENY) {
+            if (lastDecision == Decision.Denied && lastChangeContribution == Contribution.DENY) {
                 return true;
             }
         }
         return false;
     }
 
-    public String useLastDecision(int x) {
-        String decision = this.lastDecisions.get(x);
+    public Decision useLastDecision(int x) {
+        Decision decision = this.lastDecisions.get(x);
         saveDecision(x, decision);
         return decision;
     }
@@ -49,7 +49,7 @@ public class DecisionManager {
         this.currentDecisions = new HashMap<>();
     }
 
-    public void saveDecision(int currentValue, String decision) {
+    public void saveDecision(int currentValue, Decision decision) {
         this.currentDecisions.put(currentValue, decision);
     }
 

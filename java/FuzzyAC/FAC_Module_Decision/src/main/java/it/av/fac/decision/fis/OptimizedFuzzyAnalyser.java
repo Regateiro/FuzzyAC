@@ -2,6 +2,7 @@ package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
 import it.av.fac.decision.util.Contribution;
+import it.av.fac.decision.util.Decision;
 import it.av.fac.decision.util.DecisionManager;
 import it.av.fac.decision.util.SlopeType;
 import it.av.fac.decision.util.MultiRangeValue;
@@ -101,7 +102,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 }
             } while (true);
         } else {
-            String decision = null;
+            Decision decision = null;
 
             //Edge case where there are no more variables.
             //Check to see if an evaluation is required
@@ -124,7 +125,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
 
                     //Adds the variables that resulted on the provided alphaCut
-                    decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? "Granted" : "Denied");
+                    decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? Decision.Granted : Decision.Denied);
                     numberOfEvaluations++;
                     this.decisionManager.saveDecision(variableMap.get(varIdx - 1).getCurrentValue(), decision);
                 }
@@ -133,6 +134,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
                 if (outputBuffer.containsKey(permissionToAnalyse)) {
                     if (outputBuffer.get(permissionToAnalyse).charAt(0) != line.charAt(0)) {
+                        this.numberOfDecisionChanges++;
 //                        System.out.println(outputBuffer.get(permissionToAnalyse));
 //                        System.out.println(line);
 //                        System.out.println();

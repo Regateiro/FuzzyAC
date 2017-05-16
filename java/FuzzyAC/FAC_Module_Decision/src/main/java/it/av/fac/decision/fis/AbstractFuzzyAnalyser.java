@@ -18,11 +18,13 @@ public abstract class AbstractFuzzyAnalyser {
     protected final Map<String, String> outputBuffer;
     protected String permissionToAnalyse;
     protected int numberOfEvaluations;
+    protected int numberOfDecisionChanges;
 
     protected AbstractFuzzyAnalyser(FuzzyEvaluator feval) {
         this.feval = feval;
         this.outputBuffer = new HashMap<>();
         this.numberOfEvaluations = 0;
+        this.numberOfDecisionChanges = 0;
     }
 
     abstract public void analyse(String permission);
@@ -30,9 +32,14 @@ public abstract class AbstractFuzzyAnalyser {
     public void resetAnalyser() {
         this.outputBuffer.clear();
         this.numberOfEvaluations = 0;
+        this.numberOfDecisionChanges = 0;
     }
     
     public int getNumberOfEvaluations() {
         return numberOfEvaluations;
+    }
+    
+    public int getNumberOfDecisionChanges() {
+        return numberOfDecisionChanges;
     }
 }

@@ -136,7 +136,7 @@ public class FuzzyEvaluator {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String testFile = "academic_3vars_simpler.fcl";
+        String testFile = "academic_3vars.fcl";
 
         switch (testFile) {
             case "academic.fcl": // works
@@ -155,28 +155,28 @@ public class FuzzyEvaluator {
             ofanal.analyse("Read");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + ofanal.getNumberOfDecisionChanges() + " permission changes.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
             ofanal.analyse("Write");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + ofanal.getNumberOfDecisionChanges() + " permission changes.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
             sfanal.analyse("Read");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
+        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + sfanal.getNumberOfDecisionChanges() + " permission changes.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
             sfanal.analyse("Write");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
+        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + sfanal.getNumberOfDecisionChanges() + " permission changes.");
     }
 
     FIS getFis() {

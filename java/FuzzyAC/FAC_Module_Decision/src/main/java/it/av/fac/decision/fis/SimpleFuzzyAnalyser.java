@@ -106,6 +106,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
                 if (outputBuffer.containsKey(permissionToAnalyse)) {
                     if (outputBuffer.get(permissionToAnalyse).charAt(0) != line.charAt(0)) {
+                        this.numberOfDecisionChanges++;
 //                        System.out.println(outputBuffer.get(permissionToAnalyse));
 //                        System.out.println(line);
 //                        System.out.println();
