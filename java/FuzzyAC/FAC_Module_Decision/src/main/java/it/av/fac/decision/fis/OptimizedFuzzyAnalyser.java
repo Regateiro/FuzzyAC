@@ -4,6 +4,7 @@ import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_
 import it.av.fac.decision.util.Contribution;
 import it.av.fac.decision.util.Decision;
 import it.av.fac.decision.util.DecisionManager;
+import it.av.fac.decision.util.DecisionResult;
 import it.av.fac.decision.util.SlopeType;
 import it.av.fac.decision.util.MultiRangeValue;
 import it.av.fac.decision.util.RangeValue;
@@ -25,19 +26,28 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     private final VariableDependenceAnalyser vda;
     private Contribution lastChangeContribution;
     private final DecisionManager decisionManager;
+    private final List<List<DecisionResult>> variableOutputs;
+    private final Map<Integer, Integer> lastPassCount;
+    private List<DecisionResult> results;
+    private int variableUpdatedIdx;
 
     public OptimizedFuzzyAnalyser(FuzzyEvaluator feval) {
         super(feval);
         this.vda = new VariableDependenceAnalyser(feval.getFis());
         this.lastChangeContribution = Contribution.UNKNOWN;
         this.decisionManager = new DecisionManager();
+        this.variableOutputs = new ArrayList<>();
+        this.lastPassCount = new HashMap<>();
+        this.results = null;
+        this.variableUpdatedIdx = -1;
     }
 
     @Override
-    public void analyse(String permission) {
-        resetAnalyser();
-        decisionManager.clear();
+    public List<DecisionResult> analyse(String permission) {
         this.permissionToAnalyse = permission;
+
+        //reset the analyser
+        resetAnalyser();
 
         //Analyse the variable dependences.
         this.vda.analyse(permission);
@@ -53,6 +63,8 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
         //Obtains the edge conditions.
         findEdgeIntegerConditions(permission, 0.5, inputVars);
+
+        return results;
     }
 
     /**
@@ -72,17 +84,44 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
             variableMap.add(diffNotZeroRanges(permission, varName));
         }
 
+        this.vda.optimizeOrdering(variableMap);
+
         // recursive function call
         findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
     }
 
+    @SuppressWarnings("empty-statement")
     protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
         if (varIdx < variableMap.size()) {
+            variableOutputs.add(new ArrayList<>());
+            
             do {
-                //recursive call to add the other variable to the list
-                findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1);
+                if (this.lastChangeContribution != Contribution.NONE) {
+                    //update the results count for the new pass
+                    lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
 
-                //TODO: Optimize. Breaks the recursive call when the variable is on the range edge
+                    //recursive call to add the other variable to the list
+                    findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1);
+                } else {
+                    //update the previous results changing only this variable value
+                    List<DecisionResult> tempList = new ArrayList<>();
+                    
+                    variableOutputs.get(varIdx)
+                            .subList(lastPassCount.get(varIdx), variableOutputs.get(varIdx).size())
+                            .stream().forEachOrdered((result) -> tempList.add(result.copy()));
+
+                    tempList.parallelStream().forEach((result) -> {
+                        result.getVariables().put(variableMap.get(varIdx).getVarName(), (double) variableMap.get(varIdx).getCurrentValue());
+                    });
+
+                    //update the results count
+                    lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
+                    
+                    //add the new results
+                    variableOutputs.get(varIdx).addAll(tempList);
+                }
+                
+                //Breaks the recursive call when the variable is on the range edge
                 if (variableMap.get(varIdx).isOnTheEdge()) {
                     variableMap.get(varIdx).invertDirection();
 
@@ -90,11 +129,20 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     if (varIdx == variableMap.size() - 1) {
                         this.decisionManager.ageDecisions();
                     }
+
+                    //pulls back the results into the parent
+                    if (varIdx == 0) {
+                        this.results = this.variableOutputs.get(varIdx);
+                    } else {
+                        this.variableOutputs.get(varIdx - 1).addAll(this.variableOutputs.remove(varIdx));
+                    }
                     break;
                 }
 
                 //Searched the rest of the variable, time to update this one by step.
-                variableMap.get(varIdx).next();
+                int lastValue = variableMap.get(varIdx).getCurrentValue();
+                while (lastValue == variableMap.get(varIdx).next());
+                this.variableUpdatedIdx = varIdx;
 
                 // if the variable updated is not the last one on the list
                 if (varIdx < variableMap.size() - 1) {
@@ -130,18 +178,17 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     this.decisionManager.saveDecision(variableMap.get(varIdx - 1).getCurrentValue(), decision);
                 }
 
-                String line = String.format("%s : %s [%s]", decision, permissionToAnalyse, variablesToEvaluate);
+                DecisionResult result = new DecisionResult(decision, variablesToEvaluate);
 
-                if (outputBuffer.containsKey(permissionToAnalyse)) {
-                    if (outputBuffer.get(permissionToAnalyse).charAt(0) != line.charAt(0)) {
-                        this.numberOfDecisionChanges++;
-//                        System.out.println(outputBuffer.get(permissionToAnalyse));
-//                        System.out.println(line);
-//                        System.out.println();
+                if (lastResult != null) {
+                    if (!lastResult.decisionMatches(result)) {
+                        this.variableOutputs.get(this.variableUpdatedIdx).add(lastResult);
+                        this.variableOutputs.get(this.variableUpdatedIdx).add(result);
+                        this.lastPassCount.put(this.variableUpdatedIdx, this.lastPassCount.get(this.variableUpdatedIdx) + 2);
                     }
                 }
 
-                outputBuffer.put(permissionToAnalyse, line);
+                lastResult = result;
             } catch (NullPointerException ex) {
                 System.err.println("[OptimizedFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }
@@ -170,8 +217,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 double x2 = mf.getParameter(i + 2);
                 double y2 = mf.getParameter(i + 3);
 
-                // If there is a slope
-                if (y1 != y2 && x1 != x2) {
+                if (x1 != x2) {
                     // Add to the list.
                     ranges.putIfAbsent(linguisticTerm, new ArrayList<>());
                     ranges.get(linguisticTerm).add(new RangeValue(varName, SlopeType.getSlope(y1, y2), (int) x1, (int) x2));
@@ -244,5 +290,16 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         }
 
         return new MultiRangeValue(finalList);
+    }
+
+    @Override
+    public void resetAnalyser() {
+        super.resetAnalyser();
+        this.decisionManager.clear();
+        this.lastPassCount.clear();
+        this.results = null;
+        this.variableOutputs.clear();
+        this.lastChangeContribution = Contribution.UNKNOWN;
+        this.variableUpdatedIdx = -1;
     }
 }

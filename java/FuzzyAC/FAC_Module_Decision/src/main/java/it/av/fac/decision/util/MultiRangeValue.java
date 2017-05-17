@@ -42,9 +42,11 @@ public class MultiRangeValue {
                 // if so move to it.
                 idx += direction;
             }
-        }
 
-        return ranges.get(idx).next();
+            return ranges.get(idx).getCurrentValue();
+        } else {
+            return ranges.get(idx).next();
+        }
     }
 
     public String getVarName() {

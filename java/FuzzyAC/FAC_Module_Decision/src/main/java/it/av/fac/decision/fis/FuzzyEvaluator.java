@@ -5,6 +5,7 @@
  */
 package it.av.fac.decision.fis;
 
+import it.av.fac.decision.util.DecisionResult;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -149,34 +150,35 @@ public class FuzzyEvaluator {
         AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
-        int itr = 2;
+        List<DecisionResult> ret = new ArrayList<>();
+        int itr = 1;
         long time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            ofanal.analyse("Read");
+            ret = ofanal.analyse("Read");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + ofanal.getNumberOfDecisionChanges() + " permission changes.");
+        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + (ret.size() / 2) + " permission changes.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            ofanal.analyse("Write");
+            ret = sfanal.analyse("Read");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + ofanal.getNumberOfDecisionChanges() + " permission changes.");
+        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + (ret.size() / 2) + " permission changes.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            sfanal.analyse("Read");
+            ret = ofanal.analyse("Write");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + sfanal.getNumberOfDecisionChanges() + " permission changes.");
+        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + (ret.size() / 2) + " permission changes.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            sfanal.analyse("Write");
+            ret = sfanal.analyse("Write");
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + sfanal.getNumberOfDecisionChanges() + " permission changes.");
+        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + (ret.size() / 2) + " permission changes.");
     }
 
     FIS getFis() {

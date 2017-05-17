@@ -6,6 +6,8 @@
 package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
+import it.av.fac.decision.util.Decision;
+import it.av.fac.decision.util.DecisionResult;
 import it.av.fac.decision.util.MultiRangeValue;
 import it.av.fac.decision.util.RangeValue;
 import java.util.ArrayList;
@@ -31,11 +33,14 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
     /**
      * 
      * @param permission Doesn't matter.
+     * @return 
      */
     @Override
-    public void analyse(String permission) {
-        resetAnalyser();
+    public List<DecisionResult> analyse(String permission) {
         this.permissionToAnalyse = permission;
+        
+        //reset the analyser
+        resetAnalyser();
         
         //List of input variable names
         List<String> inputVars = new ArrayList<>();
@@ -47,7 +52,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
         variables.stream().filter((var) -> var.isInput()).forEach((var) -> inputVars.add(var.getName()));
 
         //Obtains the edge conditions.
-        findEdgeIntegerConditions(0.5, inputVars);
+        return findEdgeIntegerConditions(0.5, inputVars);
     }
 
     /**
@@ -57,7 +62,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
      * @param alphaCut The value to check the permission weights for equality.
      * @param variables The name of the variables for the FIS.
      */
-    private void findEdgeIntegerConditions(double alphaCut, List<String> variables) {
+    private List<DecisionResult> findEdgeIntegerConditions(double alphaCut, List<String> variables) {
         List<MultiRangeValue> variableMap = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
             //get variable name
@@ -66,16 +71,25 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             //add temporary solution
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
         }
-
+        
+        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Citations")).findFirst().get());
+        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Days_Since_Last_Publication")).findFirst().get());
+        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Publications")).findFirst().get());
+        variableMap.remove(0);
+        variableMap.remove(0);
+        variableMap.remove(0);
+        
         // recursive function call
-        findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
+        return findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
     }
     
-    protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
+    protected List<DecisionResult> findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
+        List<DecisionResult> results = new ArrayList<>();
+        
         if (varIdx < variableMap.size()) {
             do {
                 //recursive call to add the other variable to the list
-                findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1);
+                results.addAll(findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1));
 
                 //TODO: Optimize. Breaks the recursive call when the variable is on the range edge
                 if (variableMap.get(varIdx).isOnTheEdge()) {
@@ -101,23 +115,23 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
             try {
                 //Adds the variables that resulted on the provided alphaCut
-                String decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? "Granted" : "Denied");
-                String line = String.format("%s : %s [%s]", decision, permissionToAnalyse, variablesToEvaluate);
+                Decision decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? Decision.Granted : Decision.Denied);
+                DecisionResult result = new DecisionResult(decision, variablesToEvaluate);
 
-                if (outputBuffer.containsKey(permissionToAnalyse)) {
-                    if (outputBuffer.get(permissionToAnalyse).charAt(0) != line.charAt(0)) {
-                        this.numberOfDecisionChanges++;
-//                        System.out.println(outputBuffer.get(permissionToAnalyse));
-//                        System.out.println(line);
-//                        System.out.println();
+                if (lastResult != null) {
+                    if (!lastResult.decisionMatches(result)) {
+                        results.add(lastResult);
+                        results.add(result);
                     }
                 }
 
-                outputBuffer.put(permissionToAnalyse, line);
+                lastResult = result;
             } catch (NullPointerException ex) {
                 System.err.println("[SimpleFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }
         }
+        
+        return results;
     }
     
     private double maxXValue(String varName) {

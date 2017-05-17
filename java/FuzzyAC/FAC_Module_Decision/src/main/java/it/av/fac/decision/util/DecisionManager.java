@@ -25,6 +25,10 @@ public class DecisionManager {
     public boolean isLastDecisionApplicable(Contribution lastChangeContribution, int x) {
         if (this.lastDecisions.containsKey(x)) {
             Decision lastDecision = this.lastDecisions.get(x);
+            
+            if(lastChangeContribution == Contribution.NONE) {
+                return true;
+            }
 
             if (lastDecision == Decision.Granted && lastChangeContribution == Contribution.GRANT) {
                 return true;

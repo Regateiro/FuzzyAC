@@ -5,6 +5,7 @@
  */
 package it.av.fac.decision.fis;
 
+import it.av.fac.decision.util.MultiRangeValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -191,8 +192,17 @@ public class VariableDependenceAnalyser {
         ruleTermList2.addAll(temp2);
     }
 
-    boolean variableIsUsed(String varName) {
+    public boolean variableIsUsed(String varName) {
         return usedVariables.contains(varName);
+    }
+
+    public void optimizeOrdering(List<MultiRangeValue> variableMap) {
+        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Citations")).findFirst().get());
+        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Days_Since_Last_Publication")).findFirst().get());
+        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Publications")).findFirst().get());
+        variableMap.remove(0);
+        variableMap.remove(0);
+        variableMap.remove(0);
     }
 
     private static class RuleTermComparator {
