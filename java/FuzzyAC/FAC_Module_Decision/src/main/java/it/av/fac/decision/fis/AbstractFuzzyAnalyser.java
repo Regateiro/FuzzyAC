@@ -6,9 +6,7 @@
 package it.av.fac.decision.fis;
 
 import it.av.fac.decision.util.DecisionResult;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *

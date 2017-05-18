@@ -106,19 +106,24 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     //update the previous results changing only this variable value
                     List<DecisionResult> tempList = new ArrayList<>();
                     
+                    //filter only to the results added on the last time the recursive function was called and make a copy of them
                     variableOutputs.get(varIdx)
                             .subList(lastPassCount.get(varIdx), variableOutputs.get(varIdx).size())
                             .stream().forEachOrdered((result) -> tempList.add(result.copy()));
 
+                    //update the copy values for this variable to the current value
                     tempList.parallelStream().forEach((result) -> {
                         result.getVariables().put(variableMap.get(varIdx).getVarName(), (double) variableMap.get(varIdx).getCurrentValue());
                     });
 
-                    //update the results count
+                    //update the results count so only the newly added results will be copied if the contribution remains NONE
                     lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
                     
-                    //add the new results
+                    //add the new copied results
                     variableOutputs.get(varIdx).addAll(tempList);
+                    
+                    //update last result
+                    lastResult.getVariables().put(variableMap.get(varIdx).getVarName(), (double) variableMap.get(varIdx).getCurrentValue());
                 }
                 
                 //Breaks the recursive call when the variable is on the range edge
