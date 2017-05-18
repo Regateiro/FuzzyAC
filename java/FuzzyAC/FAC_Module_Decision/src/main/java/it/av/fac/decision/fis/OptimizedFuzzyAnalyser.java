@@ -58,7 +58,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         //Get the list of variables used in the VariableInference function block.
         Collection<Variable> variables = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables();
 
-        //Retrieves the variables for the VariableInference function block, filtering for only input variables and adds their name to the inputVars list.
+        //Retrieves the variables for the VariableInference function block, filtering for only used input variables and adds their name to the inputVars list.
         variables.stream().filter((var) -> var.isInput() && this.vda.variableIsUsed(var.getName())).forEach((var) -> inputVars.add(var.getName()));
 
         //Obtains the edge conditions.
