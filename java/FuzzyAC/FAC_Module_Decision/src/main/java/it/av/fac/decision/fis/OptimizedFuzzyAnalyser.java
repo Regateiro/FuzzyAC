@@ -43,8 +43,9 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     }
 
     @Override
-    public List<DecisionResult> analyse(String permission) {
+    public List<DecisionResult> analyse(String permission, DecisionResultsToReturn decisionsToResult) {
         this.permissionToAnalyse = permission;
+        this.decisionsToReturn = decisionsToResult;
 
         //reset the analyser
         resetAnalyser();
@@ -60,6 +61,9 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
         //Retrieves the variables for the VariableInference function block, filtering for only used input variables and adds their name to the inputVars list.
         variables.stream().filter((var) -> var.isInput() && this.vda.variableIsUsed(var.getName())).forEach((var) -> inputVars.add(var.getName()));
+
+        //update the variableUpdatedIdx
+        this.variableUpdatedIdx = inputVars.size() - 1;
 
         //Obtains the edge conditions.
         findEdgeIntegerConditions(permission, 0.5, inputVars);
@@ -94,7 +98,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
         if (varIdx < variableMap.size()) {
             variableOutputs.add(new ArrayList<>());
-            
+
             do {
                 if (this.lastChangeContribution != Contribution.NONE) {
                     //update the results count for the new pass
@@ -105,11 +109,14 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 } else {
                     //update the previous results changing only this variable value
                     List<DecisionResult> tempList = new ArrayList<>();
-                    
+
                     //filter only to the results added on the last time the recursive function was called and make a copy of them
                     variableOutputs.get(varIdx)
                             .subList(lastPassCount.get(varIdx), variableOutputs.get(varIdx).size())
                             .stream().forEachOrdered((result) -> tempList.add(result.copy()));
+
+                    //keep only a single value being updated per line
+                    Collections.reverse(tempList);
 
                     //update the copy values for this variable to the current value
                     tempList.parallelStream().forEach((result) -> {
@@ -118,14 +125,11 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
                     //update the results count so only the newly added results will be copied if the contribution remains NONE
                     lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
-                    
+
                     //add the new copied results
                     variableOutputs.get(varIdx).addAll(tempList);
-                    
-                    //update last result
-                    lastResult.getVariables().put(variableMap.get(varIdx).getVarName(), (double) variableMap.get(varIdx).getCurrentValue());
                 }
-                
+
                 //Breaks the recursive call when the variable is on the range edge
                 if (variableMap.get(varIdx).isOnTheEdge()) {
                     variableMap.get(varIdx).invertDirection();
@@ -185,15 +189,21 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
                 DecisionResult result = new DecisionResult(decision, variablesToEvaluate);
 
-                if (lastResult != null) {
-                    if (!lastResult.decisionMatches(result)) {
-                        this.variableOutputs.get(this.variableUpdatedIdx).add(lastResult);
-                        this.variableOutputs.get(this.variableUpdatedIdx).add(result);
-                        this.lastPassCount.put(this.variableUpdatedIdx, this.lastPassCount.get(this.variableUpdatedIdx) + 2);
-                    }
+                switch (decisionsToReturn) {
+                    case ALL:
+                        this.variableOutputs.get(varIdx - 1).add(result);
+                        break;
+                    case ONLY_GRANT:
+                        if (result.getDecision() == Decision.Granted) {
+                            this.variableOutputs.get(varIdx - 1).add(result);
+                        }
+                        break;
+                    case ONLY_DENY:
+                        if (result.getDecision() == Decision.Denied) {
+                            this.variableOutputs.get(varIdx - 1).add(result);
+                        }
+                        break;
                 }
-
-                lastResult = result;
             } catch (NullPointerException ex) {
                 System.err.println("[OptimizedFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }
