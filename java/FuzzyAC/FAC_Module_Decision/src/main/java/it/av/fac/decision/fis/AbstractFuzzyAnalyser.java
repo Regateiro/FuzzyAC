@@ -5,15 +5,17 @@
  */
 package it.av.fac.decision.fis;
 
-import it.av.fac.decision.util.Decision;
-import it.av.fac.decision.util.DecisionResult;
-import java.util.List;
+import it.av.fac.decision.util.decision.IDecisionMaker;
+import it.av.fac.decision.util.handlers.IResultHandler;
 
 /**
- * Abstract class used to analyze the inputs that get a certain permission decision. 
+ * Abstract class used to analyze the inputs that get a certain permission
+ * decision.
+ *
  * @author Diogo Regateiro
  */
 public abstract class AbstractFuzzyAnalyser {
+
     public enum DecisionResultsToReturn {
         ALL, ONLY_GRANT, ONLY_DENY;
     }
@@ -22,6 +24,8 @@ public abstract class AbstractFuzzyAnalyser {
     protected String permissionToAnalyse;
     protected int numberOfEvaluations;
     protected DecisionResultsToReturn decisionsToReturn;
+    protected IDecisionMaker decisionMaker;
+    protected IResultHandler handler;
 
     protected AbstractFuzzyAnalyser(FuzzyEvaluator feval) {
         this.feval = feval;
@@ -29,17 +33,18 @@ public abstract class AbstractFuzzyAnalyser {
     }
 
     /**
-     * 
-     * @param permission 
+     *
+     * @param permission
+     * @param decisionMaker
      * @param decisionsToResult
-     * @return 
+     * @param handler
      */
-    abstract public List<DecisionResult> analyse(String permission, DecisionResultsToReturn decisionsToResult);
-    
+    abstract public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler);
+
     public void resetAnalyser() {
         this.numberOfEvaluations = 0;
     }
-    
+
     public int getNumberOfEvaluations() {
         return numberOfEvaluations;
     }

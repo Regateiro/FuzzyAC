@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.decision.util;
+package it.av.fac.decision.util.decision;
 
 /**
- *
+ * TODO: Change this into configuration files.
  * @author Diogo Regateiro
  */
-public enum Contribution {
-    GRANT, DENY, NONE, UNKNOWN;
+public class DecisionConfig {
+    public static final String MODULE_KEY = "decision";
 }

@@ -1,13 +1,14 @@
 package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
-import it.av.fac.decision.util.Contribution;
-import it.av.fac.decision.util.Decision;
-import it.av.fac.decision.util.DecisionManager;
-import it.av.fac.decision.util.DecisionResult;
-import it.av.fac.decision.util.SlopeType;
-import it.av.fac.decision.util.MultiRangeValue;
-import it.av.fac.decision.util.RangeValue;
+import it.av.fac.decision.util.variables.Contribution;
+import it.av.fac.decision.util.decision.Decision;
+import it.av.fac.decision.util.decision.DecisionManager;
+import it.av.fac.decision.util.decision.DecisionResult;
+import it.av.fac.decision.util.decision.IDecisionMaker;
+import it.av.fac.decision.util.variables.SlopeType;
+import it.av.fac.decision.util.variables.MultiRangeValue;
+import it.av.fac.decision.util.variables.RangeValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
+import it.av.fac.decision.util.handlers.IResultHandler;
 
 /**
  *
@@ -28,8 +30,6 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     private final DecisionManager decisionManager;
     private final List<List<DecisionResult>> variableOutputs;
     private final Map<Integer, Integer> lastPassCount;
-    private List<DecisionResult> results;
-    private int variableUpdatedIdx;
 
     public OptimizedFuzzyAnalyser(FuzzyEvaluator feval) {
         super(feval);
@@ -38,14 +38,21 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         this.decisionManager = new DecisionManager();
         this.variableOutputs = new ArrayList<>();
         this.lastPassCount = new HashMap<>();
-        this.results = null;
-        this.variableUpdatedIdx = -1;
     }
 
+    /**
+     * 
+     * @param permission
+     * @param decisionMaker
+     * @param decisionsToResult
+     * @param handler 
+     */
     @Override
-    public List<DecisionResult> analyse(String permission, DecisionResultsToReturn decisionsToResult) {
+    public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler) {
         this.permissionToAnalyse = permission;
         this.decisionsToReturn = decisionsToResult;
+        this.handler = handler;
+        this.decisionMaker = decisionMaker;
 
         //reset the analyser
         resetAnalyser();
@@ -62,13 +69,8 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         //Retrieves the variables for the VariableInference function block, filtering for only used input variables and adds their name to the inputVars list.
         variables.stream().filter((var) -> var.isInput() && this.vda.variableIsUsed(var.getName())).forEach((var) -> inputVars.add(var.getName()));
 
-        //update the variableUpdatedIdx
-        this.variableUpdatedIdx = inputVars.size() - 1;
-
         //Obtains the edge conditions.
-        findEdgeIntegerConditions(permission, 0.5, inputVars);
-
-        return results;
+        findEdgeIntegerConditions(permission, inputVars);
     }
 
     /**
@@ -78,7 +80,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
      * @param alphaCut The value to check the permission weights for equality.
      * @param variables The name of the variables for the FIS.
      */
-    private void findEdgeIntegerConditions(String permission, double alphaCut, List<String> variables) {
+    private void findEdgeIntegerConditions(String permission, List<String> variables) {
         List<MultiRangeValue> variableMap = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
             //get variable name
@@ -91,21 +93,28 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         this.vda.optimizeOrdering(variableMap);
 
         // recursive function call
-        findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
+        findEdgeIntegerConditionsRec(variableMap, 0, false);
     }
 
     @SuppressWarnings("empty-statement")
-    protected void findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
+    protected void findEdgeIntegerConditionsRec(List<MultiRangeValue> variableMap, int varIdx, boolean storeResults) {
         if (varIdx < variableMap.size()) {
             variableOutputs.add(new ArrayList<>());
 
             do {
                 if (this.lastChangeContribution != Contribution.NONE) {
                     //update the results count for the new pass
+                    if (!storeResults) {
+                        for (int i = 0; i < variableOutputs.size(); i++) {
+                            this.handler.handleResults(this.variableOutputs.get(i));
+                            this.variableOutputs.get(i).clear();
+                        }
+                    }
+
                     lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
 
                     //recursive call to add the other variable to the list
-                    findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1);
+                    findEdgeIntegerConditionsRec(variableMap, varIdx + 1, storeResults || variableMap.get(varIdx).getNextValueContribution() == Contribution.NONE);
                 } else {
                     //update the previous results changing only this variable value
                     List<DecisionResult> tempList = new ArrayList<>();
@@ -141,7 +150,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
                     //pulls back the results into the parent
                     if (varIdx == 0) {
-                        this.results = this.variableOutputs.get(varIdx);
+                        this.handler.handleResults(this.variableOutputs.get(varIdx));
                     } else {
                         this.variableOutputs.get(varIdx - 1).addAll(this.variableOutputs.remove(varIdx));
                     }
@@ -151,7 +160,6 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 //Searched the rest of the variable, time to update this one by step.
                 int lastValue = variableMap.get(varIdx).getCurrentValue();
                 while (lastValue == variableMap.get(varIdx).next());
-                this.variableUpdatedIdx = varIdx;
 
                 // if the variable updated is not the last one on the list
                 if (varIdx < variableMap.size() - 1) {
@@ -182,7 +190,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
 
                     //Adds the variables that resulted on the provided alphaCut
-                    decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? Decision.Granted : Decision.Denied);
+                    decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
                     numberOfEvaluations++;
                     this.decisionManager.saveDecision(variableMap.get(varIdx - 1).getCurrentValue(), decision);
                 }
@@ -312,9 +320,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         super.resetAnalyser();
         this.decisionManager.clear();
         this.lastPassCount.clear();
-        this.results = null;
         this.variableOutputs.clear();
         this.lastChangeContribution = Contribution.UNKNOWN;
-        this.variableUpdatedIdx = -1;
     }
 }

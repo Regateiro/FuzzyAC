@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.decision.util;
+package it.av.fac.decision.util.decision;
 
+import it.av.fac.decision.util.variables.Contribution;
 import java.util.HashMap;
 import java.util.Map;
 

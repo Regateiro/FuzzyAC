@@ -6,7 +6,7 @@
 package it.av.fac.decision.handlers;
 
 import it.av.fac.decision.fis.FuzzyEvaluator;
-import it.av.fac.decision.util.DecisionConfig;
+import it.av.fac.decision.util.decision.DecisionConfig;
 import it.av.fac.messaging.client.DecisionReply;
 import it.av.fac.messaging.client.DecisionRequest;
 import it.av.fac.messaging.client.InformationReply;

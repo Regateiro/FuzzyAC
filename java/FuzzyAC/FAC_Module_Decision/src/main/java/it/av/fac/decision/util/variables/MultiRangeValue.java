@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.decision.util;
+package it.av.fac.decision.util.variables;
 
 import java.util.List;
 
@@ -59,5 +59,21 @@ public class MultiRangeValue {
 
     public Contribution getContribution() {
         return ranges.get(idx).getContribution();
+    }
+
+    public Contribution getNextValueContribution() {
+        if (ranges.get(idx).isOnTheEdge() && idx + direction >= 0 && idx + direction < ranges.size()) {
+            return ranges.get(idx + direction).getContribution();
+        }
+        
+        return ranges.get(idx).getContribution();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder ret = new StringBuilder(this.getVarName());
+        ranges.stream().forEachOrdered((range) -> ret.append("\n\t").append(range.toString()));
+        ret.append("\n");
+        return ret.toString();
     }
 }

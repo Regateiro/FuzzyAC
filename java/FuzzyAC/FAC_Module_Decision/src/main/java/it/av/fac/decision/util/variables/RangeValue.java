@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.decision.util;
+package it.av.fac.decision.util.variables;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +71,7 @@ public class RangeValue {
 
     @Override
     public String toString() {
-        return String.format("(%d-%d; %d)", min, max, currVal);
+        return String.format("(%d-%d; %d [%s])", min, max, currVal, contribution);
     }
 
     public void invertDirection() {

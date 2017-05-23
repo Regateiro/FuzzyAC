@@ -6,10 +6,12 @@
 package it.av.fac.decision.fis;
 
 import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
-import it.av.fac.decision.util.Decision;
-import it.av.fac.decision.util.DecisionResult;
-import it.av.fac.decision.util.MultiRangeValue;
-import it.av.fac.decision.util.RangeValue;
+import it.av.fac.decision.util.decision.Decision;
+import it.av.fac.decision.util.decision.DecisionResult;
+import it.av.fac.decision.util.decision.IDecisionMaker;
+import it.av.fac.decision.util.handlers.IResultHandler;
+import it.av.fac.decision.util.variables.MultiRangeValue;
+import it.av.fac.decision.util.variables.RangeValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,13 +34,17 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
     /**
      *
-     * @param permission Doesn't matter.
-     * @return
+     * @param permission
+     * @param decisionMaker
+     * @param decisionsToResult
+     * @param handler
      */
     @Override
-    public List<DecisionResult> analyse(String permission, DecisionResultsToReturn decisionsToResult) {
+    public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler) {
         this.permissionToAnalyse = permission;
         this.decisionsToReturn = decisionsToResult;
+        this.handler = handler;
+        this.decisionMaker = decisionMaker;
 
         //reset the analyser
         resetAnalyser();
@@ -53,7 +59,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
         variables.stream().filter((var) -> var.isInput()).forEach((var) -> inputVars.add(var.getName()));
 
         //Obtains the edge conditions.
-        return findEdgeIntegerConditions(0.5, inputVars);
+        findEdgeIntegerConditions(inputVars);
     }
 
     /**
@@ -63,7 +69,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
      * @param alphaCut The value to check the permission weights for equality.
      * @param variables The name of the variables for the FIS.
      */
-    private List<DecisionResult> findEdgeIntegerConditions(double alphaCut, List<String> variables) {
+    private void findEdgeIntegerConditions(List<String> variables) {
         List<MultiRangeValue> variableMap = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
             //get variable name
@@ -81,16 +87,14 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
         variableMap.remove(0);
 
         // recursive function call
-        return findEdgeIntegerConditionsRec(alphaCut, variableMap, 0);
+        findEdgeIntegerConditionsRec(variableMap, 0);
     }
 
-    protected List<DecisionResult> findEdgeIntegerConditionsRec(double alphaCut, List<MultiRangeValue> variableMap, int varIdx) {
-        List<DecisionResult> results = new ArrayList<>();
-
+    protected void findEdgeIntegerConditionsRec(List<MultiRangeValue> variableMap, int varIdx) {
         if (varIdx < variableMap.size()) {
             do {
                 //recursive call to add the other variable to the list
-                results.addAll(findEdgeIntegerConditionsRec(alphaCut, variableMap, varIdx + 1));
+                findEdgeIntegerConditionsRec(variableMap, varIdx + 1);
 
                 //TODO: Optimize. Breaks the recursive call when the variable is on the range edge
                 if (variableMap.get(varIdx).isOnTheEdge()) {
@@ -116,21 +120,21 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
 
             try {
                 //Adds the variables that resulted on the provided alphaCut
-                Decision decision = (evaluation.get(permissionToAnalyse).getValue() > alphaCut ? Decision.Granted : Decision.Denied);
+                Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
                 DecisionResult result = new DecisionResult(decision, variablesToEvaluate);
 
                 switch (decisionsToReturn) {
                     case ALL:
-                        results.add(result);
+                        handler.handleSingleResult(result);
                         break;
                     case ONLY_GRANT:
                         if (result.getDecision() == Decision.Granted) {
-                            results.add(result);
+                            handler.handleSingleResult(result);
                         }
                         break;
                     case ONLY_DENY:
                         if (result.getDecision() == Decision.Denied) {
-                            results.add(result);
+                            handler.handleSingleResult(result);
                         }
                         break;
                 }
@@ -139,8 +143,6 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 System.err.println("[SimpleFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }
         }
-
-        return results;
     }
 
     private double maxXValue(String varName) {

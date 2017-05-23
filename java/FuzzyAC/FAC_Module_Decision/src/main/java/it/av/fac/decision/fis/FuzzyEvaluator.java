@@ -5,9 +5,9 @@
  */
 package it.av.fac.decision.fis;
 
-import it.av.fac.decision.util.DecisionResult;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
+import it.av.fac.decision.util.decision.IDecisionMaker;
+import it.av.fac.decision.util.handlers.ResultHandlerToFile;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,8 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
@@ -36,16 +34,6 @@ public class FuzzyEvaluator {
 
     final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
     final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
-
-    private static void printToFile(String filename, List<DecisionResult> ret) {
-        try {
-            try (PrintWriter pw = new PrintWriter(filename + ".txt")) {
-                ret.stream().forEachOrdered((result) -> pw.println(result));
-            }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(FuzzyEvaluator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 
     private final FIS fis;
 
@@ -165,44 +153,44 @@ public class FuzzyEvaluator {
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
         AbstractFuzzyAnalyser.DecisionResultsToReturn drtr = AbstractFuzzyAnalyser.DecisionResultsToReturn.ONLY_GRANT;
+        IDecisionMaker decisionMaker = new AlphaCutDecisionMaker(0.5);
 
-        List<DecisionResult> ret = new ArrayList<>();
         int itr = 1;
         long time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            ret = ofanal.analyse("Read", drtr);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("oread.txt")) {
+                ofanal.analyse("Read", decisionMaker, drtr, handler);
+            }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + ret.size() + " permission results.");
-
-        printToFile("O_Read", ret);
+        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            ret = sfanal.analyse("Read", drtr);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("sread.txt")) {
+                sfanal.analyse("Read", decisionMaker, drtr, handler);
+            }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + ret.size() + " permission results.");
-
-        printToFile("S_Read", ret);
+        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            ret = ofanal.analyse("Write", drtr);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("owrite.txt")) {
+                ofanal.analyse("Write", decisionMaker, drtr, handler);
+            }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations and found " + ret.size() + " permission results.");
-
-        printToFile("O_Write", ret);
+        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            ret = sfanal.analyse("Write", drtr);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("swrite.txt")) {
+                sfanal.analyse("Write", decisionMaker, drtr, handler);
+            }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations and found " + ret.size() + " permission results.");
-
-        printToFile("S_Write", ret);
+        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
     }
 
     FIS getFis() {

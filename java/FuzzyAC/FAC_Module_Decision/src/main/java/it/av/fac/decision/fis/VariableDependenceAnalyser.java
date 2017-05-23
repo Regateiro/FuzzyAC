@@ -5,7 +5,7 @@
  */
 package it.av.fac.decision.fis;
 
-import it.av.fac.decision.util.MultiRangeValue;
+import it.av.fac.decision.util.variables.MultiRangeValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
