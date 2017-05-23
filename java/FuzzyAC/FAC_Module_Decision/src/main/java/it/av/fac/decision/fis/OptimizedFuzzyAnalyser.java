@@ -41,11 +41,11 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     }
 
     /**
-     * 
+     *
      * @param permission
      * @param decisionMaker
      * @param decisionsToResult
-     * @param handler 
+     * @param handler
      */
     @Override
     public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler) {
@@ -108,6 +108,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                         for (int i = 0; i < variableOutputs.size(); i++) {
                             this.handler.handleResults(this.variableOutputs.get(i));
                             this.variableOutputs.get(i).clear();
+                            this.lastPassCount.put(i, 0);
                         }
                     }
 
@@ -116,6 +117,9 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     //recursive call to add the other variable to the list
                     findEdgeIntegerConditionsRec(variableMap, varIdx + 1, storeResults || variableMap.get(varIdx).getNextValueContribution() == Contribution.NONE);
                 } else {
+                    if (varIdx == 0) {
+                        System.out.print("");
+                    }
                     //update the previous results changing only this variable value
                     List<DecisionResult> tempList = new ArrayList<>();
 
@@ -133,10 +137,18 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     });
 
                     //update the results count so only the newly added results will be copied if the contribution remains NONE
-                    lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
+                    if (!storeResults) {
+                        for (int i = 0; i < variableOutputs.size(); i++) {
+                            this.handler.handleResults(this.variableOutputs.get(i));
+                            this.variableOutputs.get(i).clear();
+                            this.lastPassCount.put(i, 0);
+                        }
+                    } else {
+                        this.lastPassCount.put(varIdx, this.variableOutputs.get(varIdx).size());
+                    }
 
                     //add the new copied results
-                    variableOutputs.get(varIdx).addAll(tempList);
+                    this.variableOutputs.get(varIdx).addAll(tempList);
                 }
 
                 //Breaks the recursive call when the variable is on the range edge

@@ -6,6 +6,7 @@
 package it.av.fac.decision.util.variables;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -67,6 +68,16 @@ public class MultiRangeValue {
         }
         
         return ranges.get(idx).getContribution();
+    }
+    
+    public int getTotalNotUnknownContribution() {
+        AtomicInteger ret = new AtomicInteger();
+        ranges.parallelStream().forEach((range) -> {
+            if(range.getContribution() != Contribution.UNKNOWN) {
+                ret.addAndGet(range.getMax() - range.getMin() + 1);
+            }
+        });
+        return ret.get();
     }
 
     @Override

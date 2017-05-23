@@ -8,6 +8,7 @@ package it.av.fac.decision.fis;
 import it.av.fac.decision.util.variables.MultiRangeValue;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -196,13 +197,18 @@ public class VariableDependenceAnalyser {
         return usedVariables.contains(varName);
     }
 
+    /**
+     * Optimizes the ordering the of the variables.
+     * @param variableMap The list of variable in any order.
+     */
     public void optimizeOrdering(List<MultiRangeValue> variableMap) {
-        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Citations")).findFirst().get());
-        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Days_Since_Last_Publication")).findFirst().get());
-        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Publications")).findFirst().get());
-        variableMap.remove(0);
-        variableMap.remove(0);
-        variableMap.remove(0);
+        //sort the variable according to the amount of NONE contribution
+        Collections.sort(variableMap, (o1, o2) -> {
+            return Integer.compare(o1.getTotalNotUnknownContribution(), o2.getTotalNotUnknownContribution());
+        });
+        
+        //put the variable with the least amount of NONE contribution on the end.
+        variableMap.add(variableMap.remove(0));
     }
 
     private static class RuleTermComparator {
