@@ -175,6 +175,14 @@ public class RangeValue {
     }
 
     public Contribution getContribution() {
+        if(this.direction == -1) {
+            if(this.contribution == Contribution.GRANT) {
+                return Contribution.DENY;
+            } else if(this.contribution == Contribution.DENY) {
+                return Contribution.GRANT;
+            }
+        }
+        
         return contribution;
     }
 }
