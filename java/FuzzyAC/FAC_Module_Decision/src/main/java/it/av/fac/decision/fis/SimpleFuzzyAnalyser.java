@@ -79,13 +79,6 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
         }
 
-        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Citations")).findFirst().get());
-        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Days_Since_Last_Publication")).findFirst().get());
-        variableMap.add(variableMap.stream().filter((var) -> var.getVarName().equalsIgnoreCase("Number_Of_Publications")).findFirst().get());
-        variableMap.remove(0);
-        variableMap.remove(0);
-        variableMap.remove(0);
-
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0);
     }
