@@ -66,14 +66,14 @@ public class MultiRangeValue {
         if (ranges.get(idx).isOnTheEdge() && idx + direction >= 0 && idx + direction < ranges.size()) {
             return ranges.get(idx + direction).getContribution();
         }
-        
+
         return ranges.get(idx).getContribution();
     }
-    
+
     public int getTotalNotUnknownContribution() {
         AtomicInteger ret = new AtomicInteger();
         ranges.parallelStream().forEach((range) -> {
-            if(range.getContribution() != Contribution.UNKNOWN) {
+            if (range.getContribution() != Contribution.UNKNOWN) {
                 ret.addAndGet(range.getMax() - range.getMin() + 1);
             }
         });
@@ -86,5 +86,41 @@ public class MultiRangeValue {
         ranges.stream().forEachOrdered((range) -> ret.append("\n\t").append(range.toString()));
         ret.append("\n");
         return ret.toString();
+    }
+
+    public void setToMin() {
+        this.idx = 0;
+        this.direction = 1;
+        this.ranges.parallelStream().forEach((range) -> range.setToMin());
+    }
+
+    public void setToMax() {
+        this.idx = this.ranges.size() - 1;
+        this.direction = -1;
+        this.ranges.parallelStream().forEach((range) -> range.setToMax());
+    }
+    
+    public double getMin() {
+        return this.ranges.get(0).getMin();
+    }
+    
+    public double getMax() {
+        return this.ranges.get(this.ranges.size() - 1).getMax();
+    }
+
+    public boolean isSetToMin() {
+        return getCurrentValue() == this.ranges.get(0).getMin();
+    }
+    
+    public boolean isSetToMax() {
+        return getCurrentValue() == this.ranges.get(this.ranges.size() - 1).getMax();
+    }
+    
+    public double getRangeSize() {
+        AtomicInteger ret = new AtomicInteger();
+        ranges.parallelStream().forEach((range) -> {
+            ret.addAndGet(range.getMax() - range.getMin() + 1);
+        });
+        return ret.get();
     }
 }

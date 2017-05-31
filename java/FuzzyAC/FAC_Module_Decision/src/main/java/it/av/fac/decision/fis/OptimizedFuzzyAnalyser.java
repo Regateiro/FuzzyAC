@@ -99,10 +99,12 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     @SuppressWarnings("empty-statement")
     protected void findEdgeIntegerConditionsRec(List<MultiRangeValue> variableMap, int varIdx, boolean storeResults) {
         if (varIdx < variableMap.size()) {
+            boolean oddPass = false;
             variableOutputs.add(new ArrayList<>());
 
             do {
-                if (this.lastChangeContribution != Contribution.NONE) {
+                oddPass = !oddPass;
+                if (this.lastChangeContribution == Contribution.UNKNOWN) {
                     //update the results count for the new pass
                     if (!storeResults) {
                         for (int i = 0; i < variableOutputs.size(); i++) {
@@ -115,26 +117,44 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     lastPassCount.put(varIdx, variableOutputs.get(varIdx).size());
 
                     //recursive call to add the other variable to the list
-                    findEdgeIntegerConditionsRec(variableMap, varIdx + 1, storeResults || variableMap.get(varIdx).getNextValueContribution() == Contribution.NONE);
+                    findEdgeIntegerConditionsRec(variableMap, varIdx + 1, storeResults || variableMap.get(varIdx).getNextValueContribution() != Contribution.UNKNOWN);
                 } else {
-                    if (varIdx == 0) {
-                        System.out.print("");
-                    }
                     //update the previous results changing only this variable value
-                    List<DecisionResult> tempList = new ArrayList<>();
+                    List<DecisionResult> newResults = new ArrayList<>();
 
                     //filter only to the results added on the last time the recursive function was called and make a copy of them
                     variableOutputs.get(varIdx)
                             .subList(lastPassCount.get(varIdx), variableOutputs.get(varIdx).size())
-                            .stream().forEachOrdered((result) -> tempList.add(result.copy()));
+                            .stream().forEachOrdered((result) -> newResults.add(result.copy()));
 
                     //keep only a single value being updated per line
-                    Collections.reverse(tempList);
+                    Collections.reverse(newResults);
 
                     //update the copy values for this variable to the current value
-                    tempList.parallelStream().forEach((result) -> {
+                    newResults.parallelStream().forEach((result) -> {
                         result.getVariables().put(variableMap.get(varIdx).getVarName(), (double) variableMap.get(varIdx).getCurrentValue());
                     });
+
+                    //if the lastChangeContribution is not NONE, then update the decision where it does not match the contribution.
+                    if (this.lastChangeContribution == Contribution.GRANT) {
+                        //reevaluate decisions that do not match the last change contribution
+                        for (int idx = 0; idx < newResults.size(); idx++) {
+                            DecisionResult result = newResults.get(idx);
+                            if (result.getDecision() == Decision.Denied) {
+                                newResults.remove(idx);
+                                newResults.add(idx, evaluateDecision(result.getVariables()));
+                            }
+                        }
+                    } else if (this.lastChangeContribution == Contribution.DENY) {
+                        //reevaluate decisions that do not match the last change contribution
+                        for (int idx = 0; idx < newResults.size(); idx++) {
+                            DecisionResult result = newResults.get(idx);
+                            if (result.getDecision() == Decision.Granted) {
+                                newResults.remove(idx);
+                                newResults.add(idx, evaluateDecision(result.getVariables()));
+                            }
+                        }
+                    }
 
                     //update the results count so only the newly added results will be copied if the contribution remains NONE
                     if (!storeResults) {
@@ -148,17 +168,25 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     }
 
                     //add the new copied results
-                    this.variableOutputs.get(varIdx).addAll(tempList);
+                    this.variableOutputs.get(varIdx).addAll(newResults);
+
+                    DecisionResult lastEvaluatedResult = this.variableOutputs.get(varIdx).get(this.variableOutputs.get(varIdx).size() - 1);
+
+                    //update the variables
+                    for (int idx = varIdx + 1; idx < variableMap.size(); idx++) {
+                        double resultVarVal = lastEvaluatedResult.getVariables().get(variableMap.get(idx).getVarName());
+                        if (resultVarVal == variableMap.get(idx).getMin()) {
+                            variableMap.get(idx).setToMin();
+                        } else if (resultVarVal == variableMap.get(idx).getMax()) {
+                            variableMap.get(idx).setToMax();
+                        }
+                    }
                 }
 
+                //current variable value has been processed
                 //Breaks the recursive call when the variable is on the range edge
                 if (variableMap.get(varIdx).isOnTheEdge()) {
                     variableMap.get(varIdx).invertDirection();
-
-                    //if the last variable just finished a pass, save the current ranges.
-                    if (varIdx == variableMap.size() - 1) {
-                        this.decisionManager.ageDecisions();
-                    }
 
                     //pulls back the results into the parent
                     if (varIdx == 0) {
@@ -173,41 +201,13 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 int lastValue = variableMap.get(varIdx).getCurrentValue();
                 while (lastValue == variableMap.get(varIdx).next());
 
-                // if the variable updated is not the last one on the list
-                if (varIdx < variableMap.size() - 1) {
-                    this.lastChangeContribution = variableMap.get(varIdx).getContribution();
-                }
+                //save the last variable updated contribution
+                this.lastChangeContribution = variableMap.get(varIdx).getContribution();
             } while (true);
         } else {
-            Decision decision = null;
-
             //Edge case where there are no more variables.
-            //Check to see if an evaluation is required
-            if (this.lastChangeContribution != Contribution.UNKNOWN) {
-                int x = variableMap.get(varIdx - 1).getCurrentValue();
-                if (this.decisionManager.isLastDecisionApplicable(this.lastChangeContribution, x)) {
-                    decision = this.decisionManager.useLastDecision(x);
-                }
-            }
-
             try {
-                //Create evaluation variable map
-                Map<String, Double> variablesToEvaluate = new HashMap<>();
-                variableMap.stream().forEach((var) -> {
-                    variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
-                });
-
-                if (decision == null) {
-                    //Evaluates the result using the current variable values.
-                    Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
-
-                    //Adds the variables that resulted on the provided alphaCut
-                    decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
-                    numberOfEvaluations++;
-                    this.decisionManager.saveDecision(variableMap.get(varIdx - 1).getCurrentValue(), decision);
-                }
-
-                DecisionResult result = new DecisionResult(decision, variablesToEvaluate);
+                DecisionResult result = evaluateDecision(variableMap);
 
                 switch (decisionsToReturn) {
                     case ALL:
@@ -228,6 +228,46 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                 System.err.println("[OptimizedFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }
         }
+    }
+
+    /**
+     * Evaluates a decision based on variable values using the FIS.
+     *
+     * @param variableMap
+     * @return
+     */
+    private DecisionResult evaluateDecision(List<MultiRangeValue> variableMap) {
+        //Create evaluation variable map
+        Map<String, Double> variablesToEvaluate = new HashMap<>();
+        variableMap.stream().forEach((var) -> {
+            variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
+        });
+
+        //Evaluates the result using the current variable values.
+        Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+        this.numberOfEvaluations++;
+
+        //Adds the variables that resulted on the provided alphaCut
+        Decision decision = this.decisionMaker.makeDecision(evaluation.get(this.permissionToAnalyse));
+
+        return new DecisionResult(decision, variablesToEvaluate);
+    }
+
+    /**
+     * Evaluates a decision based on variable values using the FIS.
+     *
+     * @param variableMap
+     * @return
+     */
+    private DecisionResult evaluateDecision(Map<String, Double> variableMap) {
+        //Evaluates the result using the current variable values.
+        Map<String, Variable> evaluation = feval.evaluate(variableMap, false);
+        numberOfEvaluations++;
+
+        //Adds the variables that resulted on the provided alphaCut
+        Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
+
+        return new DecisionResult(decision, variableMap);
     }
 
     /**

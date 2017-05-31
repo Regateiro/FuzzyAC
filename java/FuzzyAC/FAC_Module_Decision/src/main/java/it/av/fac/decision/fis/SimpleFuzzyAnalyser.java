@@ -78,6 +78,8 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             //add temporary solution
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
         }
+        
+        System.out.println(variableMap);
 
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0);

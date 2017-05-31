@@ -185,4 +185,14 @@ public class RangeValue {
         
         return contribution;
     }
+
+    void setToMin() {
+        this.currVal = min;
+        this.direction = 1;
+    }
+    
+    void setToMax() {
+        this.currVal = max;
+        this.direction = -1;
+    }
 }

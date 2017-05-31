@@ -199,16 +199,19 @@ public class VariableDependenceAnalyser {
 
     /**
      * Optimizes the ordering the of the variables.
+     *
      * @param variableMap The list of variable in any order.
      */
     public void optimizeOrdering(List<MultiRangeValue> variableMap) {
         //sort the variable according to the amount of NONE contribution
         Collections.sort(variableMap, (o1, o2) -> {
-            return Integer.compare(o1.getTotalNotUnknownContribution(), o2.getTotalNotUnknownContribution());
+            return Integer.compare(o2.getTotalNotUnknownContribution(), o1.getTotalNotUnknownContribution());
         });
         
-        //put the variable with the least amount of NONE contribution on the end.
-        variableMap.add(variableMap.remove(0));
+//        //put the variable with the least amount of NONE contribution on the end.
+//        variableMap.add(variableMap.remove(0));
+        
+        System.out.println(variableMap);
     }
 
     private static class RuleTermComparator {

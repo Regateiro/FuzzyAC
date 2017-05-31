@@ -152,7 +152,7 @@ public class FuzzyEvaluator {
         AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
-        AbstractFuzzyAnalyser.DecisionResultsToReturn drtr = AbstractFuzzyAnalyser.DecisionResultsToReturn.ONLY_GRANT;
+        AbstractFuzzyAnalyser.DecisionResultsToReturn drtr = AbstractFuzzyAnalyser.DecisionResultsToReturn.ALL;
         IDecisionMaker decisionMaker = new AlphaCutDecisionMaker(0.5);
 
         int itr = 1;
