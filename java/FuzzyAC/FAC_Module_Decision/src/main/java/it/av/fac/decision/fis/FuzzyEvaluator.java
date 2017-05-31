@@ -152,14 +152,14 @@ public class FuzzyEvaluator {
         AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
-        AbstractFuzzyAnalyser.DecisionResultsToReturn drtr = AbstractFuzzyAnalyser.DecisionResultsToReturn.ALL;
+        AbstractFuzzyAnalyser.DecisionResultsToReturn drtr = AbstractFuzzyAnalyser.DecisionResultsToReturn.ONLY_GRANT;
         IDecisionMaker decisionMaker = new AlphaCutDecisionMaker(0.5);
 
         int itr = 1;
         long time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("oread.txt")) {
-                ofanal.analyse("Read", decisionMaker, drtr, handler);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("oread.txt", drtr)) {
+                ofanal.analyse("Read", decisionMaker, handler);
             }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
@@ -167,8 +167,8 @@ public class FuzzyEvaluator {
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("sread.txt")) {
-                sfanal.analyse("Read", decisionMaker, drtr, handler);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("sread.txt", drtr)) {
+                sfanal.analyse("Read", decisionMaker, handler);
             }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
@@ -176,8 +176,8 @@ public class FuzzyEvaluator {
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("owrite.txt")) {
-                ofanal.analyse("Write", decisionMaker, drtr, handler);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("owrite.txt", drtr)) {
+                ofanal.analyse("Write", decisionMaker, handler);
             }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));
@@ -185,8 +185,8 @@ public class FuzzyEvaluator {
 
         time = System.nanoTime();
         for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("swrite.txt")) {
-                sfanal.analyse("Write", decisionMaker, drtr, handler);
+            try (ResultHandlerToFile handler = new ResultHandlerToFile("swrite.txt", drtr)) {
+                sfanal.analyse("Write", decisionMaker, handler);
             }
         }
         time = ((System.nanoTime() - time) / (1000000 * itr));

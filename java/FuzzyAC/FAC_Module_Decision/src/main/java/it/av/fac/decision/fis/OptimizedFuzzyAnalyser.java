@@ -44,13 +44,11 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
      *
      * @param permission
      * @param decisionMaker
-     * @param decisionsToResult
      * @param handler
      */
     @Override
-    public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler) {
+    public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler) {
         this.permissionToAnalyse = permission;
-        this.decisionsToReturn = decisionsToResult;
         this.handler = handler;
         this.decisionMaker = decisionMaker;
 
@@ -208,22 +206,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
             //Edge case where there are no more variables.
             try {
                 DecisionResult result = evaluateDecision(variableMap);
-
-                switch (decisionsToReturn) {
-                    case ALL:
-                        this.variableOutputs.get(varIdx - 1).add(result);
-                        break;
-                    case ONLY_GRANT:
-                        if (result.getDecision() == Decision.Granted) {
-                            this.variableOutputs.get(varIdx - 1).add(result);
-                        }
-                        break;
-                    case ONLY_DENY:
-                        if (result.getDecision() == Decision.Denied) {
-                            this.variableOutputs.get(varIdx - 1).add(result);
-                        }
-                        break;
-                }
+                this.variableOutputs.get(varIdx - 1).add(result);
             } catch (NullPointerException ex) {
                 System.err.println("[OptimizedFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }

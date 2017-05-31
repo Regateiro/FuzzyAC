@@ -36,13 +36,11 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
      *
      * @param permission
      * @param decisionMaker
-     * @param decisionsToResult
      * @param handler
      */
     @Override
-    public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler) {
+    public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler) {
         this.permissionToAnalyse = permission;
-        this.decisionsToReturn = decisionsToResult;
         this.handler = handler;
         this.decisionMaker = decisionMaker;
 
@@ -78,7 +76,7 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             //add temporary solution
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
         }
-        
+
         System.out.println(variableMap);
 
         // recursive function call
@@ -102,42 +100,37 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             } while (true);
         } else {
             //Edge case where there are no more variables.
-
-            //Create evaluation variable map
-            Map<String, Double> variablesToEvaluate = new HashMap<>();
-            variableMap.stream().forEach((var) -> {
-                variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
-            });
-
-            //Evaluates the result using the current variable values.
-            Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
-            numberOfEvaluations++;
-
             try {
                 //Adds the variables that resulted on the provided alphaCut
-                Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
-                DecisionResult result = new DecisionResult(decision, variablesToEvaluate);
-
-                switch (decisionsToReturn) {
-                    case ALL:
-                        handler.handleSingleResult(result);
-                        break;
-                    case ONLY_GRANT:
-                        if (result.getDecision() == Decision.Granted) {
-                            handler.handleSingleResult(result);
-                        }
-                        break;
-                    case ONLY_DENY:
-                        if (result.getDecision() == Decision.Denied) {
-                            handler.handleSingleResult(result);
-                        }
-                        break;
-                }
-
+                DecisionResult result = evaluateDecision(variableMap);
+                handler.handleSingleResult(result);
             } catch (NullPointerException ex) {
                 System.err.println("[SimpleFuzzyAnalyser] : Null pointer exception, it's possible that the permission " + permissionToAnalyse + " is not defined.");
             }
         }
+    }
+    
+        /**
+     * Evaluates a decision based on variable values using the FIS.
+     *
+     * @param variableMap
+     * @return
+     */
+    private DecisionResult evaluateDecision(List<MultiRangeValue> variableMap) {
+        //Create evaluation variable map
+        Map<String, Double> variablesToEvaluate = new HashMap<>();
+        variableMap.stream().forEach((var) -> {
+            variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
+        });
+
+        //Evaluates the result using the current variable values.
+        Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+        this.numberOfEvaluations++;
+
+        //Adds the variables that resulted on the provided alphaCut
+        Decision decision = this.decisionMaker.makeDecision(evaluation.get(this.permissionToAnalyse));
+
+        return new DecisionResult(decision, variablesToEvaluate);
     }
 
     private double maxXValue(String varName) {

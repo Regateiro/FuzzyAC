@@ -23,7 +23,6 @@ public abstract class AbstractFuzzyAnalyser {
     protected final FuzzyEvaluator feval;
     protected String permissionToAnalyse;
     protected int numberOfEvaluations;
-    protected DecisionResultsToReturn decisionsToReturn;
     protected IDecisionMaker decisionMaker;
     protected IResultHandler handler;
 
@@ -36,10 +35,9 @@ public abstract class AbstractFuzzyAnalyser {
      *
      * @param permission
      * @param decisionMaker
-     * @param decisionsToResult
      * @param handler
      */
-    abstract public void analyse(String permission, IDecisionMaker decisionMaker, DecisionResultsToReturn decisionsToResult, IResultHandler handler);
+    abstract public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler);
 
     public void resetAnalyser() {
         this.numberOfEvaluations = 0;

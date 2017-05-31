@@ -5,6 +5,8 @@
  */
 package it.av.fac.decision.util.handlers;
 
+import it.av.fac.decision.fis.AbstractFuzzyAnalyser;
+import it.av.fac.decision.util.decision.Decision;
 import it.av.fac.decision.util.decision.DecisionResult;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -17,19 +19,35 @@ import java.util.List;
 public class ResultHandlerToFile implements IResultHandler {
 
     private final PrintWriter handlerOut;
+    private final AbstractFuzzyAnalyser.DecisionResultsToReturn decisionsToHandle;
 
-    public ResultHandlerToFile(String filePath) throws FileNotFoundException {
+    public ResultHandlerToFile(String filePath, AbstractFuzzyAnalyser.DecisionResultsToReturn decisionsToHandle) throws FileNotFoundException {
         this.handlerOut = new PrintWriter(filePath);
+        this.decisionsToHandle = decisionsToHandle;
     }
 
     @Override
     public void handleResults(List<DecisionResult> results) {
-        results.stream().forEachOrdered((result) -> this.handlerOut.println(result));
+        results.stream().forEachOrdered((result) -> handleSingleResult(result));
     }
 
     @Override
     public void handleSingleResult(DecisionResult result) {
-        this.handlerOut.println(result);
+        switch (decisionsToHandle) {
+            case ALL:
+                this.handlerOut.println(result);
+                break;
+            case ONLY_GRANT:
+                if (result.getDecision() == Decision.Granted) {
+                    this.handlerOut.println(result);
+                }
+                break;
+            case ONLY_DENY:
+                if (result.getDecision() == Decision.Denied) {
+                    this.handlerOut.println(result);
+                }
+                break;
+        }
     }
 
     @Override
