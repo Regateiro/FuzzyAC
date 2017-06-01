@@ -82,14 +82,15 @@ public class VariableDependenceAnalyser {
             if (rule.getConsequents().size() > 1) {
                 System.err.println("more than one consequence in a rule. Using only the first one.");
             }
+            
+            grantingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
+            denyingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
 
             //check if the rule results into a grant or deny and adds the rule terms to the revelant list.
             RuleTerm consequent = rule.getConsequents().getFirst();
             if (consequent.getLinguisticTerm().getTermName().equalsIgnoreCase("grant")) {
-                grantingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
                 grantingOutputRuleTerms.get(permAnalyse).addAll(r_rts);
             } else {
-                denyingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
                 denyingOutputRuleTerms.get(permAnalyse).addAll(r_rts);
             }
         });
@@ -118,15 +119,15 @@ public class VariableDependenceAnalyser {
                 //check if the consequent of the rule is in the granting set or the denying set and add it to the appropriate set.
                 RuleTerm consequent = rule.getConsequents().getFirst();
                 grantingOutputRuleTerms.keySet().stream().forEach((String permission) -> {
+                    onlyGrantingInputRuleTerms.putIfAbsent(permission, new ArrayList<>());
                     if (RuleTermComparator.collectionContains(grantingOutputRuleTerms.get(permission), consequent)) {
-                        onlyGrantingInputRuleTerms.putIfAbsent(permission, new ArrayList<>());
                         onlyGrantingInputRuleTerms.get(permission).addAll(r_rts);
                     }
                 });
 
                 denyingOutputRuleTerms.keySet().stream().forEach((String permission) -> {
+                    onlyDenyingInputRuleTerms.putIfAbsent(permission, new ArrayList<>());
                     if (RuleTermComparator.collectionContains(denyingOutputRuleTerms.get(permission), consequent)) {
-                        onlyDenyingInputRuleTerms.putIfAbsent(permission, new ArrayList<>());
                         onlyDenyingInputRuleTerms.get(permission).addAll(r_rts);
                     }
                 });
@@ -205,13 +206,11 @@ public class VariableDependenceAnalyser {
     public void optimizeOrdering(List<MultiRangeValue> variableMap) {
         //sort the variable according to the amount of NONE contribution
         Collections.sort(variableMap, (o1, o2) -> {
-            return Integer.compare(o2.getTotalNotUnknownContribution(), o1.getTotalNotUnknownContribution());
+            return Integer.compare(o1.getTotalNotUnknownContribution(), o2.getTotalNotUnknownContribution()) * -1;
         });
-        
+
 //        //put the variable with the least amount of NONE contribution on the end.
 //        variableMap.add(variableMap.remove(0));
-        
-        System.out.println(variableMap);
     }
 
     private static class RuleTermComparator {

@@ -7,6 +7,7 @@ package it.av.fac.decision.fis;
 
 import it.av.fac.decision.util.decision.IDecisionMaker;
 import it.av.fac.decision.util.handlers.IResultHandler;
+import java.util.List;
 
 /**
  * Abstract class used to analyze the inputs that get a certain permission
@@ -25,10 +26,12 @@ public abstract class AbstractFuzzyAnalyser {
     protected int numberOfEvaluations;
     protected IDecisionMaker decisionMaker;
     protected IResultHandler handler;
+    protected List<String> order;
 
     protected AbstractFuzzyAnalyser(FuzzyEvaluator feval) {
         this.feval = feval;
         this.numberOfEvaluations = 0;
+        this.order = null;
     }
 
     /**
@@ -45,5 +48,9 @@ public abstract class AbstractFuzzyAnalyser {
 
     public int getNumberOfEvaluations() {
         return numberOfEvaluations;
+    }
+    
+    public void setVariableOrdering(List<String> order) {
+        this.order = order;
     }
 }

@@ -5,9 +5,11 @@
  */
 package it.av.fac.decision.fis;
 
+import it.av.fac.decision.fis.AbstractFuzzyAnalyser.DecisionResultsToReturn;
 import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
 import it.av.fac.decision.util.decision.IDecisionMaker;
-import it.av.fac.decision.util.handlers.ResultHandlerToFile;
+import it.av.fac.decision.util.handlers.IResultHandler;
+import it.av.fac.decision.util.handlers.NullHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,7 +36,6 @@ public class FuzzyEvaluator {
 
     final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
     final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
-
     private final FIS fis;
 
     public FuzzyEvaluator(String fcl, boolean inlineFcl) throws RecognitionException {
@@ -146,51 +147,79 @@ public class FuzzyEvaluator {
                 vars.put("Number_Of_Publications", 12.0);
                 vars.put("Number_Of_Citations", 50.0);
         }
-
+        
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
 //        System.out.println(feval.evaluate(vars, false));
+
+        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 1);
+    }
+
+    public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations) {
         AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
-        AbstractFuzzyAnalyser.DecisionResultsToReturn drtr = AbstractFuzzyAnalyser.DecisionResultsToReturn.ONLY_GRANT;
-        IDecisionMaker decisionMaker = new AlphaCutDecisionMaker(0.5);
+        List<List<String>> permutations = new ArrayList<>();
+        getPermutations(feval.getVariableNameList(), permutations);
 
-        int itr = 1;
-        long time = System.nanoTime();
-        for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("oread.txt", drtr)) {
-                ofanal.analyse("Read", decisionMaker, handler);
-            }
-        }
-        time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+        permutations.stream().forEach((List<String> permutation) -> {
+            System.out.println("Variable Order: " + permutation);
+            ofanal.setVariableOrdering(permutation);
+            sfanal.setVariableOrdering(permutation);
 
-        time = System.nanoTime();
-        for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("sread.txt", drtr)) {
-                sfanal.analyse("Read", decisionMaker, handler);
+            long time = System.nanoTime();
+            for (int i = 0; i < iterations; i++) {
+                try (IResultHandler handler = new NullHandler()) {
+                    ofanal.analyse("Read", decisionMaker, handler);
+                }
             }
-        }
-        time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
+            time = ((System.nanoTime() - time) / (1000000 * iterations));
+            System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
 
-        time = System.nanoTime();
-        for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("owrite.txt", drtr)) {
-                ofanal.analyse("Write", decisionMaker, handler);
+            time = System.nanoTime();
+            for (int i = 0; i < iterations; i++) {
+                try (IResultHandler handler = new NullHandler()) {
+                    sfanal.analyse("Read", decisionMaker, handler);
+                }
             }
-        }
-        time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+            time = ((System.nanoTime() - time) / (1000000 * iterations));
+            System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
 
-        time = System.nanoTime();
-        for (int i = 0; i < itr; i++) {
-            try (ResultHandlerToFile handler = new ResultHandlerToFile("swrite.txt", drtr)) {
-                sfanal.analyse("Write", decisionMaker, handler);
+            time = System.nanoTime();
+            for (int i = 0; i < iterations; i++) {
+                try (IResultHandler handler = new NullHandler()) {
+                    ofanal.analyse("Write", decisionMaker, handler);
+                }
             }
+            time = ((System.nanoTime() - time) / (1000000 * iterations));
+            System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+
+            time = System.nanoTime();
+            for (int i = 0; i < iterations; i++) {
+                try (IResultHandler handler = new NullHandler()) {
+                    sfanal.analyse("Write", decisionMaker, handler);
+                }
+            }
+            time = ((System.nanoTime() - time) / (1000000 * iterations));
+            System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
+            System.out.println();
+        });
+    }
+
+    private static void getPermutations(Collection<String> varList, List<List<String>> outputList) {
+        getPermutations(varList, outputList, new ArrayList<>());
+    }
+    private static void getPermutations(Collection<String> varList, List<List<String>> outputList, List<String> tempList) {
+        if(tempList.size() < varList.size()) {
+            varList.stream().forEachOrdered((var) -> {
+                if(!tempList.contains(var)) {
+                    tempList.add(var);
+                    getPermutations(varList, outputList, tempList);
+                    tempList.remove(var);
+                }
+            });
+        } else {
+            outputList.add(new ArrayList<>(tempList));
         }
-        time = ((System.nanoTime() - time) / (1000000 * itr));
-        System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
     }
 
     FIS getFis() {

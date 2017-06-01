@@ -56,6 +56,18 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
         //Retrieves the variables for the VariableInference function block, filtering for only input variables and adds their name to the inputVars list.
         variables.stream().filter((var) -> var.isInput()).forEach((var) -> inputVars.add(var.getName()));
 
+        if (order != null) {
+            //do ordering
+            if (inputVars.containsAll(order) && order.containsAll(inputVars)) {
+                order.stream().forEachOrdered((var) -> {
+                    inputVars.remove(var);
+                    inputVars.add(var);
+                });
+            } else {
+                System.out.println("Variables found do not match ordering received: " + inputVars);
+            }
+        }
+
         //Obtains the edge conditions.
         findEdgeIntegerConditions(inputVars);
     }
@@ -76,8 +88,6 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             //add temporary solution
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
         }
-
-        System.out.println(variableMap);
 
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0);
@@ -109,8 +119,8 @@ public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
             }
         }
     }
-    
-        /**
+
+    /**
      * Evaluates a decision based on variable values using the FIS.
      *
      * @param variableMap

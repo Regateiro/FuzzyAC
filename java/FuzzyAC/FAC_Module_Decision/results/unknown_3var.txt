@@ -1,0 +1,45 @@
+Read
+[ A (0-50; 0 [UNKNOWN]) (50-100; 50 [UNKNOWN]), 
+  B (0-50; 0 [UNKNOWN]) (50-100; 50 [UNKNOWN]), 
+  C	(0-50; 0 [UNKNOWN])	(50-100; 50 [UNKNOWN])]
+
+Write
+[ A (0-50; 0 [UNKNOWN]) (50-100; 50 [UNKNOWN]), 
+  B (0-50; 0 [UNKNOWN]) (50-100; 50 [UNKNOWN]), 
+  C	(0-50; 0 [UNKNOWN])	(50-100; 50 [UNKNOWN])]
+  
+Variable Order: [A, B, C]
+OFA took 7180ms to process the Read permission, which needed 1030301 evaluations.
+SFA took 5412ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 5399ms to process the Write permission, which needed 1030301 evaluations.
+SFA took 5932ms to process the Write permission, which needed 1030301 evaluations.
+
+Variable Order: [A, C, B]
+OFA took 6585ms to process the Read permission, which needed 1030301 evaluations.
+SFA took 6508ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 5757ms to process the Write permission, which needed 1030301 evaluations.
+SFA took 5788ms to process the Write permission, which needed 1030301 evaluations.
+
+Variable Order: [B, A, C]
+OFA took 6074ms to process the Read permission, which needed 1030301 evaluations.
+SFA took 5829ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 5954ms to process the Write permission, which needed 1030301 evaluations.
+SFA took 5754ms to process the Write permission, which needed 1030301 evaluations.
+
+Variable Order: [B, C, A]
+OFA took 5623ms to process the Read permission, which needed 1030301 evaluations.
+SFA took 5524ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 5600ms to process the Write permission, which needed 1030301 evaluations.
+SFA took 6624ms to process the Write permission, which needed 1030301 evaluations.
+
+Variable Order: [C, A, B]
+OFA took 5961ms to process the Read permission, which needed 1030301 evaluations.
+SFA took 6250ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 6518ms to process the Write permission, which needed 1030301 evaluations.
+SFA took 5716ms to process the Write permission, which needed 1030301 evaluations.
+
+Variable Order: [C, B, A]
+OFA took 5871ms to process the Read permission, which needed 1030301 evaluations.
+SFA took 5712ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 5915ms to process the Write permission, which needed 1030301 evaluations.
+SFA took 5484ms to process the Write permission, which needed 1030301 evaluations.

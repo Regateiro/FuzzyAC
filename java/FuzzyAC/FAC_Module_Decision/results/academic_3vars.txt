@@ -1,0 +1,69 @@
+Read
+ [Days_Since_Last_Publication
+	(0-60; 0 [NONE])
+	(60-75; 60 [DENY])
+	(75-90; 75 [UNKNOWN])
+	(90-100; 90 [UNKNOWN])
+	(100-150; 100 [UNKNOWN])
+	(150-360; 150 [UNKNOWN])
+, Number_Of_Citations
+	(0-4; 0 [NONE])
+	(4-10; 4 [UNKNOWN])
+	(10-100; 10 [UNKNOWN])
+, Number_Of_Publications
+	(3-5; 3 [UNKNOWN])
+	(5-18; 5 [UNKNOWN])
+]
+
+Write
+ [Days_Since_Last_Publication
+	(0-60; 0 [UNKNOWN])
+	(60-100; 60 [UNKNOWN])
+	(100-150; 100 [UNKNOWN])
+	(150-180; 150 [UNKNOWN])
+	(180-210; 180 [UNKNOWN])
+	(210-360; 210 [DENY])
+, Number_Of_Citations
+	(0-4; 0 [NONE])
+	(4-10; 4 [UNKNOWN])
+	(10-100; 10 [UNKNOWN])
+, Number_Of_Publications
+	(3-5; 3 [UNKNOWN])
+	(5-18; 5 [UNKNOWN])
+]
+
+Variable Order: [Number_Of_Publications, Number_Of_Citations, Days_Since_Last_Publication]
+OFA took 7999ms to process the Read permission, which needed 455512 evaluations.
+SFA took 8611ms to process the Read permission, which needed 583376 evaluations.
+OFA took 7029ms to process the Write permission, which needed 443872 evaluations.
+SFA took 8454ms to process the Write permission, which needed 583376 evaluations.
+
+Variable Order: [Number_Of_Publications, Days_Since_Last_Publication, Number_Of_Citations]
+OFA took 6869ms to process the Read permission, which needed 455992 evaluations.
+SFA took 8478ms to process the Read permission, which needed 583376 evaluations.
+OFA took 6715ms to process the Write permission, which needed 448672 evaluations.
+SFA took 8545ms to process the Write permission, which needed 583376 evaluations.
+
+Variable Order: [Number_Of_Citations, Number_Of_Publications, Days_Since_Last_Publication]
+OFA took 6780ms to process the Read permission, which needed 455512 evaluations.
+SFA took 8479ms to process the Read permission, which needed 583376 evaluations.
+OFA took 6588ms to process the Write permission, which needed 443872 evaluations.
+SFA took 8419ms to process the Write permission, which needed 583376 evaluations.
+
+Variable Order: [Number_Of_Citations, Days_Since_Last_Publication, Number_Of_Publications]
+OFA took 6875ms to process the Read permission, which needed 455632 evaluations.
+SFA took 8622ms to process the Read permission, which needed 583376 evaluations.
+OFA took 7412ms to process the Write permission, which needed 442672 evaluations.
+SFA took 8827ms to process the Write permission, which needed 583376 evaluations.
+
+Variable Order: [Days_Since_Last_Publication, Number_Of_Publications, Number_Of_Citations]
+OFA took 6898ms to process the Read permission, which needed 466192 evaluations.
+SFA took 8428ms to process the Read permission, which needed 583376 evaluations.
+OFA took 4853ms to process the Write permission, which needed 327472 evaluations.
+SFA took 8454ms to process the Write permission, which needed 583376 evaluations.
+
+Variable Order: [Days_Since_Last_Publication, Number_Of_Citations, Number_Of_Publications]
+OFA took 6965ms to process the Read permission, which needed 466192 evaluations.
+SFA took 8976ms to process the Read permission, which needed 583376 evaluations.
+OFA took 4945ms to process the Write permission, which needed 327472 evaluations.
+SFA took 10641ms to process the Write permission, which needed 583376 evaluations.

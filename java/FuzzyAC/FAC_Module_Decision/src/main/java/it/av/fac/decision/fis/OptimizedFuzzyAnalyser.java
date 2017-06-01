@@ -67,6 +67,18 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         //Retrieves the variables for the VariableInference function block, filtering for only used input variables and adds their name to the inputVars list.
         variables.stream().filter((var) -> var.isInput() && this.vda.variableIsUsed(var.getName())).forEach((var) -> inputVars.add(var.getName()));
 
+        if (order != null) {
+            //do ordering
+            if (inputVars.containsAll(order) && order.containsAll(inputVars)) {
+                order.stream().forEachOrdered((var) -> {
+                    inputVars.remove(var);
+                    inputVars.add(var);
+                });
+            } else {
+                System.out.println("Variables found do not match ordering received: " + inputVars);
+            }
+        }
+
         //Obtains the edge conditions.
         findEdgeIntegerConditions(permission, inputVars);
     }
@@ -88,7 +100,8 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
             variableMap.add(diffNotZeroRanges(permission, varName));
         }
 
-        this.vda.optimizeOrdering(variableMap);
+        //this.vda.optimizeOrdering(variableMap);
+        //System.out.println(" " + variableMap);
 
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0, false);
