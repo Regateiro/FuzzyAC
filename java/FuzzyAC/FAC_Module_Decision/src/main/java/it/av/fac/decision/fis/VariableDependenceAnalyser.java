@@ -5,6 +5,7 @@
  */
 package it.av.fac.decision.fis;
 
+import it.av.fac.decision.util.variables.Contribution;
 import it.av.fac.decision.util.variables.MultiRangeValue;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,7 +83,7 @@ public class VariableDependenceAnalyser {
             if (rule.getConsequents().size() > 1) {
                 System.err.println("more than one consequence in a rule. Using only the first one.");
             }
-            
+
             grantingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
             denyingOutputRuleTerms.putIfAbsent(permAnalyse, new ArrayList<>());
 
@@ -206,8 +207,12 @@ public class VariableDependenceAnalyser {
     public void optimizeOrdering(List<MultiRangeValue> variableMap) {
         //sort the variable according to the amount of Deny/Grant contribution DESC
         Collections.sort(variableMap, (o1, o2) -> {
-            return Integer.compare(o2.getDenyOrGrantContributionRangeSize(), o1.getDenyOrGrantContributionRangeSize());
+            double O1_FDC2UNKNOWN = (o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT)) / (double) o1.getContributionRangeSize(Contribution.UNKNOWN);
+            double O2_FDC2UNKNOWN = (o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT)) / (double) o2.getContributionRangeSize(Contribution.UNKNOWN);
+            return Double.compare(O2_FDC2UNKNOWN, O1_FDC2UNKNOWN);
         });
+        
+//        System.out.println(variableMap);
     }
 
     private static class RuleTermComparator {

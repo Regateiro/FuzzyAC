@@ -69,11 +69,11 @@ public class MultiRangeValue {
 
         return ranges.get(idx).getContribution();
     }
-
-    public int getDenyOrGrantContributionRangeSize() {
+    
+    public int getContributionRangeSize(Contribution contrib) {
         AtomicInteger ret = new AtomicInteger();
         ranges.parallelStream().forEach((range) -> {
-            if (range.getContribution() == Contribution.DENY || range.getContribution() == Contribution.GRANT) {
+            if (range.getContribution() == contrib) {
                 ret.addAndGet(range.getMax() - range.getMin() + 1);
             }
         });

@@ -152,20 +152,26 @@ public class FuzzyEvaluator {
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
 //        System.out.println(feval.evaluate(vars, false));
 
-        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 1);
+        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 1, true);
     }
 
-    public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations) {
+    public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutaitons) {
         AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
         List<List<String>> permutations = new ArrayList<>();
-        getPermutations(feval.getVariableNameList(), permutations);
+        if (allPermutaitons) {
+            getPermutations(feval.getVariableNameList(), permutations);
+        } else {
+            permutations.add(new ArrayList<>());
+        }
 
         permutations.stream().forEach((List<String> permutation) -> {
             System.out.println("Variable Order: " + permutation);
-            ofanal.setVariableOrdering(permutation);
-            sfanal.setVariableOrdering(permutation);
+            if (allPermutaitons) {
+                ofanal.setVariableOrdering(permutation);
+                sfanal.setVariableOrdering(permutation);
+            }
 
             long time = System.nanoTime();
             try (ValidatorHandler handler = new ValidatorHandler()) {
