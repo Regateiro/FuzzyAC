@@ -148,20 +148,11 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
                     });
 
                     //if the lastChangeContribution is not NONE, then update the decision where it does not match the contribution.
-                    if (this.lastChangeContribution == Contribution.GRANT) {
+                    if (this.lastChangeContribution == Contribution.GRANT || this.lastChangeContribution == Contribution.DENY) {
                         //reevaluate decisions that do not match the last change contribution
                         for (int idx = 0; idx < newResults.size(); idx++) {
                             DecisionResult result = newResults.get(idx);
-                            if (result.getDecision() == Decision.Denied) {
-                                newResults.remove(idx);
-                                newResults.add(idx, evaluateDecision(result.getVariables()));
-                            }
-                        }
-                    } else if (this.lastChangeContribution == Contribution.DENY) {
-                        //reevaluate decisions that do not match the last change contribution
-                        for (int idx = 0; idx < newResults.size(); idx++) {
-                            DecisionResult result = newResults.get(idx);
-                            if (result.getDecision() == Decision.Granted) {
+                            if (!result.getDecision().matchesContribution(this.lastChangeContribution)) {
                                 newResults.remove(idx);
                                 newResults.add(idx, evaluateDecision(result.getVariables()));
                             }

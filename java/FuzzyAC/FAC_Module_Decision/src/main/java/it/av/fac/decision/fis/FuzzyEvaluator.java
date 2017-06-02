@@ -10,6 +10,7 @@ import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
 import it.av.fac.decision.util.decision.IDecisionMaker;
 import it.av.fac.decision.util.handlers.IResultHandler;
 import it.av.fac.decision.util.handlers.NullHandler;
+import it.av.fac.decision.util.handlers.ValidatorHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -147,7 +148,7 @@ public class FuzzyEvaluator {
                 vars.put("Number_Of_Publications", 12.0);
                 vars.put("Number_Of_Citations", 50.0);
         }
-        
+
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
 //        System.out.println(feval.evaluate(vars, false));
 
@@ -167,40 +168,50 @@ public class FuzzyEvaluator {
             sfanal.setVariableOrdering(permutation);
 
             long time = System.nanoTime();
-            for (int i = 0; i < iterations; i++) {
-                try (IResultHandler handler = new NullHandler()) {
+            try (ValidatorHandler handler = new ValidatorHandler()) {
+                for (int i = 0; i < iterations; i++) {
                     ofanal.analyse("Read", decisionMaker, handler);
+                    handler.disableHandler();
                 }
-            }
-            time = ((System.nanoTime() - time) / (1000000 * iterations));
-            System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+                time = ((System.nanoTime() - time) / (1000000 * iterations));
+                System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
 
-            time = System.nanoTime();
-            for (int i = 0; i < iterations; i++) {
-                try (IResultHandler handler = new NullHandler()) {
+                handler.enableHandler();
+                handler.enableValidation();
+
+                time = System.nanoTime();
+                for (int i = 0; i < iterations; i++) {
                     sfanal.analyse("Read", decisionMaker, handler);
+                    handler.disableHandler();
                 }
-            }
-            time = ((System.nanoTime() - time) / (1000000 * iterations));
-            System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
+                time = ((System.nanoTime() - time) / (1000000 * iterations));
+                System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
 
-            time = System.nanoTime();
-            for (int i = 0; i < iterations; i++) {
-                try (IResultHandler handler = new NullHandler()) {
+                System.out.println("Validation: " + (handler.wasValidationSuccessul() ? "Passed!\n" : "Failed...\n"));
+            }
+
+            try (ValidatorHandler handler = new ValidatorHandler()) {
+                time = System.nanoTime();
+                for (int i = 0; i < iterations; i++) {
                     ofanal.analyse("Write", decisionMaker, handler);
+                    handler.disableHandler();
                 }
-            }
-            time = ((System.nanoTime() - time) / (1000000 * iterations));
-            System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
+                time = ((System.nanoTime() - time) / (1000000 * iterations));
+                System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
 
-            time = System.nanoTime();
-            for (int i = 0; i < iterations; i++) {
-                try (IResultHandler handler = new NullHandler()) {
+                handler.enableHandler();
+                handler.enableValidation();
+
+                time = System.nanoTime();
+                for (int i = 0; i < iterations; i++) {
                     sfanal.analyse("Write", decisionMaker, handler);
+                    handler.disableHandler();
                 }
+                time = ((System.nanoTime() - time) / (1000000 * iterations));
+                System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
+
+                System.out.println("Validation: " + (handler.wasValidationSuccessul() ? "Passed!\n" : "Failed...\n"));
             }
-            time = ((System.nanoTime() - time) / (1000000 * iterations));
-            System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
             System.out.println();
         });
     }
@@ -208,10 +219,11 @@ public class FuzzyEvaluator {
     private static void getPermutations(Collection<String> varList, List<List<String>> outputList) {
         getPermutations(varList, outputList, new ArrayList<>());
     }
+
     private static void getPermutations(Collection<String> varList, List<List<String>> outputList, List<String> tempList) {
-        if(tempList.size() < varList.size()) {
+        if (tempList.size() < varList.size()) {
             varList.stream().forEachOrdered((var) -> {
-                if(!tempList.contains(var)) {
+                if (!tempList.contains(var)) {
                     tempList.add(var);
                     getPermutations(varList, outputList, tempList);
                     tempList.remove(var);

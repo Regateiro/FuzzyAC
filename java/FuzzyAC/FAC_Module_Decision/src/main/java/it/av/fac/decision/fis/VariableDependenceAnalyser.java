@@ -204,9 +204,9 @@ public class VariableDependenceAnalyser {
      * @param variableMap The list of variable in any order.
      */
     public void optimizeOrdering(List<MultiRangeValue> variableMap) {
-        //sort the variable according to the amount of NOT UNKNOWN contribution DESC
+        //sort the variable according to the amount of Deny/Grant contribution DESC
         Collections.sort(variableMap, (o1, o2) -> {
-            return Integer.compare(o2.getTotalNotUnknownContribution(), o1.getTotalNotUnknownContribution());
+            return Integer.compare(o2.getDenyOrGrantContributionRangeSize(), o1.getDenyOrGrantContributionRangeSize());
         });
     }
 

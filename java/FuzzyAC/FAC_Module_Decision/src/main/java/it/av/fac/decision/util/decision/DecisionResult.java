@@ -7,6 +7,7 @@ package it.av.fac.decision.util.decision;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -42,4 +43,32 @@ public class DecisionResult {
     public DecisionResult copy() {
         return new DecisionResult(decision, new HashMap<>(variables));
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 97 * hash + Objects.hashCode(this.decision);
+        hash = 97 * hash + Objects.hashCode(this.variables);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DecisionResult other = (DecisionResult) obj;
+        if (this.decision != other.decision) {
+            return false;
+        }
+        return Objects.equals(this.variables, other.variables);
+    }
+
+     
 }

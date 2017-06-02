@@ -5,10 +5,16 @@
  */
 package it.av.fac.decision.util.decision;
 
+import it.av.fac.decision.util.variables.Contribution;
+
 /**
  *
  * @author Diogo Regateiro
  */
 public enum Decision {
     Granted, Denied;
+    
+    public boolean matchesContribution(Contribution contrib) {
+        return (this == Granted && contrib == Contribution.GRANT) || (this == Denied && contrib == Contribution.DENY);
+    }
 }

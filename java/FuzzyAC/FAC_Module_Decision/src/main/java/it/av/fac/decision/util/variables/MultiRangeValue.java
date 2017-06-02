@@ -70,10 +70,10 @@ public class MultiRangeValue {
         return ranges.get(idx).getContribution();
     }
 
-    public int getTotalNotUnknownContribution() {
+    public int getDenyOrGrantContributionRangeSize() {
         AtomicInteger ret = new AtomicInteger();
         ranges.parallelStream().forEach((range) -> {
-            if (range.getContribution() != Contribution.UNKNOWN) {
+            if (range.getContribution() == Contribution.DENY || range.getContribution() == Contribution.GRANT) {
                 ret.addAndGet(range.getMax() - range.getMin() + 1);
             }
         });
