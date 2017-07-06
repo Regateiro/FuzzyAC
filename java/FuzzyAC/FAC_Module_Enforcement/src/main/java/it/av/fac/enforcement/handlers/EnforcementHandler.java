@@ -79,6 +79,7 @@ public class EnforcementHandler implements IServerHandler<byte[], String> {
         decisionRequest.setRequestType(DecisionRequest.DecisionRequestType.Normal);
         decisionRequest.setUserToken(queryRequest.getToken());
         documentsReply.getDocuments().stream().forEach((JSONObject doc) -> {
+            //System.out.println(doc.getString("title"));
             decisionRequest.addSecurityLabel(doc.getString("security_label"));
         });
 
@@ -93,6 +94,7 @@ public class EnforcementHandler implements IServerHandler<byte[], String> {
             Map<String, Boolean> decision = decisionReply.getSecurityLabelDecision(label);
             return (decision.keySet().contains("*") && decision.get("*")) || decision.get("Read");
         }).forEach((JSONObject userAccessibleDocument) -> {
+            //System.out.println(userAccessibleDocument.getString("title"));
             queryReply.addDocument(userAccessibleDocument);
         });
 
