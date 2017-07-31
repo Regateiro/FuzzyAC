@@ -27,37 +27,37 @@ Write
 ]
   
 Variable Order: [A, B, C]
-OFA took 4123ms to process the Read permission, which needed 775276 evaluations.
-SFA took 4031ms to process the Read permission, which needed 1030301 evaluations.
-OFA took 3294ms to process the Write permission, which needed 775276 evaluations.
-SFA took 4121ms to process the Write permission, which needed 1030301 evaluations.
+OFA took 3347ms to process the Read permission, which needed 487101 evaluations.
+SFA took 4090ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 2611ms to process the Write permission, which needed 487101 evaluations.
+SFA took 4009ms to process the Write permission, which needed 1030301 evaluations.
 
 Variable Order: [A, C, B]
-OFA took 3209ms to process the Read permission, which needed 775276 evaluations.
-SFA took 4109ms to process the Read permission, which needed 1030301 evaluations.
-OFA took 3155ms to process the Write permission, which needed 775276 evaluations.
-SFA took 4139ms to process the Write permission, which needed 1030301 evaluations.
+OFA took 2506ms to process the Read permission, which needed 488351 evaluations.
+SFA took 4366ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 2083ms to process the Write permission, which needed 488351 evaluations.
+SFA took 4076ms to process the Write permission, which needed 1030301 evaluations.
 
 Variable Order: [B, A, C]
-OFA took 3992ms to process the Read permission, which needed 901526 evaluations.
-SFA took 4177ms to process the Read permission, which needed 1030301 evaluations.
-OFA took 4076ms to process the Write permission, which needed 901526 evaluations.
-SFA took 4250ms to process the Write permission, which needed 1030301 evaluations.
+OFA took 2748ms to process the Read permission, which needed 585876 evaluations.
+SFA took 4113ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 2586ms to process the Write permission, which needed 585876 evaluations.
+SFA took 4105ms to process the Write permission, which needed 1030301 evaluations.
 
 Variable Order: [B, C, A]
-OFA took 3873ms to process the Read permission, which needed 902776 evaluations.
-SFA took 4263ms to process the Read permission, which needed 1030301 evaluations.
-OFA took 3702ms to process the Write permission, which needed 902776 evaluations.
-SFA took 4171ms to process the Write permission, which needed 1030301 evaluations.
+OFA took 2611ms to process the Read permission, which needed 584676 evaluations.
+SFA took 4406ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 2638ms to process the Write permission, which needed 584676 evaluations.
+SFA took 4228ms to process the Write permission, which needed 1030301 evaluations.
 
 Variable Order: [C, A, B]
-OFA took 3826ms to process the Read permission, which needed 901526 evaluations.
-SFA took 4312ms to process the Read permission, which needed 1030301 evaluations.
-OFA took 3898ms to process the Write permission, which needed 901526 evaluations.
-SFA took 4269ms to process the Write permission, which needed 1030301 evaluations.
+OFA took 3137ms to process the Read permission, which needed 710851 evaluations.
+SFA took 4547ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 3387ms to process the Write permission, which needed 710851 evaluations.
+SFA took 4256ms to process the Write permission, which needed 1030301 evaluations.
 
 Variable Order: [C, B, A]
-OFA took 3804ms to process the Read permission, which needed 902776 evaluations.
-SFA took 4194ms to process the Read permission, which needed 1030301 evaluations.
-OFA took 3833ms to process the Write permission, which needed 902776 evaluations.
-SFA took 4202ms to process the Write permission, which needed 1030301 evaluations.
+OFA took 3162ms to process the Read permission, which needed 713426 evaluations.
+SFA took 4059ms to process the Read permission, which needed 1030301 evaluations.
+OFA took 3295ms to process the Write permission, which needed 713426 evaluations.
+SFA took 4065ms to process the Write permission, which needed 1030301 evaluations.

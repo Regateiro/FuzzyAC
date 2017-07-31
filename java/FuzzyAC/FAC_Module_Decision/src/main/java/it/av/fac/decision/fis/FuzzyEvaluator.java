@@ -8,8 +8,6 @@ package it.av.fac.decision.fis;
 import it.av.fac.decision.fis.AbstractFuzzyAnalyser.DecisionResultsToReturn;
 import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
 import it.av.fac.decision.util.decision.IDecisionMaker;
-import it.av.fac.decision.util.handlers.IResultHandler;
-import it.av.fac.decision.util.handlers.NullHandler;
 import it.av.fac.decision.util.handlers.ValidatorHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -150,17 +148,17 @@ public class FuzzyEvaluator {
         }
 
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
-//        System.out.println(feval.evaluate(vars, false));
+        //System.out.println(feval.evaluate(vars, true));
 
-        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 1, true);
+        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 1, false);
     }
 
-    public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutaitons) {
+    public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutations) {
         AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
         AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
 
         List<List<String>> permutations = new ArrayList<>();
-        if (allPermutaitons) {
+        if (allPermutations) {
             getPermutations(feval.getVariableNameList(), permutations);
         } else {
             permutations.add(new ArrayList<>());
@@ -168,7 +166,7 @@ public class FuzzyEvaluator {
 
         permutations.stream().forEach((List<String> permutation) -> {
             System.out.println("Variable Order: " + permutation);
-            if (allPermutaitons) {
+            if (allPermutations) {
                 ofanal.setVariableOrdering(permutation);
                 sfanal.setVariableOrdering(permutation);
             }

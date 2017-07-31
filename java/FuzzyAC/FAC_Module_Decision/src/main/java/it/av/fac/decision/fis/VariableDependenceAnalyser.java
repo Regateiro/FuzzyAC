@@ -210,6 +210,10 @@ public class VariableDependenceAnalyser {
             double O1_FDC2UNKNOWN = (o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT)) / (double) o1.getContributionRangeSize(Contribution.UNKNOWN);
             double O2_FDC2UNKNOWN = (o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT)) / (double) o2.getContributionRangeSize(Contribution.UNKNOWN);
             return Double.compare(O2_FDC2UNKNOWN, O1_FDC2UNKNOWN);
+//            
+//            int O1SC = o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT);
+//            int O2SC = o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT);
+//            return Integer.compare(O2SC, O1SC);
         });
         
 //        System.out.println(variableMap);

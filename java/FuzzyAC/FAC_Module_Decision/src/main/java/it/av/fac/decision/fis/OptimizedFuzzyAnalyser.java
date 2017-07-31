@@ -111,11 +111,9 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     @SuppressWarnings("empty-statement")
     protected void findEdgeIntegerConditionsRec(List<MultiRangeValue> variableMap, int varIdx, boolean storeResults) {
         if (varIdx < variableMap.size()) {
-            boolean oddPass = false;
             variableOutputs.add(new ArrayList<>());
 
             do {
-                oddPass = !oddPass;
                 if (this.lastChangeContribution == Contribution.UNKNOWN) {
                     //update the results count for the new pass
                     if (!storeResults) {
