@@ -204,16 +204,24 @@ public class VariableDependenceAnalyser {
      *
      * @param variableMap The list of variable in any order.
      */
-    public void optimizeOrdering(List<MultiRangeValue> variableMap) {
+    public static void optimizeOrdering(List<MultiRangeValue> variableMap) {
         //sort the variable according to the amount of Deny/Grant contribution DESC
         Collections.sort(variableMap, (o1, o2) -> {
-            double O1_FDC2UNKNOWN = (o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT)) / (double) o1.getContributionRangeSize(Contribution.UNKNOWN);
-            double O2_FDC2UNKNOWN = (o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT)) / (double) o2.getContributionRangeSize(Contribution.UNKNOWN);
-            return Double.compare(O2_FDC2UNKNOWN, O1_FDC2UNKNOWN);
-//            
-//            int O1SC = o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT);
-//            int O2SC = o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT);
-//            return Integer.compare(O2SC, O1SC);
+            double O1_SINGLE = o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT);
+            double O2_SINGLE = o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT);
+            double O1_UNKNOWN = o1.getContributionRangeSize(Contribution.UNKNOWN);
+            double O2_UNKNOWN = o2.getContributionRangeSize(Contribution.UNKNOWN);
+            
+            // If both variable have no single ranges, order them by increasing size of their unknown ranges.
+            if(O1_SINGLE == 0 && O2_SINGLE == 0) {
+                return Double.compare(O1_UNKNOWN, O2_UNKNOWN);
+            }
+            
+            // Else, order them by decreasing ratio of single ranges to unknown ranges size.
+            double O1_RATIO = O1_SINGLE / O1_UNKNOWN;
+            double O2_RATIO = O2_SINGLE / O2_UNKNOWN;
+            
+            return Double.compare(O2_RATIO, O1_RATIO);
         });
         
 //        System.out.println(variableMap);

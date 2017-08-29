@@ -101,8 +101,10 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
         }
 
         if (order == null) {
-            this.vda.optimizeOrdering(variableMap);
+            VariableDependenceAnalyser.optimizeOrdering(variableMap);
         }
+        
+        System.out.println(variableMap);
 
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0, false);

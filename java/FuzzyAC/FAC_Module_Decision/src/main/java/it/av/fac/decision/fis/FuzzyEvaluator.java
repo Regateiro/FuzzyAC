@@ -150,7 +150,7 @@ public class FuzzyEvaluator {
         FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
         //System.out.println(feval.evaluate(vars, true));
 
-        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 1, false);
+        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 10, false);
     }
 
     public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutations) {
