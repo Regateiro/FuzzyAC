@@ -5,7 +5,9 @@
  */
 package it.av.fac.datasources.wikipedia;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import java.util.List;
 
 /**
  *
@@ -16,6 +18,7 @@ public class Page {
     private boolean redirecting;
     private String title;
     private String text;
+    private JSONArray categories;
 
     public Page() {
     }
@@ -25,6 +28,7 @@ public class Page {
         this.redirecting = obj.getBooleanValue("redirecting");
         this.title = obj.getString("title");
         this.text = obj.getString("text");
+        this.categories = obj.getJSONArray("categories");
     }
     
     public void setRedirecting(boolean redirecting) {
@@ -49,5 +53,13 @@ public class Page {
 
     public String getText() {
         return text;
+    }
+    
+    public void setCategories(List categories) {
+        this.categories = new JSONArray(categories);
+    }
+    
+    public JSONArray getCategories() {
+        return this.categories;
     }
 }

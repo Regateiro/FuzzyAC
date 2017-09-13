@@ -37,8 +37,8 @@ public class WikipediaTaxonomyUploader {
                 DBIRequest request = new DBIRequest();
                 request.setRequestType(DBIRequestType.StoreGraphNode);
                 request.setStorageId("wct");
-                request.setDocument(catcats[0]);
-                request.setAditionalInfo("parents", catcats[1]);
+                request.setPayload(catcats[0]);
+                request.setMetadata("parents", catcats[1]);
 
                 DBIReply reply = fac.storageRequest(request);
             }

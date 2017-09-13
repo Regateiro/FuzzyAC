@@ -42,7 +42,7 @@ public class StorageAPI extends HttpServlet {
          */
         DBIRequest storageRequest = new DBIRequest();
         storageRequest.readFromBytes(Base64.decodeBase64(request.getParameter("request")));
-        System.out.println("Received request for " + storageRequest.getAditionalInfo().getOrDefault("title", "no title"));
+        System.out.println("Received request for " + storageRequest.getMetadata().getOrDefault("title", "no title"));
         
         try (PrintWriter out = response.getWriter()) {
             DBIReply reply;

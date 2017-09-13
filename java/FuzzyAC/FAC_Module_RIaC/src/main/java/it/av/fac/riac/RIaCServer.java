@@ -11,6 +11,7 @@ import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
 import it.av.fac.messaging.rabbitmq.test.Server;
 import it.av.fac.riac.classifier.RandomClassifier;
+import it.av.fac.riac.classifier.TaxonomyClassifier;
 import it.av.fac.riac.handlers.RIaCHandler;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -25,7 +26,7 @@ public class RIaCServer {
     public static void main(String[] args) {
         try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()){
             try (IFACConnection serverConn = new RabbitMQServer(
-                    connWrapper, RabbitMQConstants.QUEUE_RIAC_REQUEST, new RIaCHandler(new RandomClassifier()))) {
+                    connWrapper, RabbitMQConstants.QUEUE_RIAC_REQUEST, new RIaCHandler(new TaxonomyClassifier()))) {
                 System.out.println("RIaC Server is now running... enter 'q' to quit.");
                 while(System.in.read() != 'q');
             } catch (Exception ex) {

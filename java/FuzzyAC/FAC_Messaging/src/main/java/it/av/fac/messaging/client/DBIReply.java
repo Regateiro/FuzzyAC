@@ -24,10 +24,10 @@ public class DBIReply implements IReply<DBIReply> {
     
     private String errorMsg;
     
-    private final List<JSONObject> documents;
+    private final List<JSONObject> payloads;
 
     public DBIReply() {
-        this.documents = new ArrayList<>();
+        this.payloads = new ArrayList<>();
         this.errorMsg = "";
         this.status = ReplyStatus.OK;
     }
@@ -60,8 +60,8 @@ public class DBIReply implements IReply<DBIReply> {
         ret.put("error_msg", errorMsg);
         
         JSONArray docarray = new JSONArray();
-        docarray.addAll(this.documents);
-        ret.put("documents", docarray);
+        docarray.addAll(this.payloads);
+        ret.put("payloads", docarray);
         
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
     }
@@ -73,21 +73,21 @@ public class DBIReply implements IReply<DBIReply> {
         
         setStatus(ReplyStatus.valueOf(obj.getString("status")));
         setErrorMsg(obj.getString("error_msg"));
-        this.documents.clear();
+        this.payloads.clear();
         
-        JSONArray docarray = obj.getJSONArray("documents");
+        JSONArray docarray = obj.getJSONArray("payloads");
         for(int i = 0; i < docarray.size(); i++) {
-            this.documents.add(docarray.getJSONObject(i));
+            this.payloads.add(docarray.getJSONObject(i));
         }
         
         return this;
     }
 
     public void addDocument(String document) {
-        this.documents.add(JSONObject.parseObject(document));
+        this.payloads.add(JSONObject.parseObject(document));
     }
     
     public List<JSONObject> getDocuments() {
-        return Collections.unmodifiableList(documents);
+        return Collections.unmodifiableList(payloads);
     }
 }

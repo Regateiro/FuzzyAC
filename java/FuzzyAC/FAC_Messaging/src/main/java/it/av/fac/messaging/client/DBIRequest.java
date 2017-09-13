@@ -26,9 +26,9 @@ public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestTyp
     private DBIRequestType requestType;
     
     /**
-     * A document payload to store.
+     * A payload payload to store.
      */
-    private String document;
+    private String payload;
     
     /**
      * A query to process.
@@ -41,20 +41,20 @@ public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestTyp
     private String storageId;
     
     /**
-     * Additional document information.
+     * Additional payload information.
      */
-    private final Map<String, Object> aditionalInfo;
+    private final Map<String, Object> metadata;
 
     public DBIRequest() {
-        this.aditionalInfo = new HashMap<>();
+        this.metadata = new HashMap<>();
     }
 
-    public void setDocument(String document) {
-        this.document = document;
+    public void setPayload(String document) {
+        this.payload = document;
     }
     
-    public String getDocument() {
-        return this.document;
+    public String getPayload() {
+        return this.payload;
     }
     
     public void setQuery(String query) {
@@ -65,8 +65,8 @@ public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestTyp
         return this.query;
     }
     
-    public Map<String, Object> getAditionalInfo() {
-        return Collections.unmodifiableMap(aditionalInfo);
+    public Map<String, Object> getMetadata() {
+        return Collections.unmodifiableMap(metadata);
     }
 
     @Override
@@ -87,8 +87,8 @@ public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestTyp
      * @param key
      * @param value 
      */
-    public void setAditionalInfo(String key, String value) {
-        this.aditionalInfo.put(key, value);
+    public void setMetadata(String key, String value) {
+        this.metadata.put(key, value);
     }
 
     @Override
@@ -101,10 +101,10 @@ public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestTyp
         JSONObject ret = new JSONObject();
         
         ret.put("request_type", requestType.name());
-        ret.put("document", document);
+        ret.put("payload", payload);
         ret.put("storage_id", storageId);
         ret.put("query", query);
-        ret.put("aditional_info", new JSONObject(aditionalInfo));
+        ret.put("metadata", new JSONObject(metadata));
         
         return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
     }
@@ -115,14 +115,14 @@ public class DBIRequest implements IRequest<DBIRequest, DBIRequest.DBIRequestTyp
         JSONObject obj = JSONObject.parseObject(data);
         
         setRequestType(DBIRequestType.valueOf(obj.getString("request_type")));
-        setDocument(obj.getString("document"));
+        setPayload(obj.getString("payload"));
         setStorageId(obj.getString("storage_id"));
         setQuery(obj.getString("query"));
         
-        this.aditionalInfo.clear();
-        JSONObject ainfo = obj.getJSONObject("aditional_info");
+        this.metadata.clear();
+        JSONObject ainfo = obj.getJSONObject("metadata");
         ainfo.keySet().forEach((key) -> {
-            setAditionalInfo(key, ainfo.getString(key));
+            setMetadata(key, ainfo.getString(key));
         });
         
         return this;

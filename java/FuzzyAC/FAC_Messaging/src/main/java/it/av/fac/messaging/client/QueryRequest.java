@@ -101,6 +101,6 @@ public class QueryRequest implements IRequest<QueryRequest, QueryRequest.QueryRe
     }
     
     public enum QueryRequestType implements IRequestType {
-        QueryForDocument
+        QueryForDocument, AccessService
     };
 }

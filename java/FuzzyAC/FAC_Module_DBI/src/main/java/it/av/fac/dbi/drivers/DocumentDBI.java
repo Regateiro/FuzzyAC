@@ -93,7 +93,7 @@ public class DocumentDBI implements Closeable {
         this.collection = this.mongoDB.getCollection(collection);
     }
 
-    public void syncWithDB() {
+    public synchronized void syncWithDB() {
         this.lastSync = System.currentTimeMillis();
         this.collection.insertMany(bulk);
         this.bulk.clear();
@@ -101,8 +101,8 @@ public class DocumentDBI implements Closeable {
 
     public void storeDocument(DBIRequest request) {
         Document doc = new Document();
-        doc.append("document", request.getDocument());
-        doc.putAll(request.getAditionalInfo());
+        doc.append("document", request.getPayload());
+        doc.putAll(request.getMetadata());
         this.bulk.add(doc);
 
         if (this.bulk.size() == this.bulkSize) {
@@ -142,7 +142,7 @@ public class DocumentDBI implements Closeable {
         DBIReply reply = new DBIReply();
         reply.setStatus(ReplyStatus.OK);
 
-        JSONObject fields = JSONObject.parseObject((String) request.getAditionalInfo().get("fields"));
+        JSONObject fields = JSONObject.parseObject((String) request.getMetadata().get("fields"));
         List<Bson> filters = new ArrayList<>();
         fields.keySet().stream().forEach((field) ->{
             filters.add(Filters.eq(field, fields.getString(field)));

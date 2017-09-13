@@ -5,6 +5,9 @@
  */
 package it.av.fac.datasources.wikipedia;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -48,9 +51,11 @@ public class PageHandler extends DefaultHandler {
         if (page != null && !page.isRedirecting()) {
             switch (qName) {
                 case "title":
+                case "redirect title":
                     page.setTitle(stringBuilder.toString());
                     break;
                 case "text":
+                    page.setCategories(getCategories(stringBuilder));
                     String articleText = stringBuilder.toString();
                     articleText = articleText.replaceAll("(?s)<ref(.+?)</ref>", " "); //remove references
                     articleText = articleText.replaceAll("(?s)\\{\\{(.+?)\\}\\}", " "); //remove links underneath headings
@@ -76,5 +81,23 @@ public class PageHandler extends DefaultHandler {
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
         stringBuilder.append(ch, start, length);
+    }
+
+    private List<String> getCategories(StringBuilder text) {
+        List<String> categories = new ArrayList<>();
+        int idx = 0;
+
+        try {
+            idx = text.indexOf("[[Category:");
+            while (idx != -1) {
+                int endIdx = text.indexOf("]]", idx);
+                categories.add(text.substring(idx + 11, endIdx).split("[|]")[0]);
+                idx = text.indexOf("[[Category:", endIdx);
+            }
+        } catch (IndexOutOfBoundsException ex) {
+            System.err.print("Error... skipping.");
+        }
+
+        return categories;
     }
 }

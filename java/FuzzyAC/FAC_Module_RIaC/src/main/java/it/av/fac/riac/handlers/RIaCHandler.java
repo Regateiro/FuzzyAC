@@ -58,7 +58,7 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
         errorReply.setStatus(ReplyStatus.ERROR);
 
         // classify the document in the request
-        System.out.println("Classifying " + request.getAditionalInfo().getOrDefault("title", "no title"));
+        System.out.println("Classifying " + request.getMetadata().getOrDefault("title", "no title"));
         classifier.classify(request);
         return requestStorage(request);
     }

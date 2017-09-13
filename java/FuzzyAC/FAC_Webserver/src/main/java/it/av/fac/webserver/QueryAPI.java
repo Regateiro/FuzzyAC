@@ -5,16 +5,12 @@
  */
 package it.av.fac.webserver;
 
-import it.av.fac.messaging.client.DBIReply;
+import it.av.fac.enforcement.handlers.FACEnforcer;
 import it.av.fac.messaging.client.QueryReply;
 import it.av.fac.messaging.client.QueryRequest;
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.webserver.handlers.QueryHandler;
-import it.av.fac.webserver.handlers.StorageHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -46,7 +42,7 @@ public class QueryAPI extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             QueryReply reply;
             try {
-                reply = QueryHandler.getInstance().handle(queryRequest);
+                reply = FACEnforcer.getInstance().handle(queryRequest);
             } catch (Exception ex) {
                 reply = new QueryReply();
                 reply.setStatus(ReplyStatus.ERROR);

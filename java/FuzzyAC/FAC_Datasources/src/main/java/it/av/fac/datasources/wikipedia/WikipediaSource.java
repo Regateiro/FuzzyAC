@@ -40,13 +40,14 @@ public class WikipediaSource {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
                 if (!page.getTitle().startsWith("File:") && !page.getTitle().startsWith("Wikipedia:") 
                         && !page.getTitle().startsWith("Category:") && !page.getTitle().startsWith("Template:")) {
-                    if ((int) (Math.random() * 10000) == 0) {
+                    if ((int) (Math.random() * 10) == 0) {
                         DBIRequest request = new DBIRequest();
                         request.setRequestType(DBIRequestType.StoreDocument);
-                        request.setDocument(page.getText());
+                        request.setPayload(page.getText());
                         request.setStorageId("randwikipages");
-                        request.setAditionalInfo("title", page.getTitle());
-                        request.setAditionalInfo("redirecting", String.valueOf(page.isRedirecting()));
+                        request.setMetadata("title", page.getTitle());
+                        request.setMetadata("categories", page.getCategories().toJSONString());
+                        request.setMetadata("redirecting", String.valueOf(page.isRedirecting()));
                         System.out.print("Storing: " + page.getTitle() + " ... ");
                         DBIReply reply = fac.storageRequest(request);
                         System.out.println("[" + reply.getStatus().name() + "] " + reply.getErrorMsg());
@@ -61,7 +62,7 @@ public class WikipediaSource {
     }
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException {
-        WikipediaSource src = new WikipediaSource("G:\\articles.xml");
+        WikipediaSource src = new WikipediaSource("F:\\articles.xml");
         src.parse();
     }
 }

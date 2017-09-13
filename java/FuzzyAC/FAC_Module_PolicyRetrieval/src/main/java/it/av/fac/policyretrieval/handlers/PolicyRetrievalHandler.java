@@ -68,7 +68,7 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
 
             JSONObject fields = new JSONObject();
             fields.put("security_label", label);
-            dbiRequest.setAditionalInfo("fields", fields.toJSONString());
+            dbiRequest.setMetadata("fields", fields.toJSONString());
             
             DBIReply documentsReply = requestPolicies(dbiRequest);
             documentsReply.getDocuments().stream().forEach((doc) -> addPolicyToReplySync(policyReply, doc));

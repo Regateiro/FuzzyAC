@@ -35,7 +35,7 @@ public class PolicyManager {
         array.add(securityLabel);
         
         fields.put("security_labels", array);
-        request.setAditionalInfo("fields", fields.toJSONString());
+        request.setMetadata("fields", fields.toJSONString());
         return this.client.find(request);
     }
 
@@ -58,8 +58,8 @@ public class PolicyManager {
             }
         }
 
-        request.setDocument(filePath != null ? fcl.toString() : null);
-        request.setAditionalInfo("security_label", securityLabel);
+        request.setPayload(filePath != null ? fcl.toString() : null);
+        request.setMetadata("security_label", securityLabel);
         this.client.storeDocument(request);
         this.client.syncWithDB();
         return reply;

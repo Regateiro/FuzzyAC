@@ -19,7 +19,8 @@ public class RandomClassifier implements IClassifier {
 
     @Override
     public void classify(DBIRequest request) {
-        request.setAditionalInfo("security_label", CLASSES[(int)(Math.random() * 4)]);
+        request.setMetadata("security_label", CLASSES[(int)(Math.random() * 4)]);
+        request.setMetadata("sl_timestamp", String.valueOf(System.currentTimeMillis()));
     }
     
 }
