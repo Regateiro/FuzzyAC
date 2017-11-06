@@ -5,7 +5,7 @@
  */
 package it.av.fac.decision.handlers;
 
-import it.av.fac.decision.fis.FuzzyEvaluator;
+import it.av.fac.decision.fis.BDFIS;
 import it.av.fac.decision.util.decision.DecisionConfig;
 import it.av.fac.messaging.client.DecisionReply;
 import it.av.fac.messaging.client.DecisionRequest;
@@ -92,7 +92,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
                 String fcl = policy.getString("document");
                 if (fcl != null) {
                     Map<String, Double> neededVariables = new HashMap<>(userVariables);
-                    FuzzyEvaluator feval = new FuzzyEvaluator(fcl, true);
+                    BDFIS feval = new BDFIS(fcl, true);
                     userVariables.keySet().stream().filter((varName) -> !feval.getVariableNameList().contains(varName)).forEach((notNeededVarName) -> {
                             neededVariables.remove(notNeededVarName);
                     });

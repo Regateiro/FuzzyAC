@@ -5,7 +5,7 @@
  */
 package it.av.fac.decision.fis;
 
-import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
+import static it.av.fac.decision.fis.BDFIS.FB_VARIABLE_INFERENCE_PHASE_NAME;
 import it.av.fac.decision.util.decision.Decision;
 import it.av.fac.decision.util.decision.DecisionResult;
 import it.av.fac.decision.util.decision.IDecisionMaker;
@@ -26,9 +26,9 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  *
  * @author Diogo Regateiro
  */
-public class SimpleFuzzyAnalyser extends AbstractFuzzyAnalyser {
+public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
 
-    public SimpleFuzzyAnalyser(FuzzyEvaluator feval) {
+    public SimpleBDFISAnalyser(BDFIS feval) {
         super(feval);
     }
 

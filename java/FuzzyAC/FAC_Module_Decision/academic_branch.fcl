@@ -59,6 +59,13 @@ VAR_OUTPUT
 END_VAR
 	
 FUZZIFY Expertise
+	TERM Very_Low := (1, 1) (1.5, 0) ;
+	TERM Low := (1, 0) (1.5, 1) (2, 0) ;
+	TERM Medium_Low := (1.5, 0) (2, 1) (2.5, 0) ;
+	TERM Medium := (2, 0) (2.5, 1) (3, 0) ;
+	TERM Medium_High := (2.5, 0) (3, 1) (3.5, 0) ;
+	TERM High := (3, 0) (3.5, 1) (4, 0) ;
+	TERM Very_High := (3.5, 0) (4, 1) ;
 END_FUZZIFY
 
 DEFUZZIFY Read
@@ -78,10 +85,8 @@ RULEBLOCK Read
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Expertise IS Low) THEN Read IS Deny;
-RULE 1: IF (Expertise IS Medium) THEN Read IS Grant;
-RULE 2: IF (Expertise IS High) THEN Read IS Grant;
-RULE 3: IF (Expertise IS Very_High) THEN Read IS Grant;
+RULE 0: IF (Expertise IS Very_Low) OR (Expertise IS Low) THEN Read IS Deny;
+RULE 1: IF (Expertise IS Medium_Low) OR (Expertise IS Medium) OR (Expertise IS Medium_High) OR (Expertise IS High) OR (Expertise IS Very_High) THEN Read IS Grant;
 
 END_RULEBLOCK
 
@@ -89,10 +94,8 @@ RULEBLOCK Write
 
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Expertise IS Low) THEN Write IS Deny;
-RULE 1: IF (Expertise IS Medium) THEN Write IS Deny;
-RULE 2: IF (Expertise IS High) THEN Write IS Deny;
-RULE 3: IF (Expertise IS Very_High) THEN Write IS Grant;
+RULE 0: IF (Expertise IS Very_Low) OR (Expertise IS Low) OR (Expertise IS Medium_Low) OR (Expertise IS Medium) OR (Expertise IS Medium_High) THEN Write IS Deny;
+RULE 1: IF (Expertise IS High) OR (Expertise IS Very_High) THEN Write IS Grant;
 
 END_RULEBLOCK
 

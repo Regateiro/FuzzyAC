@@ -6,7 +6,6 @@
 package it.av.fac.decision.fis;
 
 import it.av.fac.decision.fis.AbstractFuzzyAnalyser.DecisionResultsToReturn;
-import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
 import it.av.fac.decision.util.decision.IDecisionMaker;
 import it.av.fac.decision.util.handlers.ValidatorHandler;
 import java.util.ArrayList;
@@ -27,24 +26,24 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
 import org.antlr.runtime.RecognitionException;
 
 /**
- * Fuzzy Inference System FuzzyEvaluator
+ * Fuzzy Inference System BDFIS
  *
  * @author Diogo Regateiro
  */
-public class FuzzyEvaluator {
+public class BDFIS {
+    
+    public final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
+    public final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
+    protected final FIS fis;
 
-    final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
-    final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
-    private final FIS fis;
-
-    public FuzzyEvaluator(String fcl, boolean inlineFcl) throws RecognitionException {
+    public BDFIS(String fcl, boolean inlineFcl) throws RecognitionException {
         if (inlineFcl) {
             this.fis = FIS.createFromString(fcl, false);
         } else {
             this.fis = FIS.load(fcl, false);
         }
     }
-
+    
     public Collection<String> getVariableNameList() {
         Set<String> ret = new HashSet<>();
         this.fis.getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables().stream()
@@ -52,7 +51,7 @@ public class FuzzyEvaluator {
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
     }
-
+    
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
         Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
@@ -95,8 +94,8 @@ public class FuzzyEvaluator {
             //save the VariableInference output variable to configure the respective AccessControl input.
             outVariables.add(outVariable);
 
-            //add the input value for the AccessControl function block
-            fis.setVariable(acfb.getName(), outVariable.getName(), outVariable.getLatestDefuzzifiedValue());
+            //add the input value 0 for variable in the AccessControl function block
+            fis.setVariable(acfb.getName(), outVariable.getName(), 0);
         });
 
         //for each input variable on the AccessControl functionblock
@@ -105,11 +104,11 @@ public class FuzzyEvaluator {
             outVariables.stream().filter((outVariable) -> (outVariable.getName().equals(inVariable.getName()))).forEach((outVariable) -> {
                 //For each linguistic term in the VariableInference output variable
                 outVariable.getLinguisticTerms().values().stream().forEach((lt) -> {
-                    //Add the linguistic term with x as the defuzzified value and y as the membership degree
+                    //Add the linguistic term with x as 0 and y as the membership degree
                     //This will put all linguistic terms on the same x, which will be the value for the AccessControl input variable
                     DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
                     MembershipFunctionSingleton mfunction = new MembershipFunctionSingleton(
-                            new Value(outVariable.getValue()),
+                            new Value(0),
                             new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
                     );
                     inVariable.add(new LinguisticTerm(lt.getTermName(), mfunction));
@@ -139,7 +138,7 @@ public class FuzzyEvaluator {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String testFile = "academic_3vars.fcl";
+        String testFile = "academic.fcl";
 
         switch (testFile) {
             case "academic.fcl": // works
@@ -147,15 +146,15 @@ public class FuzzyEvaluator {
                 vars.put("Number_Of_Citations", 50.0);
         }
 
-        FuzzyEvaluator feval = new FuzzyEvaluator(testFile, false);
-        //System.out.println(feval.evaluate(vars, true));
+        BDFIS feval = new BDFIS(testFile, false);
+        System.out.println(feval.evaluate(vars, true));
 
-        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 10, false);
+//        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 10, false);
     }
 
-    public static void orderEval(FuzzyEvaluator feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutations) {
-        AbstractFuzzyAnalyser ofanal = new OptimizedFuzzyAnalyser(feval);
-        AbstractFuzzyAnalyser sfanal = new SimpleFuzzyAnalyser(feval);
+    public static void orderEval(BDFIS feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutations) {
+        AbstractFuzzyAnalyser ofanal = new OptimizedBDFISAnalyser(feval);
+        AbstractFuzzyAnalyser sfanal = new SimpleBDFISAnalyser(feval);
 
         List<List<String>> permutations = new ArrayList<>();
         if (allPermutations) {

@@ -65,7 +65,7 @@ public class VariableDependenceAnalyser {
         this.onlyDenyingInputRuleTerms.clear();
 
         //access the AC rulebook and get the associated rules.
-        FunctionBlock fb_ac = this.fis.getFunctionBlock(FuzzyEvaluator.FB_ACCESS_CONTROL_PHASE_NAME);
+        FunctionBlock fb_ac = this.fis.getFunctionBlock(BDFIS.FB_ACCESS_CONTROL_PHASE_NAME);
         HashMap<String, RuleBlock> rb_ac = fb_ac.getRuleBlocks();
 
         if (!rb_ac.keySet().contains(permAnalyse)) {
@@ -101,7 +101,7 @@ public class VariableDependenceAnalyser {
         denyingOutputRuleTerms.values().parallelStream().forEach((ruleTermList) -> removeDuplicateRuleTerms(ruleTermList));
 
         //access the VI rulebook and get the associated rules.
-        FunctionBlock fb_vi = this.fis.getFunctionBlock(FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME);
+        FunctionBlock fb_vi = this.fis.getFunctionBlock(BDFIS.FB_VARIABLE_INFERENCE_PHASE_NAME);
         HashMap<String, RuleBlock> rb_vi = fb_vi.getRuleBlocks();
 
         //for each rulebook
@@ -257,7 +257,7 @@ public class VariableDependenceAnalyser {
     }
 
     public Set<String> getPermissions() {
-        FunctionBlock fb_ac = this.fis.getFunctionBlock(FuzzyEvaluator.FB_ACCESS_CONTROL_PHASE_NAME);
+        FunctionBlock fb_ac = this.fis.getFunctionBlock(BDFIS.FB_ACCESS_CONTROL_PHASE_NAME);
         HashMap<String, RuleBlock> rb_ac = fb_ac.getRuleBlocks();
         return rb_ac.keySet();
     }

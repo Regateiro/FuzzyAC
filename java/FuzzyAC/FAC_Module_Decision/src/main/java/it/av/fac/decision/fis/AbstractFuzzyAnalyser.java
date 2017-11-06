@@ -21,14 +21,14 @@ public abstract class AbstractFuzzyAnalyser {
         ALL, ONLY_GRANT, ONLY_DENY;
     }
 
-    protected final FuzzyEvaluator feval;
+    protected final BDFIS feval;
     protected String permissionToAnalyse;
     protected int numberOfEvaluations;
     protected IDecisionMaker decisionMaker;
     protected IResultHandler handler;
     protected List<String> order;
 
-    protected AbstractFuzzyAnalyser(FuzzyEvaluator feval) {
+    protected AbstractFuzzyAnalyser(BDFIS feval) {
         this.feval = feval;
         this.numberOfEvaluations = 0;
         this.order = null;

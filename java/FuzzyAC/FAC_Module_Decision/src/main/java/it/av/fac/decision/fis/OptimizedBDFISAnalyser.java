@@ -1,6 +1,6 @@
 package it.av.fac.decision.fis;
 
-import static it.av.fac.decision.fis.FuzzyEvaluator.FB_VARIABLE_INFERENCE_PHASE_NAME;
+import static it.av.fac.decision.fis.BDFIS.FB_VARIABLE_INFERENCE_PHASE_NAME;
 import it.av.fac.decision.util.variables.Contribution;
 import it.av.fac.decision.util.decision.Decision;
 import it.av.fac.decision.util.decision.DecisionManager;
@@ -23,7 +23,7 @@ import it.av.fac.decision.util.handlers.IResultHandler;
  *
  * @author Diogo Regateiro
  */
-public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
+public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
     private Contribution lastChangeContribution;
@@ -31,7 +31,7 @@ public class OptimizedFuzzyAnalyser extends AbstractFuzzyAnalyser {
     private final List<List<DecisionResult>> variableOutputs;
     private final Map<Integer, Integer> lastPassCount;
 
-    public OptimizedFuzzyAnalyser(FuzzyEvaluator feval) {
+    public OptimizedBDFISAnalyser(BDFIS feval) {
         super(feval);
         this.vda = new VariableDependenceAnalyser(feval.getFis());
         this.lastChangeContribution = Contribution.UNKNOWN;
