@@ -6,7 +6,8 @@
 package it.av.fac.riac.classifier;
 
 import com.alibaba.fastjson.JSONArray;
-import it.av.fac.messaging.client.DBIRequest;
+import com.alibaba.fastjson.JSONObject;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -57,8 +58,9 @@ public class TaxonomyClassifier implements IClassifier {
     }
 
     @Override
-    public void classify(DBIRequest request) {
-        JSONArray categories = JSONArray.parseArray((String) request.getMetadata().get("categories"));
+    public void classify(IRequest request) {
+        JSONObject resource = JSONObject.parseObject(request.getResource());
+        JSONArray categories = JSONArray.parseArray((String) resource.get("categories"));
         Set<String> labels = new HashSet<>();
 
         search(new HashSet<>(Arrays.asList(categories.toArray(new String[0]))), labels, 0);
@@ -74,8 +76,9 @@ public class TaxonomyClassifier implements IClassifier {
             labelstr.append(label).append(";");
         });
 
-        request.setMetadata("security_labels", labelstr.toString());
-        request.setMetadata("sl_timestamp", String.valueOf(System.currentTimeMillis()));
+        resource.put("security_labels", labelstr.toString());
+        resource.put("sl_timestamp", String.valueOf(System.currentTimeMillis()));
+        request.setResource(resource.toJSONString());
     }
 
     private void search(Set<String> categories, Set<String> labels, int depth) {

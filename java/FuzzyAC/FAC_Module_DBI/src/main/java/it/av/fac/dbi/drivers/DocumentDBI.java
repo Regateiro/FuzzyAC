@@ -13,9 +13,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import it.av.fac.dbi.util.DBIConfig;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
-import it.av.fac.messaging.client.ReplyStatus;
+import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.interfaces.IReply;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -99,10 +99,9 @@ public class DocumentDBI implements Closeable {
         this.bulk.clear();
     }
 
-    public void storeDocument(DBIRequest request) {
+    public void storeResource(JSONObject resource) {
         Document doc = new Document();
-        doc.append("document", request.getPayload());
-        doc.putAll(request.getMetadata());
+        doc.putAll(resource);
         this.bulk.add(doc);
 
         if (this.bulk.size() == this.bulkSize) {
@@ -114,22 +113,21 @@ public class DocumentDBI implements Closeable {
     /**
      * TODO: Add more query functionalities.
      *
-     * @param request
+     * @param query
      * @return
      */
-    public DBIReply query(DBIRequest request) {
-        DBIReply reply = new DBIReply();
+    public JSONArray query(String query) {
+        JSONArray ret = new JSONArray();
 
-        FindIterable<Document> documents = this.collection.find(Filters.text(request.getQuery()));
+        FindIterable<Document> documents = this.collection.find(Filters.text(query));
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
-                reply.addDocument(doc.toJson());
+                ret.add(JSONObject.parse(doc.toJson()));
             }
         });
         
-        reply.setStatus(ReplyStatus.OK);
-        return reply;
+        return ret;
     }
     
     /**
@@ -138,11 +136,10 @@ public class DocumentDBI implements Closeable {
      * @param request
      * @return
      */
-    public DBIReply find(DBIRequest request) {
-        DBIReply reply = new DBIReply();
-        reply.setStatus(ReplyStatus.OK);
+    public IReply findPolicy(IRequest request) {
+        IReply reply = new BDFISReply();
 
-        JSONObject fields = JSONObject.parseObject((String) request.getMetadata().get("fields"));
+        JSONObject fields = JSONObject.parseObject((String) request.getResourceId());
         List<Bson> filters = new ArrayList<>();
         fields.keySet().stream().forEach((field) ->{
             filters.add(Filters.eq(field, fields.getString(field)));
@@ -158,7 +155,7 @@ public class DocumentDBI implements Closeable {
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
-                reply.addDocument(doc.toJson());
+                reply.addData(doc.toJson());
             }
         });
         return reply;

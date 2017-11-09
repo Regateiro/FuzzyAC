@@ -5,9 +5,12 @@
  */
 package it.av.fac.riac.handlers;
 
+import com.alibaba.fastjson.JSONObject;
+import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.BDFISRequest;
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.interfaces.IReply;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
@@ -30,7 +33,7 @@ import java.util.logging.Logger;
 public class RIaCHandler implements IServerHandler<byte[], String> {
 
     private final IClassifier classifier;
-    private final SynchronousQueue<DBIReply> queue = new SynchronousQueue<>();
+    private final SynchronousQueue<IReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
 
     public RIaCHandler(IClassifier classifier) throws Exception {
@@ -46,19 +49,16 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_RIAC_RESPONSE, clientKey)) {
-            DBIReply reply = handle(new DBIRequest().readFromBytes(requestBytes));
+            IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private DBIReply handle(DBIRequest request) {
-        DBIReply errorReply = new DBIReply();
-        errorReply.setStatus(ReplyStatus.ERROR);
-
+    private IReply handle(IRequest request) {
         // classify the document in the request
-        System.out.println("Classifying " + request.getMetadata().getOrDefault("title", "no title"));
+        System.out.println("Classifying " + JSONObject.parseObject(request.getResource()).getOrDefault("title", "no title"));
         classifier.classify(request);
         return requestStorage(request);
     }
@@ -69,27 +69,25 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private DBIReply requestStorage(DBIRequest request) {
-        DBIReply errorReply = new DBIReply();
+    private IReply requestStorage(IRequest request) {
+        IReply reply;
 
         try {
             conn.send(request.convertToBytes());
             return queue.take();
         } catch (IOException | InterruptedException ex) {
-            errorReply.setStatus(ReplyStatus.ERROR);
-            errorReply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 
-        return errorReply;
+        return reply;
     }
 
     private final IClientHandler<byte[]> handler = (byte[] replyBytes) -> {
-        DBIReply reply = new DBIReply();
+        IReply reply;
         try {
-            reply.readFromBytes(replyBytes);
+            reply = BDFISReply.readFromBytes(replyBytes);
         } catch (IOException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         queue.add(reply);
     };

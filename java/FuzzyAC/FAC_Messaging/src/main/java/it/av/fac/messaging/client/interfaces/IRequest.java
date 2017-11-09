@@ -5,17 +5,18 @@
  */
 package it.av.fac.messaging.client.interfaces;
 
+import it.av.fac.messaging.client.RequestType;
 import java.io.IOException;
 
 /**
  * Interface for the Request objects.
  * @author Diogo Regateiro
- * @param <R>
- * @param <T>
  */
-public interface IRequest<R extends IRequest, T extends IRequestType> {
-    public T getRequestType();
-    public void setRequestType(T requestType);
+public interface IRequest {
+    public String getUserToken();
+    public String getResourceId();
+    public RequestType getRequestType();
     public byte[] convertToBytes() throws IOException;
-    public R readFromBytes(byte[] bytes) throws IOException;
+    public String getResource();
+    public void setResource(String resource);
 }

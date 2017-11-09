@@ -5,7 +5,9 @@
  */
 package it.av.fac.riac.classifier;
 
-import it.av.fac.messaging.client.DBIRequest;
+import com.alibaba.fastjson.JSONObject;
+import it.av.fac.messaging.client.interfaces.IRequest;
+
 
 /**
  *
@@ -18,9 +20,11 @@ public class RandomClassifier implements IClassifier {
     private static final String[] CLASSES = {"PUBLIC", "ADMINISTRATIVE", "BUSINESS", "ACADEMIC"};
 
     @Override
-    public void classify(DBIRequest request) {
-        request.setMetadata("security_label", CLASSES[(int)(Math.random() * 4)]);
-        request.setMetadata("sl_timestamp", String.valueOf(System.currentTimeMillis()));
+    public void classify(IRequest request) {
+        JSONObject resource = JSONObject.parseObject(request.getResource());
+        resource.put("security_label", CLASSES[(int)(Math.random() * 4)]);
+        resource.put("sl_timestamp", String.valueOf(System.currentTimeMillis()));
+        request.setResource(resource.toJSONString());
     }
     
 }

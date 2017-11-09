@@ -5,18 +5,12 @@
  */
 package it.av.fac.driver;
 
-import it.av.fac.messaging.client.AdminReply;
-import it.av.fac.messaging.client.AdminRequest;
-import it.av.fac.messaging.client.DBIRequest;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.QueryRequest;
-import it.av.fac.messaging.client.QueryReply;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -35,90 +29,89 @@ import org.apache.http.util.EntityUtils;
  */
 public class APIClient {
 
-    private final static String QUERY_PATH = "/QueryAPI";
-    private final static String ADMIN_PATH = "/AdminAPI";
-    private final static String STORAGE_PATH = "/StorageAPI";
+    private final static String QUERY_PATH = "/WikiAPI";
     private final String endpoint;
 
     public APIClient(String endpoint) {
         this.endpoint = endpoint;
     }
 
-    public QueryReply queryRequest(QueryRequest request) {
+    public String queryRequest(String userToken, String resource) {
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
             HttpPost httpPost = new HttpPost(endpoint + QUERY_PATH);
 
             List<NameValuePair> nvps = new ArrayList<>();
-            nvps.add(new BasicNameValuePair("request", Base64.encodeBase64URLSafeString(request.convertToBytes())));
+            nvps.add(new BasicNameValuePair("request", URLEncoder.encode(resource, "UTF-8")));
+            nvps.add(new BasicNameValuePair("token", URLEncoder.encode(userToken, "UTF-8")));
             httpPost.setEntity(new UrlEncodedFormEntity(nvps));
 
             // Create a custom response handler
-            ResponseHandler<byte[]> responseHandler = (final HttpResponse response) -> {
+            ResponseHandler<String> responseHandler = (final HttpResponse response) -> {
                 int status = response.getStatusLine().getStatusCode();
                 if (status >= 200 && status < 300) {
                     HttpEntity entity = response.getEntity();
-                    return entity != null ? Base64.decodeBase64(EntityUtils.toString(entity)) : null;
+                    return entity != null ? EntityUtils.toString(entity) : null;
                 } else {
                     throw new ClientProtocolException("Unexpected response status: " + status);
                 }
             };
 
-            return (QueryReply) new QueryReply().readFromBytes(httpclient.execute(httpPost, responseHandler));
+            return httpclient.execute(httpPost, responseHandler);
         } catch (IOException ex) {
             Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
     }
     
-    public DBIReply storageRequest(DBIRequest request) {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(endpoint + STORAGE_PATH);
-
-            List<NameValuePair> nvps = new ArrayList<>();
-            nvps.add(new BasicNameValuePair("request", Base64.encodeBase64URLSafeString(request.convertToBytes())));
-            httpPost.setEntity(new UrlEncodedFormEntity(nvps));
-
-            // Create a custom response handler
-            ResponseHandler<byte[]> responseHandler = (final HttpResponse response) -> {
-                int status = response.getStatusLine().getStatusCode();
-                if (status >= 200 && status < 300) {
-                    HttpEntity entity = response.getEntity();
-                    return entity != null ? Base64.decodeBase64(EntityUtils.toString(entity)) : null;
-                } else {
-                    throw new ClientProtocolException("Unexpected response status: " + status);
-                }
-            };
-
-            return (DBIReply) new DBIReply().readFromBytes(httpclient.execute(httpPost, responseHandler));
-        } catch (IOException ex) {
-            Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-    }
-    
-    public AdminReply adminRequest(AdminRequest request) {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(endpoint + STORAGE_PATH);
-
-            List<NameValuePair> nvps = new ArrayList<>();
-            nvps.add(new BasicNameValuePair("request", Base64.encodeBase64URLSafeString(request.convertToBytes())));
-            httpPost.setEntity(new UrlEncodedFormEntity(nvps));
-
-            // Create a custom response handler
-            ResponseHandler<byte[]> responseHandler = (final HttpResponse response) -> {
-                int status = response.getStatusLine().getStatusCode();
-                if (status >= 200 && status < 300) {
-                    HttpEntity entity = response.getEntity();
-                    return entity != null ? Base64.decodeBase64(EntityUtils.toString(entity)) : null;
-                } else {
-                    throw new ClientProtocolException("Unexpected response status: " + status);
-                }
-            };
-
-            return (AdminReply) new AdminReply().readFromBytes(httpclient.execute(httpPost, responseHandler));
-        } catch (IOException ex) {
-            Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-    }
+//    public IReply storageRequest(IRequest request) {
+//        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+//            HttpPost httpPost = new HttpPost(endpoint + STORAGE_PATH);
+//
+//            List<NameValuePair> nvps = new ArrayList<>();
+//            nvps.add(new BasicNameValuePair("request", Base64.encodeBase64URLSafeString(request.convertToBytes())));
+//            httpPost.setEntity(new UrlEncodedFormEntity(nvps));
+//
+//            // Create a custom response handler
+//            ResponseHandler<byte[]> responseHandler = (final HttpResponse response) -> {
+//                int status = response.getStatusLine().getStatusCode();
+//                if (status >= 200 && status < 300) {
+//                    HttpEntity entity = response.getEntity();
+//                    return entity != null ? Base64.decodeBase64(EntityUtils.toString(entity)) : null;
+//                } else {
+//                    throw new ClientProtocolException("Unexpected response status: " + status);
+//                }
+//            };
+//
+//            return BDFISReply.readFromBytes(httpclient.execute(httpPost, responseHandler));
+//        } catch (IOException ex) {
+//            Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
+//            return null;
+//        }
+//    }
+//    
+//    public IReply adminRequest(IRequest request) {
+//        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+//            HttpPost httpPost = new HttpPost(endpoint + STORAGE_PATH);
+//
+//            List<NameValuePair> nvps = new ArrayList<>();
+//            nvps.add(new BasicNameValuePair("request", Base64.encodeBase64URLSafeString(request.convertToBytes())));
+//            httpPost.setEntity(new UrlEncodedFormEntity(nvps));
+//
+//            // Create a custom response handler
+//            ResponseHandler<byte[]> responseHandler = (final HttpResponse response) -> {
+//                int status = response.getStatusLine().getStatusCode();
+//                if (status >= 200 && status < 300) {
+//                    HttpEntity entity = response.getEntity();
+//                    return entity != null ? Base64.decodeBase64(EntityUtils.toString(entity)) : null;
+//                } else {
+//                    throw new ClientProtocolException("Unexpected response status: " + status);
+//                }
+//            };
+//
+//            return BDFISReply.readFromBytes(httpclient.execute(httpPost, responseHandler));
+//        } catch (IOException ex) {
+//            Logger.getLogger(APIClient.class.getName()).log(Level.SEVERE, null, ex);
+//            return null;
+//        }
+//    }
 }

@@ -7,13 +7,13 @@ package it.av.fac.decision.handlers;
 
 import it.av.fac.decision.fis.BDFIS;
 import it.av.fac.decision.util.decision.DecisionConfig;
-import it.av.fac.messaging.client.DecisionReply;
-import it.av.fac.messaging.client.DecisionRequest;
-import it.av.fac.messaging.client.InformationReply;
-import it.av.fac.messaging.client.InformationRequest;
-import it.av.fac.messaging.client.PolicyReply;
-import it.av.fac.messaging.client.PolicyRequest;
+import it.av.fac.messaging.client.BDFISDecision;
+import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.BDFISRequest;
 import it.av.fac.messaging.client.ReplyStatus;
+import it.av.fac.messaging.client.RequestType;
+import it.av.fac.messaging.client.interfaces.IReply;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
@@ -38,8 +38,8 @@ import org.antlr.runtime.RecognitionException;
  */
 public class DecisionHandler implements IServerHandler<byte[], String> {
 
-    private final SynchronousQueue<InformationReply> infoQueue = new SynchronousQueue<>();
-    private final SynchronousQueue<PolicyReply> polretQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<IReply> infoQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<IReply> polretQueue = new SynchronousQueue<>();
     private final RabbitMQClient infoConn;
     private final RabbitMQClient polretConn;
     private final double alphaCut = 0.5;
@@ -58,23 +58,22 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DECISION_RESPONSE, clientKey)) {
-            DecisionReply reply = handle(new DecisionRequest().readFromBytes(requestBytes));
+            IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private DecisionReply handle(DecisionRequest request) {
-        DecisionReply decisionReply = new DecisionReply();
-        decisionReply.setStatus(ReplyStatus.OK);
+    private IReply handle(IRequest request) {
+        IReply decisionReply = new BDFISReply();
 
         System.out.println("Processing request for user: " + request.getUserToken());
-        System.out.println("Requesting the FCL files for the security labels..."); //PolicyRetrieval
-        PolicyRequest polRequest = new PolicyRequest();
-        polRequest.setRequestType(PolicyRequest.PolicyRetrievalRequestType.BySecurityLabel);
-        polRequest.setSecurityLabels(request.getSecurityLabels());
-        PolicyReply polReply = requestPolicies(polRequest);
+        System.out.println("Requesting the FCL files for the security label..."); //PolicyRetrieval
+        String securityLabel = request.getResourceId();
+        
+        IRequest polRequest = new BDFISRequest(request.getUserToken(), request.getResourceId(), RequestType.GetPolicy);
+        IReply polReply = requestPolicies(polRequest);
 
         System.out.println("Requesting the user attributes..."); //Information
         Map<String, Double> userVariables = new HashMap<>();
@@ -87,9 +86,8 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
 
         System.out.println("Evaluating user permissions...");
 
-        polReply.getPolicies().parallelStream().forEach((policy) -> {
+        polReply.getData().parallelStream().forEach((fcl) -> {
             try {
-                String fcl = policy.getString("document");
                 if (fcl != null) {
                     Map<String, Double> neededVariables = new HashMap<>(userVariables);
                     BDFIS feval = new BDFIS(fcl, true);
@@ -98,10 +96,10 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
                     });
                     Map<String, Variable> evaluation = feval.evaluate(neededVariables, false);
                     evaluation.keySet().stream().forEach((permission) -> {
-                        addDecisionToReplySync(decisionReply, policy.getString("security_label"), permission, evaluation.get(permission).getValue() > alphaCut);
+                        addDecisionToReplySync(decisionReply, securityLabel, permission, evaluation.get(permission).getValue() > alphaCut);
                     });
                 } else {
-                    addDecisionToReplySync(decisionReply, policy.getString("security_label"), "*", true);
+                    addDecisionToReplySync(decisionReply, securityLabel, "*", true);
                 }
             } catch (RecognitionException ex) {
                 Logger.getLogger(DecisionHandler.class.getName()).log(Level.SEVERE, null, ex);
@@ -112,8 +110,8 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         return decisionReply;
     }
 
-    private synchronized void addDecisionToReplySync(DecisionReply reply, String label, String permission, boolean decision) {
-        reply.addDecision(label, permission, decision);
+    private synchronized void addDecisionToReplySync(IReply reply, String label, String permission, boolean decision) {
+        reply.addData(new BDFISDecision(label, permission, decision).convertToString());
     }
 
     /**
@@ -122,58 +120,54 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
      * @param request The request with the information required.
      * @return The information process status.
      */
-    private InformationReply requestInformation(InformationRequest request) {
-        InformationReply reply = new InformationReply();
+    private IReply requestInformation(IRequest request) {
+        IReply reply;
 
         try {
             infoConn.send(request.convertToBytes());
             reply = infoQueue.take();
         } catch (IOException | InterruptedException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 
         return reply;
     }
 
     /**
-     * Request a Policy to the Policy Retrieval Module.
+     * Request a GetPolicy to the GetPolicy Retrieval Module.
      *
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private PolicyReply requestPolicies(PolicyRequest request) {
-        PolicyReply reply = new PolicyReply();
+    private IReply requestPolicies(IRequest request) {
+        IReply reply;
 
         try {
             polretConn.send(request.convertToBytes());
             reply = polretQueue.take();
         } catch (IOException | InterruptedException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 
         return reply;
     }
 
     private final IClientHandler<byte[]> infoHandler = (byte[] replyBytes) -> {
-        InformationReply reply = new InformationReply();
+        IReply reply;
         try {
-            reply.readFromBytes(replyBytes);
+            reply = BDFISReply.readFromBytes(replyBytes);
         } catch (IOException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         infoQueue.add(reply);
     };
 
     private final IClientHandler<byte[]> polretHandler = (byte[] replyBytes) -> {
-        PolicyReply reply = new PolicyReply();
+        IReply reply;
         try {
-            reply.readFromBytes(replyBytes);
+            reply = BDFISReply.readFromBytes(replyBytes);
         } catch (IOException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         polretQueue.add(reply);
     };

@@ -6,9 +6,6 @@
 package it.av.fac.datasources.uploader;
 
 import it.av.fac.driver.APIClient;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
-import it.av.fac.messaging.client.DBIRequest.DBIRequestType;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,14 +30,7 @@ public class WikipediaTaxonomyUploader {
                     System.out.println("Error in split: " + line);
                     continue;
                 }
-                        
-                DBIRequest request = new DBIRequest();
-                request.setRequestType(DBIRequestType.StoreGraphNode);
-                request.setStorageId("wct");
-                request.setPayload(catcats[0]);
-                request.setMetadata("parents", catcats[1]);
-
-                DBIReply reply = fac.storageRequest(request);
+                
             }
         } catch (IOException ex) {
             Logger.getLogger(WikipediaTaxonomyUploader.class.getName()).log(Level.SEVERE, null, ex);

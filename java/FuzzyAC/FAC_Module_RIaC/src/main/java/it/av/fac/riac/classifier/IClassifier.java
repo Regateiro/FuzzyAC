@@ -5,12 +5,12 @@
  */
 package it.av.fac.riac.classifier;
 
-import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.interfaces.IRequest;
 
 /**
  * Interface for the classifier classes.
  * @author Diogo Regateiro
  */
 public interface IClassifier {
-    public void classify(DBIRequest request);
+    public void classify(IRequest request);
 }

@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.messaging.client.interfaces;
+package it.av.fac.messaging.client;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro
  */
-public interface IRequestType {
-    public String name();
+public enum RequestType {
+    GetPolicy, AddPolicy, Metadata, Decision;
 }

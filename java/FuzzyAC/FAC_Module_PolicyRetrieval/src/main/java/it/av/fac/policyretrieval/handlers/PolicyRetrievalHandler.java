@@ -5,13 +5,11 @@
  */
 package it.av.fac.policyretrieval.handlers;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
-import it.av.fac.messaging.client.PolicyReply;
-import it.av.fac.messaging.client.PolicyRequest;
+import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.BDFISRequest;
 import it.av.fac.messaging.client.ReplyStatus;
+import it.av.fac.messaging.client.interfaces.IReply;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
@@ -33,7 +31,7 @@ import java.util.logging.Logger;
  */
 public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
 
-    private final SynchronousQueue<DBIReply> dbiQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<IReply> dbiQueue = new SynchronousQueue<>();
     private final RabbitMQClient dbiConn;
 
     public PolicyRetrievalHandler() throws Exception {
@@ -47,39 +45,32 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_POLICY_RETRIEVAL_RESPONSE, clientKey)) {
-            PolicyReply reply = handle(new PolicyRequest().readFromBytes(requestBytes));
+            IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private PolicyReply handle(PolicyRequest policyRequest) {
-        PolicyReply policyReply = new PolicyReply();
-        policyReply.setStatus(ReplyStatus.OK);
+    private IReply handle(IRequest policyRequest) {
+        IReply policyReply = new BDFISReply(ReplyStatus.OK, "");
 
         System.out.println("Processing policy request");
 
         System.out.println("Requesting documents...");
-        policyRequest.getSecurityLabels().parallelStream().forEach((label) -> {
-            DBIRequest dbiRequest = new DBIRequest();
-            dbiRequest.setRequestType(DBIRequest.DBIRequestType.QueryPolicies);
-            dbiRequest.setStorageId("policies");
+        String policy = policyRequest.getResourceId();
 
-            JSONObject fields = new JSONObject();
-            fields.put("security_label", label);
-            dbiRequest.setMetadata("fields", fields.toJSONString());
-            
-            DBIReply documentsReply = requestPolicies(dbiRequest);
-            documentsReply.getDocuments().stream().forEach((doc) -> addPolicyToReplySync(policyReply, doc));
-        });
+        // do stuff with the policy perhaps
+        
+        IReply documentsReply = requestPolicy(policyRequest);
+        documentsReply.getData().stream().forEach((doc) -> addPolicyToReplySync(policyReply, doc));
 
         System.out.println("Replying with the filtered documents.");
         return policyReply;
     }
-    
-    private synchronized void addPolicyToReplySync(PolicyReply reply, JSONObject policy) {
-        reply.addPolicy(policy);
+
+    private synchronized void addPolicyToReplySync(IReply reply, String policy) {
+        reply.addData(policy);
     }
 
     /**
@@ -88,27 +79,25 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private DBIReply requestPolicies(DBIRequest request) {
-        DBIReply reply = new DBIReply();
+    private IReply requestPolicy(IRequest request) {
+        IReply reply;
 
         try {
             dbiConn.send(request.convertToBytes());
             return dbiQueue.take();
         } catch (IOException | InterruptedException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 
         return reply;
     }
 
     private final IClientHandler<byte[]> dbiHandler = (byte[] replyBytes) -> {
-        DBIReply reply = new DBIReply();
+        IReply reply;
         try {
-            reply.readFromBytes(replyBytes);
+            reply = BDFISReply.readFromBytes(replyBytes);
         } catch (IOException ex) {
-            reply.setStatus(ReplyStatus.ERROR);
-            reply.setErrorMsg(ex.getMessage());
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         dbiQueue.add(reply);
     };

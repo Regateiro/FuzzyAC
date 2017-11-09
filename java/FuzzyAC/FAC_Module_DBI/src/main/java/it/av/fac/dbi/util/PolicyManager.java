@@ -5,12 +5,14 @@
  */
 package it.av.fac.dbi.util;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import it.av.fac.dbi.drivers.DocumentDBI;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
+import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.BDFISRequest;
 import it.av.fac.messaging.client.ReplyStatus;
+import it.av.fac.messaging.client.RequestType;
+import it.av.fac.messaging.client.interfaces.IReply;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -27,22 +29,13 @@ public class PolicyManager {
         this.client = DocumentDBI.getInstance("policies");
     }
 
-    public DBIReply getPolicy(String securityLabel) {
-        DBIRequest request = new DBIRequest();
-        JSONObject fields = new JSONObject();
-
-        JSONArray array = new JSONArray();
-        array.add(securityLabel);
-        
-        fields.put("security_labels", array);
-        request.setMetadata("fields", fields.toJSONString());
-        return this.client.find(request);
+    public IReply getPolicy(String securityLabel) {
+        IRequest request = new BDFISRequest(null, securityLabel, RequestType.GetPolicy);
+        return this.client.findPolicy(request);
     }
 
-    public DBIReply insertPolicy(String securityLabel, String filePath) {
-        DBIRequest request = new DBIRequest();
-        DBIReply reply = new DBIReply();
-        reply.setStatus(ReplyStatus.OK);
+    public IReply insertPolicy(String securityLabel, String filePath) {
+        IReply reply = new BDFISReply();
 
         StringBuilder fcl = new StringBuilder();
         if (filePath != null) {
@@ -52,25 +45,26 @@ public class PolicyManager {
                     fcl.append(line).append("\n");
                 }
             } catch (Exception ex) {
-                reply.setStatus(ReplyStatus.ERROR);
-                reply.setErrorMsg(ex.getMessage());
+                reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
                 return reply;
             }
         }
 
-        request.setPayload(filePath != null ? fcl.toString() : null);
-        request.setMetadata("security_label", securityLabel);
-        this.client.storeDocument(request);
+        JSONObject label_fcl = new JSONObject();
+        label_fcl.put("security_label", securityLabel);
+        label_fcl.put("fcl", fcl);
+
+        this.client.storeResource(label_fcl);
         this.client.syncWithDB();
         return reply;
     }
 
     public static void main(String[] args) throws IOException {
         PolicyManager pman = new PolicyManager();
-        DBIReply publicPol = pman.getPolicy("PUBLIC");
-        DBIReply academicPol = pman.getPolicy("ACADEMIC");
-        DBIReply businessPol = pman.getPolicy("BUSINESS");
-       // DBIReply adminPol = pman.getPolicy("ADMINISTRATIVE");
+        IReply publicPol = pman.getPolicy("PUBLIC");
+        IReply academicPol = pman.getPolicy("ACADEMIC");
+        IReply businessPol = pman.getPolicy("BUSINESS");
+        // DBIReply adminPol = pman.getPolicy("ADMINISTRATIVE");
         System.out.println("");
         //pman.insertPolicy("PUBLIC", null);
         //pman.insertPolicy("ACADEMIC", System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\academic.fcl");

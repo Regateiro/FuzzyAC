@@ -5,24 +5,20 @@
  */
 package it.av.fac.webserver;
 
-import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
-import it.av.fac.webserver.handlers.StorageHandler;
+import it.av.fac.webserver.handlers.WikiHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLDecoder;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.codec.binary.Base64;
 
 /**
- * Endpoint for serving admin requests.
- *
+ * Entry point to the architecture.
  * @author Diogo Regateiro
  */
-public class StorageAPI extends HttpServlet {
+public class WikiAPI extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -35,25 +31,22 @@ public class StorageAPI extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/application;base64");
+        WikiHandler handler = new WikiHandler();
+        response.setContentType("text/html");
         
-        /**
-         * TODO: authentication *
-         */
-        DBIRequest storageRequest = new DBIRequest();
-        storageRequest.readFromBytes(Base64.decodeBase64(request.getParameter("request")));
-        System.out.println("Received request for " + storageRequest.getMetadata().getOrDefault("title", "no title"));
+        
+        String page = URLDecoder.decode((String) request.getParameter("request"), "UTF-8");
+        String userToken = URLDecoder.decode((String) request.getParameter("token"), "UTF-8");
+        System.out.println("Received query for page: " + page);
         
         try (PrintWriter out = response.getWriter()) {
-            DBIReply reply;
+            String html;
             try {
-                reply = StorageHandler.getInstance().handle(storageRequest);
+                html = handler.fetch(userToken, page);
             } catch (Exception ex) {
-                reply = new DBIReply();
-                reply.setStatus(ReplyStatus.ERROR);
-                reply.setErrorMsg(ex.getMessage());
+                html = handler.generateErrorPage(ex);
             }
-            out.println(Base64.encodeBase64URLSafeString(reply.convertToBytes()));
+            out.println(html);
         }
     }
 

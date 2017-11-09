@@ -7,17 +7,16 @@ package it.av.fac.messaging.client.interfaces;
 
 import it.av.fac.messaging.client.ReplyStatus;
 import java.io.IOException;
+import java.util.List;
 
 /**
  *
  * @author Diogo Regateiro
- * @param <R>
  */
-public interface IReply<R extends IReply> {
+public interface IReply {
     public ReplyStatus getStatus();
     public String getErrorMsg();
-    public void setStatus(ReplyStatus status);
-    public void setErrorMsg(String msg);
     public byte[] convertToBytes() throws IOException;
-    public R readFromBytes(byte[] bytes) throws IOException;
+    public List<String> getData();
+    public void addData(String document);
 }

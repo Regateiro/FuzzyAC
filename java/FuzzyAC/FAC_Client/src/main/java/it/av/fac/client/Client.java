@@ -6,8 +6,6 @@
 package it.av.fac.client;
 
 import it.av.fac.driver.APIClient;
-import it.av.fac.messaging.client.QueryReply;
-import it.av.fac.messaging.client.QueryRequest;
 
 /**
  *
@@ -17,13 +15,8 @@ public class Client {
     public static void main(String[] args) {
         APIClient fac = new APIClient("http://localhost:8084/FAC_Webserver");
         
-        QueryRequest request = new QueryRequest();
-        request.setRequestType(QueryRequest.QueryRequestType.QueryForDocument);
-        request.setQuery("security");
-        request.setToken("mytoken");
-        request.setTargetData("randwikipages");
         long nanoTime = System.nanoTime();
-        QueryReply queryRequest = fac.queryRequest(request);
+        String html = fac.queryRequest(null, "Diamond");
         nanoTime = System.nanoTime() - nanoTime;
         System.out.println(nanoTime);
     }

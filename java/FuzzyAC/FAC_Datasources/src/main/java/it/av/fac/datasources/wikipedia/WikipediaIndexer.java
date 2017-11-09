@@ -5,9 +5,11 @@
  */
 package it.av.fac.datasources.wikipedia;
 
-import it.av.fac.driver.APIClient;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,35 +22,36 @@ import org.xml.sax.SAXException;
  *
  * @author Diogo Regateiro
  */
-public class WikipediaSource {
+public class WikipediaIndexer {
 
     private final SAXParser parser;
     private final String XMLFilePath;
-    private final APIClient fac;
+    private final Set<String> titles;
 
-    public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
+    public WikipediaIndexer(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();
+        this.titles = new TreeSet<>();
         this.XMLFilePath = XMLFilePath;
-        this.fac = new APIClient("http://localhost:8080/FAC_Webserver");
     }
 
     public void parse() {
-        try {
+        try (PrintWriter pw = new PrintWriter("F:\\wiki_titles.txt")) {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
-                if (!page.getTitle().startsWith("File:") && !page.getTitle().startsWith("Wikipedia:") 
-                        && !page.getTitle().startsWith("Category:") && !page.getTitle().startsWith("Template:")) {
-                    
-                }
+                titles.add(page.getTitle());
             }));
+            
+            titles.stream().forEachOrdered((title) -> {
+                pw.println(title);
+            });
 
             //this.parser.parse(new File(XMLFilePath), new CategoryTaxonomyHandler("E:\\taxonomy.txt"));
         } catch (SAXException | IOException ex) {
-            Logger.getLogger(WikipediaSource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WikipediaIndexer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException {
-        WikipediaSource src = new WikipediaSource("F:\\articles.xml");
+        WikipediaIndexer src = new WikipediaIndexer("F:\\articles.xml");
         src.parse();
     }
 }

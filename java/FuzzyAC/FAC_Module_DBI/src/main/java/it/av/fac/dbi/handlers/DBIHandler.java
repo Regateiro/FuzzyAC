@@ -5,12 +5,13 @@
  */
 package it.av.fac.dbi.handlers;
 
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.dbi.drivers.DocumentDBI;
-import it.av.fac.dbi.drivers.GraphDBI;
+import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.BDFISRequest;
 import it.av.fac.messaging.client.ReplyStatus;
-import it.av.fac.messaging.client.DBIReply;
-import it.av.fac.messaging.client.DBIRequest;
-import it.av.fac.messaging.client.DBIRequest.DBIRequestType;
+import it.av.fac.messaging.client.interfaces.IReply;
+import it.av.fac.messaging.client.interfaces.IRequest;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.interfaces.IServerHandler;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
@@ -33,52 +34,23 @@ public class DBIHandler implements IServerHandler<byte[], String> {
         try (IFACConnection clientConn = new RabbitMQServer(
                 RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE, clientKey)) {
-            DBIReply reply = handle(new DBIRequest().readFromBytes(requestBytes));
+            IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private DBIReply handle(DBIRequest request) {
-        DBIReply reply = new DBIReply();
-        reply.setStatus(ReplyStatus.ERROR);
-
-        DBIRequestType requestType = DBIRequestType.valueOf(request.getRequestType().name());
-
-        switch (requestType) {
-            case QueryPolicies:
-                return requestPolicies(request);
-            case QueryDocuments:
-                return requestDocuments(request);
-            case StoreGraphNode:
-                return requestNodeStorage(request);
-            case StoreDocument:
-                return requestDocumentStorage(request);
+    private IReply handle(IRequest request) {
+        switch (request.getRequestType()) {
+            case GetPolicy:
+                return requestPolicy(request);
+            case AddPolicy:
+                return requestPolicyStorage(request);
         }
 
-        reply.setErrorMsg("Not a known request type was received: " + requestType);
-        return reply;
+        return new BDFISReply(ReplyStatus.ERROR, "Not a known request type was received: " + request.getRequestType());
 
-    }
-
-    /**
-     * Forwards the request to store a node in a graph.
-     *
-     * @param request The request with the node store.
-     * @return The storage process status.
-     */
-    private DBIReply requestNodeStorage(DBIRequest request) {
-        DBIReply reply = new DBIReply();
-        try {
-            GraphDBI graphDBI = new GraphDBI();
-            graphDBI.storeNode(request);
-            reply.setStatus(ReplyStatus.OK);
-        } catch (IOException ex) {
-            reply.setErrorMsg(ex.getMessage());
-            reply.setStatus(ReplyStatus.ERROR);
-        }
-        return reply;
     }
 
     /**
@@ -87,14 +59,12 @@ public class DBIHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private DBIReply requestDocumentStorage(DBIRequest request) {
-        DBIReply reply = new DBIReply();
+    private IReply requestPolicyStorage(IRequest request) {
+        IReply reply = new BDFISReply();
         try {
-            DocumentDBI.getInstance(request.getStorageId()).storeDocument(request);
-            reply.setStatus(ReplyStatus.OK);
+            DocumentDBI.getInstance("policies").storeResource(JSONObject.parseObject(request.getResource()));
         } catch (IOException ex) {
-            reply.setErrorMsg(ex.getMessage());
-            reply.setStatus(ReplyStatus.ERROR);
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         return reply;
     }
@@ -105,30 +75,12 @@ public class DBIHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private DBIReply requestDocuments(DBIRequest request) {
-        DBIReply reply = new DBIReply();
+    private IReply requestPolicy(IRequest request) {
+        IReply reply = new BDFISReply();
         try {
-            reply = DocumentDBI.getInstance(request.getStorageId()).query(request);
+            reply = DocumentDBI.getInstance("policies").findPolicy(request);
         } catch (IOException ex) {
-            reply.setErrorMsg(ex.getMessage());
-            reply.setStatus(ReplyStatus.ERROR);
-        }
-        return reply;
-    }
-
-    /**
-     * Request documents from the datastore.
-     *
-     * @param request The request with the document to classify and store.
-     * @return The storage process status.
-     */
-    private DBIReply requestPolicies(DBIRequest request) {
-        DBIReply reply = new DBIReply();
-        try {
-            reply = DocumentDBI.getInstance(request.getStorageId()).find(request);
-        } catch (IOException ex) {
-            reply.setErrorMsg(ex.getMessage());
-            reply.setStatus(ReplyStatus.ERROR);
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         return reply;
     }
