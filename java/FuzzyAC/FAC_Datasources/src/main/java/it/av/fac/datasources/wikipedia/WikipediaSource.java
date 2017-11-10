@@ -25,6 +25,7 @@ public class WikipediaSource {
     private final SAXParser parser;
     private final String XMLFilePath;
     private final APIClient fac;
+    private int SKIP = 484000;
 
     public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();
@@ -35,9 +36,12 @@ public class WikipediaSource {
     public void parse() {
         try {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
-                if (!page.getTitle().startsWith("File:") && !page.getTitle().startsWith("Wikipedia:") 
-                        && !page.getTitle().startsWith("Category:") && !page.getTitle().startsWith("Template:")) {
-                    
+                if (!page.getTitle().matches("^(File:|Wikipedia:|Category:|Draft:|Portal:|Template:).*$")) {
+                    if (SKIP == 0) {
+                        this.fac.storageRequest("", page.toJSON());
+                    } else {
+                        SKIP--;
+                    }
                 }
             }));
 

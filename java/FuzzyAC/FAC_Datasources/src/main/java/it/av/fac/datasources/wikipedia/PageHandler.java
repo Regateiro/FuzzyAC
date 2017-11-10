@@ -34,10 +34,8 @@ public class PageHandler extends DefaultHandler {
         stringBuilder = new StringBuilder();
 
         if (qName.equals("page")) {
-
             page = new Page();
             idSet = false;
-
         } else if (qName.equals("redirect")) {
             if (page != null) {
                 page.setRedirecting(true);
@@ -95,7 +93,7 @@ public class PageHandler extends DefaultHandler {
                 idx = text.indexOf("[[Category:", endIdx);
             }
         } catch (IndexOutOfBoundsException ex) {
-            System.err.print("Error... skipping.");
+            System.err.println("Error... skipping.");
         }
 
         return categories;

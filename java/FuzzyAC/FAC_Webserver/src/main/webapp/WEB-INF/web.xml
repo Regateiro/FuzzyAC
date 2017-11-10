@@ -4,9 +4,17 @@
         <servlet-name>WikiAPI</servlet-name>
         <servlet-class>it.av.fac.webserver.WikiAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>WikiAdminAPI</servlet-name>
+        <servlet-class>it.av.fac.webserver.WikiAdminAPI</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>WikiAPI</servlet-name>
         <url-pattern>/WikiAPI</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>WikiAdminAPI</servlet-name>
+        <url-pattern>/WikiAdminAPI</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

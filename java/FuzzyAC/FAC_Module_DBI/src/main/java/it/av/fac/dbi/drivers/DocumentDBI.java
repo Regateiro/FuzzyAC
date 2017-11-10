@@ -8,6 +8,7 @@ package it.av.fac.dbi.drivers;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -94,9 +97,16 @@ public class DocumentDBI implements Closeable {
     }
 
     public synchronized void syncWithDB() {
-        this.lastSync = System.currentTimeMillis();
-        this.collection.insertMany(bulk);
-        this.bulk.clear();
+        try {
+            this.lastSync = System.currentTimeMillis();
+            if (!bulk.isEmpty()) {
+                this.collection.insertMany(bulk);
+                this.bulk.clear();
+            }
+        } catch (MongoException ex) {
+            System.err.println("There was an error while trying to sync with mongo, please check the database.");
+            Logger.getLogger(DocumentDBI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void storeResource(JSONObject resource) {
@@ -126,10 +136,10 @@ public class DocumentDBI implements Closeable {
                 ret.add(JSONObject.parse(doc.toJson()));
             }
         });
-        
+
         return ret;
     }
-    
+
     /**
      * TODO: Add more query functionalities.
      *
@@ -141,17 +151,17 @@ public class DocumentDBI implements Closeable {
 
         JSONObject fields = JSONObject.parseObject((String) request.getResourceId());
         List<Bson> filters = new ArrayList<>();
-        fields.keySet().stream().forEach((field) ->{
+        fields.keySet().stream().forEach((field) -> {
             filters.add(Filters.eq(field, fields.getString(field)));
         });
-        
+
         FindIterable<Document> documents;
-        if(fields.isEmpty()){
+        if (fields.isEmpty()) {
             documents = this.collection.find();
         } else {
             documents = this.collection.find(Filters.and(filters));
         }
-        
+
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {

@@ -32,12 +32,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>FAC_Module_Enforcement</artifactId>
+            <artifactId>FAC_Module_Administration</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>FAC_Module_Administration</artifactId>
+            <artifactId>FAC_Module_Enforcement</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -62,4 +62,20 @@ public class Page {
     public JSONArray getCategories() {
         return this.categories;
     }
+    
+    public String toJSONString() {
+        return toJSON().toJSONString();
+    }
+    
+    public JSONObject toJSON() {
+        JSONObject ret = new JSONObject();
+        
+        ret.put("redirecting", redirecting);
+        ret.put("title", title);
+        ret.put("_id", title);
+        ret.put("text", text);
+        ret.put("categories", categories);
+        
+        return ret;
+    }
 }

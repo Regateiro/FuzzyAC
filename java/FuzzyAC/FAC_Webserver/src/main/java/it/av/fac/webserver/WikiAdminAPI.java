@@ -5,10 +5,10 @@
  */
 package it.av.fac.webserver;
 
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.webserver.handlers.WikiHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -16,11 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Entry point to the architecture.
  *
- * @author Diogo Regateiro
+ * @author DiogoJosé
  */
-public class WikiAPI extends HttpServlet {
+public class WikiAdminAPI extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,13 +38,13 @@ public class WikiAPI extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             String html = "";
             try {
-                if (request.getParameter("request") != null && request.getParameter("token") != null) {
-                    String page = URLDecoder.decode((String) request.getParameter("request"), "UTF-8");
+                if (request.getParameter("resource") != null && request.getParameter("token") != null) {
+                    JSONObject resource = JSONObject.parseObject(URLDecoder.decode((String) request.getParameter("resource"), "UTF-8"));
                     String userToken = URLDecoder.decode((String) request.getParameter("token"), "UTF-8");
-                    System.out.println("Received query for page: " + page);
-                    html = handler.fetch(userToken, page);
+                    System.out.println("Received resource");
+                    html = handler.store(resource, userToken);
                 }
-            } catch (UnsupportedEncodingException ex) {
+            } catch (Exception ex) {
                 html = handler.generateErrorPage(ex);
             }
             out.println(html);

@@ -26,7 +26,7 @@ public class RIaCServer {
     public static void main(String[] args) {
         try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()){
             try (IFACConnection serverConn = new RabbitMQServer(
-                    connWrapper, RabbitMQConstants.QUEUE_RIAC_REQUEST, new RIaCHandler(new TaxonomyClassifier()))) {
+                    connWrapper, RabbitMQConstants.QUEUE_RIAC_REQUEST, new RIaCHandler(new RandomClassifier()))) {
                 System.out.println("RIaC Server is now running... enter 'q' to quit.");
                 while(System.in.read() != 'q');
             } catch (Exception ex) {

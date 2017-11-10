@@ -5,6 +5,8 @@
  */
 package it.av.fac.enforcement.handlers;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.util.EnforcementConfig;
 import it.av.fac.messaging.client.BDFISDecision;
 import it.av.fac.messaging.client.BDFISReply;
@@ -32,8 +34,10 @@ public class BDFISConnector {
     private static BDFISConnector instance;
     private final SynchronousQueue<IReply> decisionQueue = new SynchronousQueue<>();
     private final SynchronousQueue<IReply> dbiQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<IReply> riacQueue = new SynchronousQueue<>();
     private final RabbitMQClient decisionConn;
     private final RabbitMQClient dbiConn;
+    private final RabbitMQClient riacConn;
 
     public BDFISConnector() throws Exception {
         this.decisionConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
@@ -42,6 +46,9 @@ public class BDFISConnector {
         this.dbiConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE,
                 RabbitMQConstants.QUEUE_DBI_REQUEST, EnforcementConfig.MODULE_KEY, dbiHandler);
+        this.riacConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
+                RabbitMQConstants.QUEUE_RIAC_RESPONSE,
+                RabbitMQConstants.QUEUE_RIAC_REQUEST, EnforcementConfig.MODULE_KEY, riacHandler);
     }
 
     public static BDFISConnector getInstance() throws Exception {
@@ -61,7 +68,7 @@ public class BDFISConnector {
      * @param mustBeGrantedForEveryLabel
      * @return
      */
-    public boolean handle(String resource, String userToken, String permission, boolean mustBeGrantedForEveryLabel) {
+    public boolean canAccess(String resource, String userToken, String permission, boolean mustBeGrantedForEveryLabel) {
         System.out.println("Processing query for: " + resource);
 
         System.out.println("Requesting resource metadata...");
@@ -103,6 +110,14 @@ public class BDFISConnector {
         return allLabelsGranted || (!mustBeGrantedForEveryLabel && !allLabelsDenied);
 
     }
+    
+    public boolean store(JSONObject resource, String userToken) {
+        System.out.println("Processing store request...");
+        IRequest storeRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.AddPolicy);
+        storeRequest.setResource(resource.toJSONString());
+        IReply storeReply = requestResourceStorage(storeRequest);
+        return storeReply.getStatus() == ReplyStatus.OK;
+    }
 
     /**
      * Request documents to the DBI.
@@ -141,6 +156,25 @@ public class BDFISConnector {
 
         return reply;
     }
+    
+    /**
+     * Request documents to the DBI.
+     *
+     * @param request The request with the document to classify and store.
+     * @return The storage process status.
+     */
+    private IReply requestResourceStorage(IRequest request) {
+        IReply reply;
+
+        try {
+            riacConn.send(request.convertToBytes());
+            return riacQueue.take();
+        } catch (IOException | InterruptedException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+
+        return reply;
+    }
 
     private final IClientHandler<byte[]> dbiHandler = (byte[] replyBytes) -> {
         IReply reply;
@@ -160,5 +194,15 @@ public class BDFISConnector {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         decisionQueue.add(reply);
+    };
+    
+    private final IClientHandler<byte[]> riacHandler = (byte[] replyBytes) -> {
+        IReply reply;
+        try {
+            reply = BDFISReply.readFromBytes(replyBytes);
+        } catch (IOException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+        riacQueue.add(reply);
     };
 }

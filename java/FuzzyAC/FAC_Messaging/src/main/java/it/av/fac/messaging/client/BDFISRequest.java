@@ -62,7 +62,8 @@ public class BDFISRequest implements IRequest {
         JSONObject ret = new JSONObject();
 
         ret.put("userToken", userToken);
-        ret.put("res_id", resourceId);
+        ret.put("resource_id", resourceId);
+        ret.put("resource", resource);
         ret.put("requesttype", requestType);
 
         return Snappy.compress(ret.toJSONString());
@@ -74,9 +75,10 @@ public class BDFISRequest implements IRequest {
 
         BDFISRequest request = new BDFISRequest(
                 obj.getString("userToken"),
-                obj.getString("res_id"),
+                obj.getString("resource_id"),
                 RequestType.valueOf(obj.getString("requesttype"))
         );
+        request.setResource(obj.getString("resource"));
 
         return request;
     }
