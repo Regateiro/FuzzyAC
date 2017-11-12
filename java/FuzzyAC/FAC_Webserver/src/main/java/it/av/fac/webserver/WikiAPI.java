@@ -39,11 +39,13 @@ public class WikiAPI extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             String html = "";
             try {
-                if (request.getParameter("request") != null && request.getParameter("token") != null) {
-                    String page = URLDecoder.decode((String) request.getParameter("request"), "UTF-8");
-                    String userToken = URLDecoder.decode((String) request.getParameter("token"), "UTF-8");
+                if (request.getPathInfo() != null){// && request.getParameter("token") != null) {
+                    String page = URLDecoder.decode((String) request.getPathInfo().substring(1), "UTF-8");
+                    //String userToken = URLDecoder.decode((String) request.getParameter("token"), "UTF-8");
                     System.out.println("Received query for page: " + page);
-                    html = handler.fetch(userToken, page);
+                    html = handler.fetch("", page);
+                    html = html.replaceAll("\\[\\[([^]]*)\\|([^]]*)\\]\\]", "<a href=\"/FAC_Webserver/WikiAPI/$1\">$2</a>");
+                    html = html.replaceAll("\\[\\[([^]]*)\\]\\]", "<a href=\"/FAC_Webserver/WikiAPI/$1\">$1</a>");
                 }
             } catch (UnsupportedEncodingException ex) {
                 html = handler.generateErrorPage(ex);

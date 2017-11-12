@@ -108,7 +108,6 @@ public class BDFISConnector {
 
         System.out.println("Replying with the final decision.");
         return allLabelsGranted || (!mustBeGrantedForEveryLabel && !allLabelsDenied);
-
     }
     
     public boolean store(JSONObject resource, String userToken) {

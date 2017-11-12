@@ -5,9 +5,14 @@
  */
 package it.av.fac.datasources.wikipedia;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.apache.commons.codec.binary.Base64;
+import org.xerial.snappy.Snappy;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -54,15 +59,20 @@ public class PageHandler extends DefaultHandler {
                     break;
                 case "text":
                     page.setCategories(getCategories(stringBuilder));
-                    String articleText = stringBuilder.toString();
-                    articleText = articleText.replaceAll("(?s)<ref(.+?)</ref>", " "); //remove references
-                    articleText = articleText.replaceAll("(?s)\\{\\{(.+?)\\}\\}", " "); //remove links underneath headings
-                    articleText = articleText.replaceAll("(?s)==See also==.+", " "); //remove everything after see also
-                    articleText = articleText.replaceAll("\\|", " "); //Separate multiple links
-                    articleText = articleText.replaceAll("[\\t\\s]*[\\n][\\t\\n\\s]*", "\n"); //remove new lines
-                    articleText = articleText.replaceAll("[^a-zA-Z0-9- \\s]", " "); //remove all non alphanumeric except dashes and spaces
-                    articleText = articleText.trim().replaceAll(" +", " "); //convert all multiple spaces to 1 space
-                    page.setText(articleText);
+                    try {
+                        String articleText = Base64.encodeBase64String(Snappy.compress(stringBuilder.toString(), "UTF-8"));
+                        page.setText(articleText);
+                    } catch (IOException ex) {
+                        page = null;
+                    }
+                    //articleText = articleText.replaceAll("(?s)<ref(.+?)</ref>", " "); //remove references
+                    //articleText = articleText.replaceAll("(?s)\\{\\{(.+?)\\}\\}", " "); //remove links underneath headings
+                    //articleText = articleText.replaceAll("(?s)==See also==.+", " "); //remove everything after see also
+                    //articleText = articleText.replaceAll("\\|", " "); //Separate multiple links
+                    //articleText = articleText.replaceAll("[\\t\\s]*[\\n][\\t\\n\\s]*", "\n"); //remove new lines
+                    //articleText = articleText.replaceAll("[^a-zA-Z0-9- \\s]", " "); //remove all non alphanumeric except dashes and spaces
+                    //articleText = articleText.trim().replaceAll(" +", " "); //convert all multiple spaces to 1 space
+                    //page.setText(articleText);
                     break;
                 case "page":
                     pageProcessor.process(page);

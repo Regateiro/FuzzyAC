@@ -25,7 +25,7 @@ public class WikipediaSource {
     private final SAXParser parser;
     private final String XMLFilePath;
     private final APIClient fac;
-    private int SKIP = 484000;
+    private int SKIP = 4826160;
 
     public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();

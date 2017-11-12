@@ -61,7 +61,6 @@ public class DocumentDBI implements Closeable {
         this.mongoDB = this.mongoClient.getDatabase(DocumentDBI.DATABASE);
         this.bulk = new ArrayList<>(this.bulkSize);
         this.lastSync = System.currentTimeMillis();
-
     }
 
     public static DocumentDBI getInstance(String collection) throws IOException {

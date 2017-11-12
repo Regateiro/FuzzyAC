@@ -5,10 +5,14 @@
  */
 package it.av.fac.webserver.handlers;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.handlers.BDFISConnector;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.codec.binary.Base64;
+import org.xerial.snappy.Snappy;
 
 /**
  *
@@ -17,24 +21,38 @@ import java.util.logging.Logger;
 public class WikiHandler {
 
     private static BDFISConnector connector;
+    private static WikiPageFetcher fetcher;
 
     public WikiHandler() {
         try {
             connector = BDFISConnector.getInstance();
+            fetcher = WikiPageFetcher.getInstance("127.0.0.1", 27017);
         } catch (Exception ex) {
             Logger.getLogger(WikiHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public String fetch(String userToken, String page) {
+    public String fetch(String userToken, String pageName) throws IOException {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
-        if (connector.canAccess(page, userToken, "read", true)) {
-            html.append("<h1>").append("YEY").append("</h1>");
+        if (/*connector.canAccess(page, userToken, "read", true)*/true) {
+            JSONArray pages = fetcher.fetchPage(pageName);
+            if (pages.isEmpty()) {
+                html.append("<h1>Page Not Found!</h1><h2>Similar pages:</h2>");
+                pages = fetcher.search(pageName);
+                for (int i = 0; i < pages.size(); i++) {
+                    String page = pages.getJSONObject(i).getString("title");
+                    html.append("[[").append(page).append("]]</br>");
+                }
+            } else {
+                html.append("<pre style=\"white-space: pre-wrap;\">")
+                        .append(Snappy.uncompressString(Base64.decodeBase64(pages.getJSONObject(0).getString("text")), "UTF-8"))
+                        .append("</pre>");
+            }
         } else {
             html.append("<h1>").append("NAY").append("</h1>");
         }
 
-        return html.append("</body>").append("</html>").toString();
+        return html.append("</body></html>").toString();
     }
 
     /**
@@ -47,12 +65,12 @@ public class WikiHandler {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
         html.append("<h1>Sorry, an error occurred...</h1><h2>");
         html.append("Details:</h2><p>");
-        
+
         html.append("<b>").append(ex).append("</b></br>");
-        for(StackTraceElement e : ex.getStackTrace()) {
+        for (StackTraceElement e : ex.getStackTrace()) {
             html.append(e.toString()).append("</br>");
         }
-        
+
         return html.append("</p></body>").append("</html>").toString();
     }
 

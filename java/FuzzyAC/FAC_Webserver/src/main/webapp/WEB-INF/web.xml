@@ -10,7 +10,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>WikiAPI</servlet-name>
-        <url-pattern>/WikiAPI</url-pattern>
+        <url-pattern>/WikiAPI/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>WikiAdminAPI</servlet-name>
