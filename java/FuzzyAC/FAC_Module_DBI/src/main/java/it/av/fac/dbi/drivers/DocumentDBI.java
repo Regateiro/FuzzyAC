@@ -12,7 +12,10 @@ import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.text;
+import static com.mongodb.client.model.Updates.set;
+import com.mongodb.client.result.UpdateResult;
 import it.av.fac.dbi.util.DBIConfig;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.interfaces.IReply;
@@ -117,6 +120,19 @@ public class DocumentDBI implements Closeable {
         }
     }
 
+    public boolean updateResource(JSONObject resource, String field) {
+        UpdateResult res = this.collection.updateOne(
+                eq("_id", resource.getString("_id")),
+                set(field, resource.getString(field))
+        );
+        
+        if(res.isModifiedCountAvailable()) {
+            return res.getModifiedCount() == 1;
+        } else {
+            return res.wasAcknowledged();
+        }
+    }
+
     /**
      * TODO: Add more query functionalities.
      *
@@ -126,7 +142,7 @@ public class DocumentDBI implements Closeable {
     public JSONArray query(String query) {
         JSONArray ret = new JSONArray();
 
-        FindIterable<Document> documents = this.collection.find(Filters.text(query));
+        FindIterable<Document> documents = this.collection.find(text(query));
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
@@ -146,14 +162,18 @@ public class DocumentDBI implements Closeable {
     public IReply findResource(String resourceId) {
         IReply reply = new BDFISReply();
 
-        this.collection.find(Filters.eq("_id", resourceId)).forEach(new Consumer<Document>() {
+        this.collection.find(eq("_id", resourceId)).forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
                 reply.addData(doc.toJson());
             }
         });
-        
+
         return reply;
+    }
+
+    public void processResources(Consumer<Document> handler) {
+        this.collection.find().forEach(handler);
     }
 
     @Override
