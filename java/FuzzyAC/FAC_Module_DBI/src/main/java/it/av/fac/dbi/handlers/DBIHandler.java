@@ -47,6 +47,10 @@ public class DBIHandler implements IServerHandler<byte[], String> {
                 return requestPolicy(request);
             case AddPolicy:
                 return requestPolicyStorage(request);
+            case GetMetadata:
+                return requestMetadata(request);
+            case AddMetadata:
+                return requestMetadataStorage(request);
         }
 
         return new BDFISReply(ReplyStatus.ERROR, "Not a known request type was received: " + request.getRequestType());
@@ -59,10 +63,10 @@ public class DBIHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private IReply requestPolicyStorage(IRequest request) {
+    private IReply requestMetadataStorage(IRequest request) {
         IReply reply = new BDFISReply();
         try {
-            DocumentDBI.getInstance("policies").storeResource(JSONObject.parseObject(request.getResource()));
+            DocumentDBI.getInstance("metadata").storeResource(JSONObject.parseObject(request.getResource()));
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
@@ -75,10 +79,30 @@ public class DBIHandler implements IServerHandler<byte[], String> {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
+    private IReply requestMetadata(IRequest request) {
+        IReply reply = new BDFISReply();
+        try {
+            reply = DocumentDBI.getInstance("metadata").findResource(request.getResourceId());
+        } catch (IOException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+        return reply;
+    }
+
+    private IReply requestPolicyStorage(IRequest request) {
+        IReply reply = new BDFISReply();
+        try {
+            DocumentDBI.getInstance("policies").storeResource(JSONObject.parseObject(request.getResource()));
+        } catch (IOException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+        return reply;
+    }
+
     private IReply requestPolicy(IRequest request) {
         IReply reply = new BDFISReply();
         try {
-            reply = DocumentDBI.getInstance("policies").findPolicy(request);
+            reply = DocumentDBI.getInstance("policies").findResource(request.getResourceId());
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }

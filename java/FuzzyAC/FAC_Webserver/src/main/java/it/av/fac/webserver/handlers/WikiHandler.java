@@ -34,7 +34,7 @@ public class WikiHandler {
 
     public String fetch(String userToken, String pageName) throws IOException {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
-        if (/*connector.canAccess(page, userToken, "read", true)*/true) {
+        if (connector.canAccess(pageName, userToken, "read", true)) {
             JSONArray pages = fetcher.fetchPage(pageName);
             if (pages.isEmpty()) {
                 html.append("<h1>Page Not Found!</h1><h2>Similar pages:</h2>");
@@ -49,7 +49,7 @@ public class WikiHandler {
                         .append("</pre>");
             }
         } else {
-            html.append("<h1>").append("NAY").append("</h1>");
+            html.append("<h1>").append("Access Denied!").append("</h1>");
         }
 
         return html.append("</body></html>").toString();

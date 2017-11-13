@@ -16,7 +16,6 @@ import com.mongodb.client.model.Filters;
 import it.av.fac.dbi.util.DBIConfig;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.interfaces.IReply;
-import it.av.fac.messaging.client.interfaces.IRequest;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,7 +26,6 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 /**
  *
@@ -142,31 +140,19 @@ public class DocumentDBI implements Closeable {
     /**
      * TODO: Add more query functionalities.
      *
-     * @param request
+     * @param resourceId
      * @return
      */
-    public IReply findPolicy(IRequest request) {
+    public IReply findResource(String resourceId) {
         IReply reply = new BDFISReply();
 
-        JSONObject fields = JSONObject.parseObject((String) request.getResourceId());
-        List<Bson> filters = new ArrayList<>();
-        fields.keySet().stream().forEach((field) -> {
-            filters.add(Filters.eq(field, fields.getString(field)));
-        });
-
-        FindIterable<Document> documents;
-        if (fields.isEmpty()) {
-            documents = this.collection.find();
-        } else {
-            documents = this.collection.find(Filters.and(filters));
-        }
-
-        documents.forEach(new Consumer<Document>() {
+        this.collection.find(Filters.eq("_id", resourceId)).forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
                 reply.addData(doc.toJson());
             }
         });
+        
         return reply;
     }
 

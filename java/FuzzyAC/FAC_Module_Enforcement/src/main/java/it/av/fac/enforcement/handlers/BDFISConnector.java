@@ -5,7 +5,6 @@
  */
 package it.av.fac.enforcement.handlers;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.util.EnforcementConfig;
 import it.av.fac.messaging.client.BDFISDecision;
@@ -72,13 +71,14 @@ public class BDFISConnector {
         System.out.println("Processing query for: " + resource);
 
         System.out.println("Requesting resource metadata...");
-        IRequest metadataRequest = new BDFISRequest(userToken, resource, RequestType.Metadata);
+        IRequest metadataRequest = new BDFISRequest(userToken, resource, RequestType.GetMetadata);
         IReply resourceMetaReply = requestMetadata(metadataRequest);
 
         System.out.println("Requesting access control decision for each security label...");
         List<IReply> decisionsReplies = new ArrayList<>();
-        resourceMetaReply.getData().stream().forEach((String securityLabel) -> {
-            IRequest decisionRequest = new BDFISRequest(userToken, securityLabel, RequestType.Decision);
+        resourceMetaReply.getData().stream().forEach((String metadataStr) -> {
+            JSONObject metadata = JSONObject.parseObject(metadataStr);
+            IRequest decisionRequest = new BDFISRequest(userToken, metadata.getString("security_label"), RequestType.Decision);
             decisionsReplies.add(requestDecision(decisionRequest));
         });
 
@@ -87,21 +87,27 @@ public class BDFISConnector {
         decisionsReplies.stream().forEach((IReply decisionReply) -> {
             decisionReply.getData().stream().forEach((String decisionStr) -> {
                 BDFISDecision decision = BDFISDecision.readFromString(decisionStr);
-                if (decision.getPermission().equalsIgnoreCase(permission)) {
+                if (decision.getPermission().equalsIgnoreCase("*") || decision.getPermission().equalsIgnoreCase(permission)) {
                     decisions.add(decision);
                 }
             });
         });
 
+        if (decisions.isEmpty()) {
+            return false;
+        }
+
         System.out.println("Determining the final decision for the permission...");
         boolean allLabelsGranted = true;
         boolean allLabelsDenied = true;
         for (BDFISDecision decision : decisions) {
-            if(!decision.isGranted()) {
+            System.out.println(String.format("Page %s requires %s access.", resource, decision.getSecurityLabel()));
+            
+            if (!decision.isGranted()) {
                 allLabelsGranted = false;
             }
-            
-            if(decision.isGranted()) {
+
+            if (decision.isGranted()) {
                 allLabelsDenied = false;
             }
         }
@@ -109,7 +115,7 @@ public class BDFISConnector {
         System.out.println("Replying with the final decision.");
         return allLabelsGranted || (!mustBeGrantedForEveryLabel && !allLabelsDenied);
     }
-    
+
     public boolean store(JSONObject resource, String userToken) {
         System.out.println("Processing store request...");
         IRequest storeRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.AddPolicy);
@@ -155,7 +161,7 @@ public class BDFISConnector {
 
         return reply;
     }
-    
+
     /**
      * Request documents to the DBI.
      *
@@ -194,7 +200,7 @@ public class BDFISConnector {
         }
         decisionQueue.add(reply);
     };
-    
+
     private final IClientHandler<byte[]> riacHandler = (byte[] replyBytes) -> {
         IReply reply;
         try {

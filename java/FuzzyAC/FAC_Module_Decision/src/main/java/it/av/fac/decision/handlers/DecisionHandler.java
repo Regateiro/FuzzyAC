@@ -5,6 +5,7 @@
  */
 package it.av.fac.decision.handlers;
 
+import com.alibaba.fastjson.JSONObject;
 import it.av.fac.decision.fis.BDFIS;
 import it.av.fac.decision.util.decision.DecisionConfig;
 import it.av.fac.messaging.client.BDFISDecision;
@@ -72,7 +73,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         System.out.println("Requesting the FCL files for the security label..."); //PolicyRetrieval
         String securityLabel = request.getResourceId();
         
-        IRequest polRequest = new BDFISRequest(request.getUserToken(), request.getResourceId(), RequestType.GetPolicy);
+        IRequest polRequest = new BDFISRequest(request.getUserToken(), securityLabel, RequestType.GetPolicy);
         IReply polReply = requestPolicies(polRequest);
 
         System.out.println("Requesting the user attributes..."); //Information
@@ -86,9 +87,10 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
 
         System.out.println("Evaluating user permissions...");
 
-        polReply.getData().parallelStream().forEach((fcl) -> {
+        polReply.getData().parallelStream().forEach((fclInfo) -> {
             try {
-                if (fcl != null) {
+                String fcl = JSONObject.parseObject(fclInfo).getString("fcl");
+                if (fcl != null && !fcl.equals("")) {
                     Map<String, Double> neededVariables = new HashMap<>(userVariables);
                     BDFIS feval = new BDFIS(fcl, true);
                     userVariables.keySet().stream().filter((varName) -> !feval.getVariableNameList().contains(varName)).forEach((notNeededVarName) -> {

@@ -27,7 +27,7 @@ import org.bson.conversions.Bson;
 public class WikiPageFetcher implements Closeable {
 
     private static final String DATABASE = "fac";
-    private static final String COLLECTION = "policies";
+    private static final String COLLECTION = "metadata";
     private static WikiPageFetcher instance;
     private final MongoClient mongoClient;
     private final MongoDatabase mongoDB;
