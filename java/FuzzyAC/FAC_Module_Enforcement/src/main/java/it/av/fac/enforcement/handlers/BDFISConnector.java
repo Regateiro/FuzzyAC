@@ -118,7 +118,7 @@ public class BDFISConnector {
 
     public boolean store(JSONObject resource, String userToken) {
         System.out.println("Processing store request...");
-        IRequest storeRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.AddPolicy);
+        IRequest storeRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.AddMetadata);
         storeRequest.setResource(resource.toJSONString());
         IReply storeReply = requestResourceStorage(storeRequest);
         return storeReply.getStatus() == ReplyStatus.OK;

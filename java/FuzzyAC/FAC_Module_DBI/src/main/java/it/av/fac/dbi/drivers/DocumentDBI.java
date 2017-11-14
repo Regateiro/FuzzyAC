@@ -15,7 +15,6 @@ import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.text;
 import static com.mongodb.client.model.Updates.set;
-import com.mongodb.client.result.UpdateResult;
 import it.av.fac.dbi.util.DBIConfig;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.interfaces.IReply;
@@ -120,17 +119,11 @@ public class DocumentDBI implements Closeable {
         }
     }
 
-    public boolean updateResource(JSONObject resource, String field) {
-        UpdateResult res = this.collection.updateOne(
+    public void updateResource(JSONObject resource, String field) {
+        this.collection.updateOne(
                 eq("_id", resource.getString("_id")),
                 set(field, resource.getString(field))
         );
-        
-        if(res.isModifiedCountAvailable()) {
-            return res.getModifiedCount() == 1;
-        } else {
-            return res.wasAcknowledged();
-        }
     }
 
     /**

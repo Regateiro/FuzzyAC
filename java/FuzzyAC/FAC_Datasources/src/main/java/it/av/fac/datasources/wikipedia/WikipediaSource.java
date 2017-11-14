@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import org.apache.commons.codec.binary.Base64;
+import org.xerial.snappy.Snappy;
 import org.xml.sax.SAXException;
 
 /**
@@ -25,7 +27,7 @@ public class WikipediaSource {
     private final SAXParser parser;
     private final String XMLFilePath;
     private final APIClient fac;
-    private int SKIP = 4826160;
+    private int SKIP = 0;
 
     public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();
@@ -38,7 +40,12 @@ public class WikipediaSource {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
                 if (!page.getTitle().matches("^(File:|Wikipedia:|Category:|Draft:|Portal:|Template:).*$")) {
                     if (SKIP == 0) {
-                        this.fac.storageRequest("", page.toJSON());
+                        try {
+                            page.setText(Base64.encodeBase64String(Snappy.compress(WikiParser.parseText(page).toJSONString())));
+                            this.fac.storageRequest("", page.toJSON());
+                        } catch (IOException ex) {
+                            Logger.getLogger(WikipediaSource.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     } else {
                         SKIP--;
                     }
