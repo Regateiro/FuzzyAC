@@ -5,6 +5,9 @@
  */
 package it.av.fac.datasources.wikipedia;
 
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import it.av.fac.driver.APIClient;
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +16,6 @@ import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import org.apache.commons.codec.binary.Base64;
-import org.xerial.snappy.Snappy;
 import org.xml.sax.SAXException;
 
 /**
@@ -27,32 +28,34 @@ public class WikipediaSource {
     private final SAXParser parser;
     private final String XMLFilePath;
     private final APIClient fac;
-    private int SKIP = 0;
+    private long SKIP;
 
     public WikipediaSource(String XMLFilePath) throws ParserConfigurationException, SAXException {
         this.parser = SAXParserFactory.newInstance().newSAXParser();
-        this.XMLFilePath = XMLFilePath;
         this.fac = new APIClient("http://localhost:8080/FAC_Webserver");
+        this.XMLFilePath = XMLFilePath;
+
+        try (MongoClient mongoClient = new MongoClient("127.0.0.1", 27017)) {
+            MongoDatabase mongoDB = mongoClient.getDatabase("fac");
+            MongoCollection metadataCol = mongoDB.getCollection("metadata");
+            this.SKIP = metadataCol.count();
+        }
     }
 
     public void parse() {
         try {
+            System.out.println("Skipping " + SKIP + " documents...");
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
                 if (!page.getTitle().matches("^(File:|Wikipedia:|Category:|Draft:|Portal:|Template:).*$")) {
                     if (SKIP == 0) {
-                        try {
-                            page.setText(Base64.encodeBase64String(Snappy.compress(WikiParser.parseText(page).toJSONString())));
-                            this.fac.storageRequest("", page.toJSON());
-                        } catch (IOException ex) {
-                            Logger.getLogger(WikipediaSource.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        String parsedPage = WikiParser.parseText(page).toJSONString();
+                        page.setText(parsedPage);
+                        fac.storageRequest("", page.toJSON());
                     } else {
                         SKIP--;
                     }
                 }
             }));
-
-            //this.parser.parse(new File(XMLFilePath), new CategoryTaxonomyHandler("E:\\taxonomy.txt"));
         } catch (SAXException | IOException ex) {
             Logger.getLogger(WikipediaSource.class.getName()).log(Level.SEVERE, null, ex);
         }

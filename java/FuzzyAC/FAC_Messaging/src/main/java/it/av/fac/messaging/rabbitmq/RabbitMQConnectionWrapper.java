@@ -38,6 +38,7 @@ public class RabbitMQConnectionWrapper implements Closeable {
         factory.setPort(port);
         factory.setUsername(username);
         factory.setPassword(password);
+        factory.setAutomaticRecoveryEnabled(true);
         this.conn = factory.newConnection();
     }
 

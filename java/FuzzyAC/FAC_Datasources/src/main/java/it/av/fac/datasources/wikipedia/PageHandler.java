@@ -5,14 +5,8 @@
  */
 package it.av.fac.datasources.wikipedia;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import org.apache.commons.codec.binary.Base64;
-import org.xerial.snappy.Snappy;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -59,12 +53,7 @@ public class PageHandler extends DefaultHandler {
                     break;
                 case "text":
                     page.setCategories(getCategories(stringBuilder));
-                    try {
-                        String articleText = Base64.encodeBase64String(Snappy.compress(stringBuilder.toString(), "UTF-8"));
-                        page.setText(articleText);
-                    } catch (IOException ex) {
-                        page = null;
-                    }
+                    page.setText(stringBuilder.toString());
                     //articleText = articleText.replaceAll("(?s)<ref(.+?)</ref>", " "); //remove references
                     //articleText = articleText.replaceAll("(?s)\\{\\{(.+?)\\}\\}", " "); //remove links underneath headings
                     //articleText = articleText.replaceAll("(?s)==See also==.+", " "); //remove everything after see also

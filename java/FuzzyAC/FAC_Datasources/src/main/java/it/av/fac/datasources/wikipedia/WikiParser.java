@@ -21,13 +21,13 @@ import java.util.regex.Pattern;
  */
 public class WikiParser {
 
-    private static JSONArray processSections(Page page) {
+    private static JSONArray processSections(String title, String text) {
         JSONArray sections = new JSONArray();
         Pattern pattern = Pattern.compile("^([=]+)([^=]+)[=]+$");
-        JSONObject currentSection = createSection(page.getTitle(), 1);
+        JSONObject currentSection = createSection(title, 1);
         sections.add(currentSection);
 
-        try (BufferedReader dumpReader = new BufferedReader(new StringReader(page.getText()))) {
+        try (BufferedReader dumpReader = new BufferedReader(new StringReader(text))) {
             String line;
             while ((line = dumpReader.readLine()) != null) {
                 int i;
@@ -100,6 +100,6 @@ public class WikiParser {
         pageText = pageText.replaceAll("\n+", "\n");
         pageText = pageText.trim();
 
-        return processSections(page);
+        return processSections(page.getTitle(), pageText);
     }
 }

@@ -11,8 +11,6 @@ import it.av.fac.enforcement.handlers.BDFISConnector;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.codec.binary.Base64;
-import org.xerial.snappy.Snappy;
 
 /**
  *
@@ -35,34 +33,31 @@ public class WikiHandler {
     public String fetch(String userToken, String pageName) throws IOException {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
 
-        if (connector.canAccess(pageName, userToken, "read", true)) {
-            JSONArray pages = fetcher.fetchPage(pageName);
-            if (pages.isEmpty()) {
-                html.append("<h1>Page Not Found!</h1><h2>Similar pages:</h2>");
-                pages = fetcher.search(pageName);
-                for (int i = 0; i < pages.size(); i++) {
-                    String page = pages.getJSONObject(i).getString("title");
-                    html.append("[[").append(page).append("]]</br>");
-                }
-            } else {
-                //append wrapper div
-                html.append("<style type=\"text/css\">").append(".wrapit {word-wrap: break-word;}").append("</style>");
-                html.append("<div class=\"wrapit\">\n");
-                JSONArray sections = JSONArray.parseArray(Snappy.uncompressString(Base64.decodeBase64(pages.getJSONObject(0).getString("text"))));
-
-                for (int i = 0; i < sections.size(); i++) {
-                    JSONObject section = sections.getJSONObject(i);
-                    html.append(String.format("<h%d>%s</h%d>\n", section.getIntValue("level"), section.getString("heading"), section.getIntValue("level")));
-                    JSONArray paragraphs = section.getJSONArray("paragraphs");
-                    for (int j = 0; j < paragraphs.size(); j++) {
-                        html.append(String.format("<p>%s</p>\n", paragraphs.getString(j)));
-                    }
-                }
-
-                html.append("</div>");
+        JSONArray pages = fetcher.fetchPage(pageName);
+        if (pages.isEmpty()) {
+            html.append("<h1>Page Not Found!</h1><h2>Similar pages:</h2>");
+            pages = fetcher.search(pageName);
+            for (int i = 0; i < pages.size(); i++) {
+                String page = pages.getJSONObject(i).getString("title");
+                html.append("[[").append(page).append("]]</br>");
             }
         } else {
-            html.append("<h1>").append("Access Denied!").append("</h1>");
+            JSONObject filteredPage = connector.filterPage(pages.getJSONObject(0), userToken, "read", true);
+            //append wrapper div
+            html.append("<style type=\"text/css\">").append(".wrapit {word-wrap: break-word;}").append("</style>");
+            html.append("<div class=\"wrapit\">\n");
+            JSONArray sections = JSONArray.parseArray(filteredPage.getString("text"));
+
+            for (int i = 0; i < sections.size(); i++) {
+                JSONObject section = sections.getJSONObject(i);
+                html.append(String.format("<h%d>%s</h%d>\n", section.getIntValue("level"), section.getString("heading"), section.getIntValue("level")));
+                JSONArray paragraphs = section.getJSONArray("paragraphs");
+                for (int j = 0; j < paragraphs.size(); j++) {
+                    html.append(String.format("<p>%s</p>\n", paragraphs.getString(j)));
+                }
+            }
+
+            html.append("</div>");
         }
 
         return html.append("</body></html>").toString();

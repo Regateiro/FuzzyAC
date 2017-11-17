@@ -5,6 +5,7 @@
  */
 package it.av.fac.enforcement.handlers;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.util.EnforcementConfig;
 import it.av.fac.messaging.client.BDFISDecision;
@@ -20,7 +21,11 @@ import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.SynchronousQueue;
 
 /**
@@ -67,53 +72,55 @@ public class BDFISConnector {
      * @param mustBeGrantedForEveryLabel
      * @return
      */
-    public boolean canAccess(String resource, String userToken, String permission, boolean mustBeGrantedForEveryLabel) {
+    public JSONObject filterPage(JSONObject resource, String userToken, String permission, boolean mustBeGrantedForEveryLabel) {
         System.out.println("Processing query for: " + resource);
 
         System.out.println("Requesting resource metadata...");
-        IRequest metadataRequest = new BDFISRequest(userToken, resource, RequestType.GetMetadata);
+        IRequest metadataRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.GetMetadata);
         IReply resourceMetaReply = requestMetadata(metadataRequest);
 
         System.out.println("Requesting access control decision for each security label...");
         List<IReply> decisionsReplies = new ArrayList<>();
+        Set<String> pageSecurityLabels = new HashSet<>();
         resourceMetaReply.getData().stream().forEach((String metadataStr) -> {
             JSONObject metadata = JSONObject.parseObject(metadataStr);
-            IRequest decisionRequest = new BDFISRequest(userToken, metadata.getString("security_label"), RequestType.Decision);
-            decisionsReplies.add(requestDecision(decisionRequest));
-        });
 
+            JSONArray sections = metadata.getJSONArray("text");
+            for (int i = 0; i < sections.size(); i++) {
+                JSONObject section = sections.getJSONObject(i);
+                pageSecurityLabels.add(section.getString("security_label"));
+            }
+
+            pageSecurityLabels.forEach((pageSecurityLabel) -> {
+                IRequest decisionRequest = new BDFISRequest(userToken, pageSecurityLabel, RequestType.Decision);
+                decisionsReplies.add(requestDecision(decisionRequest));
+            });
+        });
+        
         System.out.println("Parsing decisions...");
-        List<BDFISDecision> decisions = new ArrayList<>();
+        Map<String, BDFISDecision> decisions = new HashMap<>();
         decisionsReplies.stream().forEach((IReply decisionReply) -> {
             decisionReply.getData().stream().forEach((String decisionStr) -> {
                 BDFISDecision decision = BDFISDecision.readFromString(decisionStr);
                 if (decision.getPermission().equalsIgnoreCase("*") || decision.getPermission().equalsIgnoreCase(permission)) {
-                    decisions.add(decision);
+                    decisions.put(decision.getSecurityLabel(), decision);
                 }
             });
         });
-
-        if (decisions.isEmpty()) {
-            return false;
-        }
-
-        System.out.println("Determining the final decision for the permission...");
-        boolean allLabelsGranted = true;
-        boolean allLabelsDenied = true;
-        for (BDFISDecision decision : decisions) {
-            System.out.println(String.format("Page %s requires %s access.", resource, decision.getSecurityLabel()));
-            
-            if (!decision.isGranted()) {
-                allLabelsGranted = false;
-            }
-
-            if (decision.isGranted()) {
-                allLabelsDenied = false;
+        
+        System.out.println("Filtering headings according to access control decisions...");
+        JSONArray sections = resource.getJSONArray("text");
+        JSONArray filteredSections = new JSONArray();
+        for (int i = 0; i < sections.size(); i++) {
+            JSONObject section = sections.getJSONObject(i);
+            BDFISDecision decision = decisions.get(section.getString("security_label"));
+            if(decision.isGranted()) {
+                filteredSections.add(section);
             }
         }
-
-        System.out.println("Replying with the final decision.");
-        return allLabelsGranted || (!mustBeGrantedForEveryLabel && !allLabelsDenied);
+        resource.put("text", filteredSections);
+        
+        return resource;
     }
 
     public boolean store(JSONObject resource, String userToken) {
