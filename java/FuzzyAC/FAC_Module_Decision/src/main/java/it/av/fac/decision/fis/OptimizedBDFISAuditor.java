@@ -3,14 +3,12 @@ package it.av.fac.decision.fis;
 import static it.av.fac.decision.fis.BDFIS.FB_VARIABLE_INFERENCE_PHASE_NAME;
 import it.av.fac.decision.util.variables.Contribution;
 import it.av.fac.decision.util.decision.Decision;
-import it.av.fac.decision.util.decision.DecisionManager;
 import it.av.fac.decision.util.decision.DecisionResult;
 import it.av.fac.decision.util.decision.IDecisionMaker;
 import it.av.fac.decision.util.variables.SlopeType;
 import it.av.fac.decision.util.variables.MultiRangeValue;
 import it.av.fac.decision.util.variables.RangeValue;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,21 +21,20 @@ import it.av.fac.decision.util.handlers.IResultHandler;
  *
  * @author Diogo Regateiro
  */
-public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
+public class OptimizedBDFISAuditor extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
     private Contribution lastChangeContribution;
-    private final DecisionManager decisionManager;
     private final List<List<DecisionResult>> variableOutputs;
     private final Map<Integer, Integer> lastPassCount;
 
-    public OptimizedBDFISAnalyser(BDFIS feval) {
-        super(feval);
-        this.vda = new VariableDependenceAnalyser(feval.getFis());
+    public OptimizedBDFISAuditor(BDFIS bdfis) {
+        super(bdfis);
+        this.vda = new VariableDependenceAnalyser(bdfis.getFIS());
         this.lastChangeContribution = Contribution.UNKNOWN;
-        this.decisionManager = new DecisionManager();
         this.variableOutputs = new ArrayList<>();
         this.lastPassCount = new HashMap<>();
+        this.vda.analyse();
     }
 
     /**
@@ -47,7 +44,7 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
      * @param handler
      */
     @Override
-    public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler) {
+    public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler, boolean verbose) {
         this.permissionToAnalyse = permission;
         this.handler = handler;
         this.decisionMaker = decisionMaker;
@@ -55,17 +52,11 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
         //reset the analyser
         resetAnalyser();
 
-        //Analyse the variable dependences.
-        this.vda.analyse(permission);
-
         //List of input variable names
         List<String> inputVars = new ArrayList<>();
 
-        //Get the list of variables used in the VariableInference function block.
-        Collection<Variable> variables = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables();
-
         //Retrieves the variables for the VariableInference function block, filtering for only used input variables and adds their name to the inputVars list.
-        variables.stream().filter((var) -> var.isInput() && this.vda.variableIsUsed(var.getName())).forEach((var) -> inputVars.add(var.getName()));
+        bdfis.getVariableNameList().stream().filter((varName) -> this.vda.variableIsUsed(varName)).forEach((varName) -> inputVars.add(varName));
 
         if (order != null) {
             //do ordering
@@ -80,7 +71,7 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
         }
 
         //Obtains the edge conditions.
-        findEdgeIntegerConditions(permission, inputVars);
+        findEdgeIntegerConditions(permission, inputVars, verbose);
     }
 
     /**
@@ -90,7 +81,7 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
      * @param alphaCut The value to check the permission weights for equality.
      * @param variables The name of the variables for the FIS.
      */
-    private void findEdgeIntegerConditions(String permission, List<String> variables) {
+    private void findEdgeIntegerConditions(String permission, List<String> variables, boolean verbose) {
         List<MultiRangeValue> variableMap = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
             //get variable name
@@ -101,10 +92,12 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
         }
 
         if (order == null) {
-            VariableDependenceAnalyser.optimizeOrdering(variableMap);
+            optimizeOrdering(variableMap);
         }
-        
-        System.out.println(variableMap);
+
+        if (verbose) {
+            System.out.println(variableMap);
+        }
 
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0, false);
@@ -232,7 +225,7 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
         });
 
         //Evaluates the result using the current variable values.
-        Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+        Map<String, Variable> evaluation = bdfis.evaluate(variablesToEvaluate, false);
         this.numberOfEvaluations++;
 
         //Adds the variables that resulted on the provided alphaCut
@@ -249,7 +242,7 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
      */
     private DecisionResult evaluateDecision(Map<String, Double> variableMap) {
         //Evaluates the result using the current variable values.
-        Map<String, Variable> evaluation = feval.evaluate(variableMap, false);
+        Map<String, Variable> evaluation = bdfis.evaluate(variableMap, false);
         numberOfEvaluations++;
 
         //Adds the variables that resulted on the provided alphaCut
@@ -268,7 +261,7 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
         Map<String, List<RangeValue>> ranges = new HashMap<>();
 
         // Get the variable
-        Variable variable = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
+        Variable variable = bdfis.getFIS().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
 
         // For each LT, add the defined points to the map of points
         variable.getLinguisticTerms().values().stream().forEachOrdered((lt) -> {
@@ -352,13 +345,67 @@ public class OptimizedBDFISAnalyser extends AbstractFuzzyAnalyser {
             }
         }
 
+        //merge neighbor ranges of the same type
+        for (int i = 0; i < finalList.size() - 1;) {
+            RangeValue rv1 = finalList.get(i);
+            RangeValue rv2 = finalList.get(i + 1);
+
+            // if ranges overlap
+            if (rv1.canMergeWith(rv2)) {
+                // add all ranges created from resolving the overlap.
+                finalList.add(rv1.mergeWith(rv2));
+
+                // remove the overlapping ranges.
+                finalList.remove(rv1);
+                finalList.remove(rv2);
+
+                // sort and then retest.
+                Collections.sort(finalList, (rv1t, rv2t) -> {
+                    return Integer.compare(rv1t.getCurrentValue(), rv2t.getCurrentValue());
+                });
+            } else {
+                // ranges do not overlap, continue to the next two ranges.
+                i++;
+            }
+        }
+
         return new MultiRangeValue(finalList);
+    }
+
+    /**
+     * Optimizes the ordering the of the variables.
+     *
+     * @param variableMap The list of variable in any order.
+     */
+    private void optimizeOrdering(List<MultiRangeValue> variableMap) {
+        //sort the variable according to the amount of Deny/Grant contribution DESC
+        Collections.sort(variableMap, (o1, o2) -> {
+            double O1_SINGLE = o1.getContributionRangeSize(Contribution.DENY) + o1.getContributionRangeSize(Contribution.GRANT);
+            double O2_SINGLE = o2.getContributionRangeSize(Contribution.DENY) + o2.getContributionRangeSize(Contribution.GRANT);
+            double O1_UNKNOWN = o1.getContributionRangeSize(Contribution.UNKNOWN);
+            double O2_UNKNOWN = o2.getContributionRangeSize(Contribution.UNKNOWN);
+
+            // If both variable have no single ranges, order them by increasing size of their unknown ranges.
+            if (O1_SINGLE == 0 && O2_SINGLE == 0) {
+                return Double.compare(O1_UNKNOWN, O2_UNKNOWN);
+            }
+
+            // Else, order them by decreasing ratio of single ranges to unknown ranges size.
+            double O1_RATIO = O1_SINGLE / O1_UNKNOWN;
+            double O2_RATIO = O2_SINGLE / O2_UNKNOWN;
+
+            return Double.compare(O2_RATIO, O1_RATIO);
+        });
+
+        order = new ArrayList<>();
+        variableMap.stream().forEachOrdered((variable) -> {
+            order.add(variable.getVarName());
+        });
     }
 
     @Override
     public void resetAnalyser() {
         super.resetAnalyser();
-        this.decisionManager.clear();
         this.lastPassCount.clear();
         this.variableOutputs.clear();
         this.lastChangeContribution = Contribution.UNKNOWN;

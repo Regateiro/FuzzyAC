@@ -6,6 +6,7 @@
 package it.av.fac.decision.util.variables;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -194,5 +195,13 @@ public class RangeValue {
     void setToMax() {
         this.currVal = max;
         this.direction = -1;
+    }
+
+    public boolean canMergeWith(RangeValue otherRange) {
+        return getVarName().equalsIgnoreCase(otherRange.getVarName()) && getContribution() == otherRange.getContribution();
+    }
+
+    public RangeValue mergeWith(RangeValue otherRange) {
+        return new RangeValue(this, Math.min(min, otherRange.getMin()), Math.max(max, otherRange.getMax()));
     }
 }

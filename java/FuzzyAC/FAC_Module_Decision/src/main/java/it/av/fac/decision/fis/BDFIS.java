@@ -5,8 +5,8 @@
  */
 package it.av.fac.decision.fis;
 
-import it.av.fac.decision.fis.AbstractFuzzyAnalyser.DecisionResultsToReturn;
-import it.av.fac.decision.util.decision.IDecisionMaker;
+import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
+import it.av.fac.decision.util.handlers.NullHandler;
 import it.av.fac.decision.util.handlers.ValidatorHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +31,7 @@ import org.antlr.runtime.RecognitionException;
  * @author Diogo Regateiro
  */
 public class BDFIS {
-    
+
     public final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
     public final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
     protected final FIS fis;
@@ -43,7 +43,7 @@ public class BDFIS {
             this.fis = FIS.load(fcl, false);
         }
     }
-    
+
     public Collection<String> getVariableNameList() {
         Set<String> ret = new HashSet<>();
         this.fis.getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables().stream()
@@ -51,7 +51,7 @@ public class BDFIS {
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
     }
-    
+
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
         Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
@@ -146,98 +146,29 @@ public class BDFIS {
                 vars.put("Number_Of_Citations", 50.0);
         }
 
-        BDFIS feval = new BDFIS(testFile, false);
-        System.out.println(feval.evaluate(vars, true));
+        BDFIS bdfis = new BDFIS(testFile, false);
+//        System.out.println(bdfis.evaluate(vars, true));
 
-//        orderEval(feval, DecisionResultsToReturn.ALL, new AlphaCutDecisionMaker(0.5), 10, false);
-    }
+        AbstractFuzzyAnalyser ofanal = new OptimizedBDFISAuditor(bdfis);
+        AbstractFuzzyAnalyser sfanal = new OptimizedBDFISAuditor(bdfis);
 
-    public static void orderEval(BDFIS feval, DecisionResultsToReturn drtr, IDecisionMaker decisionMaker, int iterations, boolean allPermutations) {
-        AbstractFuzzyAnalyser ofanal = new OptimizedBDFISAnalyser(feval);
-        AbstractFuzzyAnalyser sfanal = new SimpleBDFISAnalyser(feval);
+        String[] permissions = new String[]{"Read", "Write"};
 
-        List<List<String>> permutations = new ArrayList<>();
-        if (allPermutations) {
-            getPermutations(feval.getVariableNameList(), permutations);
-        } else {
-            permutations.add(new ArrayList<>());
-        }
+        ValidatorHandler handler = new ValidatorHandler();
+        for (String permission : permissions) {
+            handler.enableHandler();
+            ofanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, false);
 
-        permutations.stream().forEach((List<String> permutation) -> {
-            System.out.println("Variable Order: " + permutation);
-            if (allPermutations) {
-                ofanal.setVariableOrdering(permutation);
-                sfanal.setVariableOrdering(permutation);
-            }
+            sfanal.setVariableOrdering(ofanal.getVariableOrdering());
+            handler.enableValidation();
 
-            long time = System.nanoTime();
-            try (ValidatorHandler handler = new ValidatorHandler()) {
-                for (int i = 0; i < iterations; i++) {
-                    ofanal.analyse("Read", decisionMaker, handler);
-                    handler.disableHandler();
-                }
-                time = ((System.nanoTime() - time) / (1000000 * iterations));
-                System.out.println("OFA took " + time + "ms to process the Read permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
-
-                handler.enableHandler();
-                handler.enableValidation();
-
-                time = System.nanoTime();
-                for (int i = 0; i < iterations; i++) {
-                    sfanal.analyse("Read", decisionMaker, handler);
-                    handler.disableHandler();
-                }
-                time = ((System.nanoTime() - time) / (1000000 * iterations));
-                System.out.println("SFA took " + time + "ms to process the Read permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
-
-                System.out.println("Validation: " + (handler.wasValidationSuccessul() ? "Passed!\n" : "Failed...\n"));
-            }
-
-            try (ValidatorHandler handler = new ValidatorHandler()) {
-                time = System.nanoTime();
-                for (int i = 0; i < iterations; i++) {
-                    ofanal.analyse("Write", decisionMaker, handler);
-                    handler.disableHandler();
-                }
-                time = ((System.nanoTime() - time) / (1000000 * iterations));
-                System.out.println("OFA took " + time + "ms to process the Write permission, which needed " + ofanal.getNumberOfEvaluations() + " evaluations.");
-
-                handler.enableHandler();
-                handler.enableValidation();
-
-                time = System.nanoTime();
-                for (int i = 0; i < iterations; i++) {
-                    sfanal.analyse("Write", decisionMaker, handler);
-                    handler.disableHandler();
-                }
-                time = ((System.nanoTime() - time) / (1000000 * iterations));
-                System.out.println("SFA took " + time + "ms to process the Write permission, which needed " + sfanal.getNumberOfEvaluations() + " evaluations.");
-
-                System.out.println("Validation: " + (handler.wasValidationSuccessul() ? "Passed!\n" : "Failed...\n"));
-            }
-            System.out.println();
-        });
-    }
-
-    private static void getPermutations(Collection<String> varList, List<List<String>> outputList) {
-        getPermutations(varList, outputList, new ArrayList<>());
-    }
-
-    private static void getPermutations(Collection<String> varList, List<List<String>> outputList, List<String> tempList) {
-        if (tempList.size() < varList.size()) {
-            varList.stream().forEachOrdered((var) -> {
-                if (!tempList.contains(var)) {
-                    tempList.add(var);
-                    getPermutations(varList, outputList, tempList);
-                    tempList.remove(var);
-                }
-            });
-        } else {
-            outputList.add(new ArrayList<>(tempList));
+            sfanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, false);
+            System.out.println("Permission: " + permission + " --> Validation: " + (handler.wasValidationSuccessul() ? "OK!" : "KO!"));
+            handler.reset();
         }
     }
 
-    FIS getFis() {
+    public FIS getFIS() {
         return fis;
     }
 }

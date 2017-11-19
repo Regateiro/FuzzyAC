@@ -26,10 +26,10 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  *
  * @author Diogo Regateiro
  */
-public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
+public class SimpleBDFISAuditor extends AbstractFuzzyAnalyser {
 
-    public SimpleBDFISAnalyser(BDFIS feval) {
-        super(feval);
+    public SimpleBDFISAuditor(BDFIS bdfis) {
+        super(bdfis);
     }
 
     /**
@@ -39,7 +39,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
      * @param handler
      */
     @Override
-    public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler) {
+    public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler, boolean verbose) {
         this.permissionToAnalyse = permission;
         this.handler = handler;
         this.decisionMaker = decisionMaker;
@@ -51,7 +51,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
         List<String> inputVars = new ArrayList<>();
 
         //Get the list of variables used in the VariableInference function block.
-        Collection<Variable> variables = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables();
+        Collection<Variable> variables = bdfis.getFIS().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).variables();
 
         //Retrieves the variables for the VariableInference function block, filtering for only input variables and adds their name to the inputVars list.
         variables.stream().filter((var) -> var.isInput()).forEach((var) -> inputVars.add(var.getName()));
@@ -69,7 +69,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
         }
 
         //Obtains the edge conditions.
-        findEdgeIntegerConditions(inputVars);
+        findEdgeIntegerConditions(inputVars, verbose);
     }
 
     /**
@@ -79,7 +79,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
      * @param alphaCut The value to check the permission weights for equality.
      * @param variables The name of the variables for the FIS.
      */
-    private void findEdgeIntegerConditions(List<String> variables) {
+    private void findEdgeIntegerConditions(List<String> variables, boolean verbose) {
         List<MultiRangeValue> variableMap = new ArrayList<>();
         for (int i = 0; i < variables.size(); i++) {
             //get variable name
@@ -87,6 +87,10 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
 
             //add temporary solution
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
+        }
+
+        if (verbose) {
+            System.out.println(variableMap);
         }
 
         // recursive function call
@@ -134,7 +138,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
         });
 
         //Evaluates the result using the current variable values.
-        Map<String, Variable> evaluation = feval.evaluate(variablesToEvaluate, false);
+        Map<String, Variable> evaluation = bdfis.evaluate(variablesToEvaluate, false);
         this.numberOfEvaluations++;
 
         //Adds the variables that resulted on the provided alphaCut
@@ -144,7 +148,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
     }
 
     private double maxXValue(String varName) {
-        Variable variable = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
+        Variable variable = bdfis.getFIS().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
 
         double xmax = 0.0;
         for (net.sourceforge.jFuzzyLogic.rule.LinguisticTerm lt : variable.getLinguisticTerms().values()) {
@@ -161,7 +165,7 @@ public class SimpleBDFISAnalyser extends AbstractFuzzyAnalyser {
     }
 
     private double minXValue(String varName) {
-        Variable variable = feval.getFis().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
+        Variable variable = bdfis.getFIS().getFunctionBlock(FB_VARIABLE_INFERENCE_PHASE_NAME).getVariable(varName);
 
         double xmin = Integer.MAX_VALUE;
         for (LinguisticTerm lt : variable.getLinguisticTerms().values()) {

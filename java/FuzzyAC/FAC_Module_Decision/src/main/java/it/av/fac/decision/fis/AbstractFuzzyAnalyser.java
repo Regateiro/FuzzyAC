@@ -7,6 +7,7 @@ package it.av.fac.decision.fis;
 
 import it.av.fac.decision.util.decision.IDecisionMaker;
 import it.av.fac.decision.util.handlers.IResultHandler;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,15 +22,15 @@ public abstract class AbstractFuzzyAnalyser {
         ALL, ONLY_GRANT, ONLY_DENY;
     }
 
-    protected final BDFIS feval;
+    protected final BDFIS bdfis;
     protected String permissionToAnalyse;
     protected int numberOfEvaluations;
     protected IDecisionMaker decisionMaker;
     protected IResultHandler handler;
     protected List<String> order;
 
-    protected AbstractFuzzyAnalyser(BDFIS feval) {
-        this.feval = feval;
+    protected AbstractFuzzyAnalyser(BDFIS bdfis) {
+        this.bdfis = bdfis;
         this.numberOfEvaluations = 0;
         this.order = null;
     }
@@ -39,8 +40,9 @@ public abstract class AbstractFuzzyAnalyser {
      * @param permission
      * @param decisionMaker
      * @param handler
+     * @param verbose
      */
-    abstract public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler);
+    abstract public void analyse(String permission, IDecisionMaker decisionMaker, IResultHandler handler, boolean verbose);
 
     public void resetAnalyser() {
         this.numberOfEvaluations = 0;
@@ -52,5 +54,9 @@ public abstract class AbstractFuzzyAnalyser {
     
     public void setVariableOrdering(List<String> order) {
         this.order = order;
+    }
+    
+    public List<String> getVariableOrdering() {
+        return Collections.unmodifiableList(this.order);
     }
 }
