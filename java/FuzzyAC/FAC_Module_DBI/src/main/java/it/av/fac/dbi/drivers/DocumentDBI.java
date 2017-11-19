@@ -97,25 +97,41 @@ public class DocumentDBI implements Closeable {
 
     public synchronized void syncWithDB() {
         try {
-            this.lastSync = System.currentTimeMillis();
             if (!bulk.isEmpty()) {
                 this.collection.insertMany(bulk);
                 this.bulk.clear();
+                this.lastSync = System.currentTimeMillis();
             }
         } catch (MongoException ex) {
-            System.err.println("There was an error while trying to sync with mongo, please check the database.");
             Logger.getLogger(DocumentDBI.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.print("There was an error while trying to sync with mongo, attempting to recover... ");
+            this.bulk.stream().map((document) -> {
+                return new Document("_id", document.getString("_id"));
+            }).filter((document) -> {
+                return this.collection.count(document) != 0;
+            }).forEach((document) -> {
+                this.collection.deleteOne(document);
+            });
+
+            try {
+                this.collection.insertMany(bulk);
+                this.bulk.clear();
+                this.lastSync = System.currentTimeMillis();
+                System.err.print("Success!");
+            } catch (MongoException ex2) {
+                System.err.print("Failure!");
+            }
         }
     }
 
     public void storeResource(JSONObject resource) {
-        Document doc = new Document();
-        doc.putAll(resource);
-        this.bulk.add(doc);
+        if (this.collection.count(new Document("_id", resource.getString("_id"))) == 0) {
+            this.bulk.add(new Document(resource));
 
-        if (this.bulk.size() == this.bulkSize) {
-            System.out.println("Bulk syncing...");
-            syncWithDB();
+            if (this.bulk.size() >= this.bulkSize) {
+                System.out.println("Bulk syncing...");
+                syncWithDB();
+            }
         }
     }
 
