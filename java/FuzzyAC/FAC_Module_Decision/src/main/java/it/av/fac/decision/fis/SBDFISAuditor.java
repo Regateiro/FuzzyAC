@@ -26,9 +26,9 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
  *
  * @author Diogo Regateiro
  */
-public class SimpleBDFISAuditor extends AbstractFuzzyAnalyser {
+public class SBDFISAuditor extends AbstractFuzzyAnalyser {
 
-    public SimpleBDFISAuditor(BDFIS bdfis) {
+    public SBDFISAuditor(BDFIS bdfis) {
         super(bdfis);
     }
 

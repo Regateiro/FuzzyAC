@@ -21,14 +21,14 @@ import it.av.fac.decision.util.handlers.IResultHandler;
  *
  * @author Diogo Regateiro
  */
-public class OptimizedBDFISAuditor extends AbstractFuzzyAnalyser {
+public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
     private Contribution lastChangeContribution;
     private final List<List<DecisionResult>> variableOutputs;
     private final Map<Integer, Integer> lastPassCount;
 
-    public OptimizedBDFISAuditor(BDFIS bdfis) {
+    public OBDFISAuditor(BDFIS bdfis) {
         super(bdfis);
         this.vda = new VariableDependenceAnalyser(bdfis.getFIS());
         this.lastChangeContribution = Contribution.UNKNOWN;

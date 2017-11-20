@@ -149,8 +149,8 @@ public class BDFIS {
         BDFIS bdfis = new BDFIS(testFile, false);
 //        System.out.println(bdfis.evaluate(vars, true));
 
-        AbstractFuzzyAnalyser ofanal = new OptimizedBDFISAuditor(bdfis);
-        AbstractFuzzyAnalyser sfanal = new OptimizedBDFISAuditor(bdfis);
+        AbstractFuzzyAnalyser ofanal = new OBDFISAuditor(bdfis);
+        AbstractFuzzyAnalyser sfanal = new OBDFISAuditor(bdfis);
 
         String[] permissions = new String[]{"Read", "Write"};
 
