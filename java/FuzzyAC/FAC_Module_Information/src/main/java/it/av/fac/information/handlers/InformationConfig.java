@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.messaging.client;
+package it.av.fac.information.handlers;
 
 /**
- *
+ * TODO: Change this into configuration files.
  * @author Diogo Regateiro
  */
-public enum RequestType {
-    GetPolicy, AddPolicy, GetMetadata, Decision, AddMetadata, AddSubject, GetSubject;
+public class InformationConfig {
+    public static final String MODULE_KEY = "information";
 }

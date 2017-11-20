@@ -33,10 +33,10 @@ public class WikiHandler {
     public String fetch(String userToken, String pageName) throws IOException {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
 
-        JSONArray pages = fetcher.fetchPage(pageName);
+        JSONArray pages = fetcher.fetchPage(pageName.toLowerCase());
         if (pages.isEmpty()) {
             html.append("<h1>Page Not Found!</h1><h2>Similar pages:</h2>");
-            pages = fetcher.search(pageName);
+            pages = fetcher.search(pageName.toLowerCase());
             for (int i = 0; i < pages.size(); i++) {
                 String page = pages.getJSONObject(i).getString("title");
                 html.append("[[").append(page).append("]]</br>");
@@ -84,6 +84,9 @@ public class WikiHandler {
 
     public String store(JSONObject resource, String userToken) {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
+        
+        resource.put("_id", resource.getString("_id").toLowerCase());
+        resource.put("title", resource.getString("title").toLowerCase());
 
         if (connector.store(resource, userToken)) {
             html.append("<h1>")

@@ -44,29 +44,32 @@ public class DBIHandler implements IServerHandler<byte[], String> {
     private IReply handle(IRequest request) {
         switch (request.getRequestType()) {
             case GetPolicy:
-                return requestPolicy(request);
+                return requestResource(request, "policies");
             case AddPolicy:
-                return requestPolicyStorage(request);
+                return storeResource(request, "policies");
             case GetMetadata:
-                return requestMetadata(request);
+                return requestResource(request, "metadata");
             case AddMetadata:
-                return requestMetadataStorage(request);
+                return storeResource(request, "metadata");
+            case GetSubject:
+                return requestResource(request, "subjects");
+            case AddSubject:
+                return storeResource(request, "subjects");
+            default:
+                return new BDFISReply(ReplyStatus.ERROR, "Invalid request type for the DBI module.");
         }
-
-        return new BDFISReply(ReplyStatus.ERROR, "Not a known request type was received: " + request.getRequestType());
-
     }
 
     /**
-     * Classify and send the document to the DBI.
+     * Stores a resource on the datastore.
      *
-     * @param request The request with the document to classify and store.
+     * @param request The request with the document to store.
      * @return The storage process status.
      */
-    private IReply requestMetadataStorage(IRequest request) {
+    private IReply storeResource(IRequest request, String collection) {
         IReply reply = new BDFISReply();
         try {
-            DocumentDBI.getInstance("metadata").storeResource(JSONObject.parseObject(request.getResource()));
+            DocumentDBI.getInstance(collection).storeResource(JSONObject.parseObject(request.getResource()));
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
@@ -74,35 +77,15 @@ public class DBIHandler implements IServerHandler<byte[], String> {
     }
 
     /**
-     * Request documents from the datastore.
+     * Request resources from the datastore.
      *
-     * @param request The request with the document to classify and store.
+     * @param request The request with the document id to retrieve.
      * @return The storage process status.
      */
-    private IReply requestMetadata(IRequest request) {
+    private IReply requestResource(IRequest request, String collection) {
         IReply reply = new BDFISReply();
         try {
-            reply = DocumentDBI.getInstance("metadata").findResource(request.getResourceId());
-        } catch (IOException ex) {
-            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
-        }
-        return reply;
-    }
-
-    private IReply requestPolicyStorage(IRequest request) {
-        IReply reply = new BDFISReply();
-        try {
-            DocumentDBI.getInstance("policies").storeResource(JSONObject.parseObject(request.getResource()));
-        } catch (IOException ex) {
-            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
-        }
-        return reply;
-    }
-
-    private IReply requestPolicy(IRequest request) {
-        IReply reply = new BDFISReply();
-        try {
-            reply = DocumentDBI.getInstance("policies").findResource(request.getResourceId());
+            reply = DocumentDBI.getInstance(collection).findResource(request.getResourceId());
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
