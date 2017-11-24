@@ -5,9 +5,6 @@ package it.av.wikipedia.client;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-import com.alibaba.fastjson.JSONObject;
-import it.av.wikipedia.client.parameters.FormatValue;
-import it.av.wikipedia.client.parameters.ListValue;
 import it.av.wikipedia.client.parameters.QueryParameters;
 import java.io.IOException;
 import java.util.logging.Level;
