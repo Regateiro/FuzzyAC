@@ -9,7 +9,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -69,5 +68,10 @@ public class MongoDBStorage implements IStorage<JSONObject> {
             indexBson.append(key, 1);
         }
         System.out.println(this.mongoCol.createIndex(indexBson, opt));
+    }
+
+    @Override
+    public void close() {
+        this.mongoClient.close();
     }
 }

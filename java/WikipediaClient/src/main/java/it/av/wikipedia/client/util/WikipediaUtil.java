@@ -33,6 +33,10 @@ public class WikipediaUtil {
         return !batchComplete;
     }
 
+    public String GetContinueCode() {
+        return params.getSubParameter(continueLabel);
+    }
+
     public JSONArray next() {
         JSONArray ret = new JSONArray();
 
@@ -45,6 +49,7 @@ public class WikipediaUtil {
             if (reply.keySet().contains("continue")) {
                 params.subparameter(continueLabel, reply.getJSONObject("continue").getString(continueLabel));
             } else {
+                params.subparameter(continueLabel, null);
                 batchComplete = true;
             }
 
@@ -54,7 +59,7 @@ public class WikipediaUtil {
         return ret;
     }
 
-    public JSONArray GetAllUsers(boolean withRecentActivity, boolean withEditsOnly) {
+    public JSONArray GetAllUsers(boolean withRecentActivity, boolean withEditsOnly, String continueCode) {
         params = new QueryParameters();
         params.format(FormatValue.json, true);
         params.list(ListValue.allusers);
@@ -68,6 +73,12 @@ public class WikipediaUtil {
         params.subparameter("auprop", "editcount");
         params.subparameter("maxlag", "5");
         queryParam = "allusers";
+        continueLabel = "aufrom";
+
+        if (continueCode != null && !continueCode.equalsIgnoreCase("")) {
+            batchComplete = false;
+            params.subparameter(continueLabel, continueCode);
+        }
 
         JSONObject reply;
         do {
@@ -76,7 +87,6 @@ public class WikipediaUtil {
 
         if (reply.keySet().contains("continue")) {
             batchComplete = false;
-            continueLabel = "aufrom";
             params.subparameter(continueLabel, reply.getJSONObject("continue").getString(continueLabel));
         } else {
             batchComplete = true;
@@ -85,7 +95,7 @@ public class WikipediaUtil {
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
 
-    public JSONArray GetAllUserContributions(String userid) {
+    public JSONArray GetAllUserContributions(String userid, String continueCode) {
         params = new QueryParameters();
         params.format(FormatValue.json, true);
         params.list(ListValue.usercontribs);
@@ -94,6 +104,12 @@ public class WikipediaUtil {
         params.subparameter("ucuserids", userid);
         params.subparameter("maxlag", "5");
         queryParam = "usercontribs";
+        continueLabel = "uccontinue";
+
+        if (continueCode != null && !continueCode.equalsIgnoreCase("")) {
+            batchComplete = false;
+            params.subparameter(continueLabel, continueCode);
+        }
 
         JSONObject reply;
         do {
@@ -102,7 +118,6 @@ public class WikipediaUtil {
 
         if (reply.keySet().contains("continue")) {
             batchComplete = false;
-            continueLabel = "uccontinue";
             params.subparameter(continueLabel, reply.getJSONObject("continue").getString(continueLabel));
         } else {
             batchComplete = true;

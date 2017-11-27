@@ -231,4 +231,8 @@ public class QueryParameters {
     public void clear() {
         this.params.clear();
     }
+
+    public String getSubParameter(String subparam) {
+        return params.get(subparam);
+    }
 }

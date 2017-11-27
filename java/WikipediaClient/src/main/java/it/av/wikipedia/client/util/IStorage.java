@@ -17,4 +17,5 @@ public interface IStorage<T> {
     public boolean delete(T matchingData);
     public List<T> select(T matchingData);
     public void index(boolean unique, String ... keys);
+    public void close();
 }
