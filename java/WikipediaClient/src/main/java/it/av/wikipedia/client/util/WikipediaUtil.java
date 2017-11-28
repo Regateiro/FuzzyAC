@@ -95,13 +95,14 @@ public class WikipediaUtil {
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
 
-    public JSONArray GetAllUserContributions(String userid, String continueCode) {
+    public JSONArray GetAllUserContributions(String userid, String continueCode, String ucend) {
         params = new QueryParameters();
         params.format(FormatValue.json, true);
         params.list(ListValue.usercontribs);
         params.subparameter("uclimit", "500"); // can request 500 at a time
         params.subparameter("ucprop", "ids|title|timestamp|comment|size|sizediff|flags|tags|oresscores");
         params.subparameter("ucuserids", userid);
+        params.subparameter("ucend", ucend);
         params.subparameter("maxlag", "5");
         queryParam = "usercontribs";
         continueLabel = "uccontinue";

@@ -39,7 +39,7 @@ public class UserContribUpdater extends TimerTask {
     public void run() {
         try {
             //updateUsers();
-            updateContributions();
+            updateContributions(false);
             //updateUserStatistics();
         } catch (IOException ex) {
             Logger.getLogger(UserContribUpdater.class.getName()).log(Level.SEVERE, null, ex);
@@ -61,7 +61,7 @@ public class UserContribUpdater extends TimerTask {
         } while (!((array = WikipediaAPI.next()).length() == 0));
     }
 
-    private void updateContributions() throws IOException {
+    private void updateContributions(boolean restart) throws IOException {
         List<JSONObject> users = this.userStorage.select(new JSONObject());
 
         for (JSONObject user : users) {
@@ -69,14 +69,14 @@ public class UserContribUpdater extends TimerTask {
             id.put("userid", user.get("userid"));
             System.out.println(id);
 
-            String continueCode = user.optString("continueCode");
+            String continueCode = (restart ? null : user.optString("continueCode"));
             if (continueCode != null && continueCode.equalsIgnoreCase(":Completed:")) {
                 System.out.println(" - Previously completed. Skipping...");
                 continue;
             }
 
             System.out.println(" - Processing new contributions...");
-            JSONArray batchContribs = WikipediaAPI.GetAllUserContributions(user.get("userid").toString(), continueCode);
+            JSONArray batchContribs = WikipediaAPI.GetAllUserContributions(user.get("userid").toString(), continueCode, "20171101000000");
 
             do {
                 System.out.println(" ---> Retrieved " + batchContribs.length() + " new contributions.");
