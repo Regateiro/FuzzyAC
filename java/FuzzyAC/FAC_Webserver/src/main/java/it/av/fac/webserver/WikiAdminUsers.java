@@ -5,21 +5,22 @@
  */
 package it.av.fac.webserver;
 
+import it.av.fac.webserver.handlers.QueryString;
 import it.av.fac.webserver.handlers.WikiHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URLDecoder;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
 
 /**
  *
  * @author DiogoJosé
  */
-public class WikiAdminAPI extends HttpServlet {
+public class WikiAdminUsers extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -38,13 +39,25 @@ public class WikiAdminAPI extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             String html = "";
             try {
-                if (request.getParameter("resource") != null && request.getParameter("token") != null) {
-                    JSONObject resource = new JSONObject(URLDecoder.decode((String) request.getParameter("resource"), "UTF-8"));
-                    String userToken = URLDecoder.decode((String) request.getParameter("token"), "UTF-8");
-                    System.out.println("Received resource");
-                    html = handler.store(resource, userToken);
+                Map<String, String> params = QueryString.parseQueryString(request.getQueryString());
+                if (params.containsKey("action") && params.get("action").equalsIgnoreCase("register")) {
+                    // register from wiki
+                    String username = params.get("username");
+                    if (username != null) {
+                        html = handler.registerUser(username);
+                    } else {
+                        html = handler.generateErrorPage(new RuntimeException("username key missing."));
+                    }
+                } else {
+                    // get info and display
+                    String token = params.get("token");
+                    if (token != null) {
+                        html = handler.getUser(token);
+                    } else {
+                        html = handler.generateErrorPage(new RuntimeException("token key missing."));
+                    }
                 }
-            } catch (Exception ex) {
+            } catch (UnsupportedEncodingException ex) {
                 html = handler.generateErrorPage(ex);
             }
             out.println(html);

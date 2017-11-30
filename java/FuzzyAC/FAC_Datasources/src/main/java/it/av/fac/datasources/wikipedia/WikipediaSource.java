@@ -48,7 +48,7 @@ public class WikipediaSource {
             this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
                 if (!page.getTitle().matches("^(File:|Wikipedia:|Category:|Draft:|Portal:|Template:).*$")) {
                     if (SKIP == 0) {
-                        String parsedPage = WikiParser.parseText(page).toJSONString();
+                        String parsedPage = WikiParser.parseText(page).toString();
                         page.setText(parsedPage);
                         fac.storageRequest("", page.toJSON());
                     } else {

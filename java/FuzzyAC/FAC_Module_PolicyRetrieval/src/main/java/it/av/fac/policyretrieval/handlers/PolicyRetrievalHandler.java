@@ -58,7 +58,7 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
         System.out.println("Processing policy request");
 
         System.out.println("Requesting documents...");
-        String policy = policyRequest.getResourceId();
+        String policy = (String) policyRequest.getResourceId();
 
         // do stuff with the policy perhaps
         

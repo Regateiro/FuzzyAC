@@ -5,7 +5,6 @@
  */
 package it.av.fac.messaging.rabbitmq.test;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.interfaces.IClientHandler;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQClient;
@@ -16,6 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 
 /**
  *
@@ -38,7 +38,7 @@ public class Client {
                 JSONObject request = new JSONObject();
                 request.put("request", "ping");
                 while (true) {
-                    conn.send(request.toJSONString().getBytes());
+                    conn.send(request.toString().getBytes());
                 }
             } catch (Exception ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);

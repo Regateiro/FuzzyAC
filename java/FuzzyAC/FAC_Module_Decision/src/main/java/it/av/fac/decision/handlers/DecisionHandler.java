@@ -5,7 +5,6 @@
  */
 package it.av.fac.decision.handlers;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.decision.fis.BDFIS;
 import it.av.fac.decision.util.decision.DecisionConfig;
 import it.av.fac.messaging.client.BDFISDecision;
@@ -31,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 import org.antlr.runtime.RecognitionException;
+import org.json.JSONObject;
 
 /**
  * Class responsible for handling query requests.
@@ -71,7 +71,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
 
         System.out.println("Processing request for user: " + request.getUserToken());
         System.out.println("Requesting the FCL files for the security label..."); //PolicyRetrieval
-        String securityLabel = request.getResourceId();
+        String securityLabel = (String) request.getResourceId();
         
         IRequest polRequest = new BDFISRequest(request.getUserToken(), securityLabel, RequestType.GetPolicy);
         IReply polReply = requestPolicies(polRequest);
@@ -89,7 +89,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
 
         polReply.getData().parallelStream().forEach((fclInfo) -> {
             try {
-                String fcl = JSONObject.parseObject(fclInfo).getString("fcl");
+                String fcl = new JSONObject(fclInfo).getString("fcl");
                 if (fcl != null && !fcl.equals("")) {
                     Map<String, Double> neededVariables = new HashMap<>(userVariables);
                     BDFIS feval = new BDFIS(fcl, true);

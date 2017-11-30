@@ -5,12 +5,12 @@
  */
 package it.av.fac.messaging.client;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IReply;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.xerial.snappy.Snappy;
 
 /**
@@ -38,7 +38,7 @@ public class BDFISReply implements IReply {
     }
 
     private BDFISReply(ReplyStatus status, String errorMsg, JSONArray data) {
-        this.data = new JSONArray(data);
+        this.data = new JSONArray(data.toString());
         this.errorMsg = errorMsg;
         this.status = status;
     }
@@ -59,18 +59,18 @@ public class BDFISReply implements IReply {
 
         ret.put("status", this.status.name());
         ret.put("error_msg", this.errorMsg);
-        ret.put("data", new JSONArray(this.data));
+        ret.put("data", this.data);
 
-        return Snappy.compress(ret.toJSONString().getBytes("UTF-8"));
+        return Snappy.compress(ret.toString().getBytes("UTF-8"));
     }
 
     public static BDFISReply readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
-        JSONObject obj = JSONObject.parseObject(data);
+        JSONObject obj = new JSONObject(data);
 
         BDFISReply reply = new BDFISReply(
-                ReplyStatus.valueOf(obj.getString("status")),
-                obj.getString("error_msg"),
+                ReplyStatus.valueOf(obj.optString("status")),
+                obj.optString("error_msg"),
                 obj.getJSONArray("data")
         );
 
@@ -80,7 +80,7 @@ public class BDFISReply implements IReply {
     @Override
     public List<String> getData() {
         List<String> ret = new ArrayList<>();
-        this.data.stream().forEach((databit) -> {
+        this.data.forEach((databit) -> {
             ret.add((String) databit);
         });
         return ret;
@@ -88,6 +88,6 @@ public class BDFISReply implements IReply {
 
     @Override
     public void addData(String data) {
-        this.data.add(data);
+        this.data.put(data);
     }
 }

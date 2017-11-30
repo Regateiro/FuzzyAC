@@ -14,7 +14,7 @@ import java.io.IOException;
  */
 public interface IRequest {
     public String getUserToken();
-    public String getResourceId();
+    public Object getResourceId();
     public RequestType getRequestType();
     public byte[] convertToBytes() throws IOException;
     public String getResource();

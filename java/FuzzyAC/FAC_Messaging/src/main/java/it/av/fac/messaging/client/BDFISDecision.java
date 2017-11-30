@@ -5,8 +5,7 @@
  */
 package it.av.fac.messaging.client;
 
-import com.alibaba.fastjson.JSONObject;
-import java.io.IOException;
+import org.json.JSONObject;
 
 /**
  *
@@ -42,16 +41,16 @@ public class BDFISDecision {
         ret.put("permission", permission);
         ret.put("granted", granted);
 
-        return ret.toJSONString();
+        return ret.toString();
     }
 
     public static BDFISDecision readFromString(String str) {
-        JSONObject obj = JSONObject.parseObject(str);
+        JSONObject obj = new JSONObject(str);
 
         BDFISDecision decision = new BDFISDecision(
-                obj.getString("security_label"),
-                obj.getString("permission"),
-                Boolean.valueOf(obj.getString("granted"))
+                obj.optString("security_label"),
+                obj.optString("permission"),
+                Boolean.valueOf(obj.optString("granted"))
         );
 
         return decision;

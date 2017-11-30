@@ -5,7 +5,6 @@
  */
 package it.av.fac.messaging.rabbitmq.test;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
@@ -15,6 +14,7 @@ import it.av.fac.messaging.interfaces.IServerHandler;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
+import org.json.JSONObject;
 
 /**
  *
@@ -30,7 +30,7 @@ public class Server {
                     JSONObject reply = new JSONObject();
                     reply.put("reply", "pong");
                     reply.put("status", "ok");
-                    clientConn.send(reply.toJSONString().getBytes());
+                    clientConn.send(reply.toString().getBytes());
                 } catch (Exception ex) {
                     Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                 }

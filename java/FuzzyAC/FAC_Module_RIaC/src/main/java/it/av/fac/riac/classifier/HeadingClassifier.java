@@ -5,9 +5,9 @@
  */
 package it.av.fac.riac.classifier;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IRequest;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -22,18 +22,18 @@ public class HeadingClassifier implements IClassifier {
 
     @Override
     public void classify(IRequest request) {
-        JSONObject resource = JSONObject.parseObject(request.getResource());
+        JSONObject resource = new JSONObject(request.getResource());
         JSONArray sections = resource.getJSONArray("text");
-        for (int i = 0; i < sections.size(); i++) {
+        for (int i = 0; i < sections.length(); i++) {
             JSONObject section = sections.getJSONObject(i);
-            int level = section.getIntValue("level");
+            int level = section.getInt("level");
             level = Math.min(level - 1, 3);
             section.put("security_label", CLASSES[level]);
             section.put("sl_timestamp", String.valueOf(System.currentTimeMillis()));
-            sections.set(i, section);
+            sections.put(i, section);
         }
         resource.put("text", sections);
-        request.setResource(resource.toJSONString());
+        request.setResource(resource.toString());
     }
 
 }

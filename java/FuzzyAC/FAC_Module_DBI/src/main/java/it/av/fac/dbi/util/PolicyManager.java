@@ -5,7 +5,6 @@
  */
 package it.av.fac.dbi.util;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.dbi.drivers.DocumentDBI;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.ReplyStatus;
@@ -13,6 +12,7 @@ import it.av.fac.messaging.client.interfaces.IReply;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import org.json.JSONObject;
 
 /**
  *

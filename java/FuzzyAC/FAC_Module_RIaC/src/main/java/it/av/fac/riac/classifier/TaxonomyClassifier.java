@@ -5,8 +5,6 @@
  */
 package it.av.fac.riac.classifier;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IRequest;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -21,6 +19,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -28,7 +28,7 @@ import java.util.zip.GZIPInputStream;
  */
 public class TaxonomyClassifier implements IClassifier {
 
-    private static final Map<String, Set<String>> TAXONOMY = new HashMap<>();
+    private static final Map<String, Set<Object>> TAXONOMY = new HashMap<>();
 
     public TaxonomyClassifier() {
         if (TAXONOMY.isEmpty()) {
@@ -59,11 +59,11 @@ public class TaxonomyClassifier implements IClassifier {
 
     @Override
     public void classify(IRequest request) {
-        JSONObject resource = JSONObject.parseObject(request.getResource());
-        JSONArray categories = JSONArray.parseArray((String) resource.get("categories"));
+        JSONObject resource = new JSONObject(request.getResource());
+        JSONArray categories = new JSONArray((String) resource.get("categories"));
         Set<String> labels = new HashSet<>();
 
-        search(new HashSet<>(Arrays.asList(categories.toArray(new String[0]))), labels, 0);
+        search(new HashSet<>(categories.toList()), labels, 0);
         if (labels.isEmpty()) {
             labels.add("PUBLIC");
         } else if (labels.contains("ADMINISTRATIVE")) {
@@ -78,13 +78,13 @@ public class TaxonomyClassifier implements IClassifier {
 
         resource.put("security_labels", labelstr.toString());
         resource.put("sl_timestamp", String.valueOf(System.currentTimeMillis()));
-        request.setResource(resource.toJSONString());
+        request.setResource(resource.toString());
     }
 
-    private void search(Set<String> categories, Set<String> labels, int depth) {
+    private void search(Set<Object> categories, Set<String> labels, int depth) {
         if (depth < 5 && categories != null) {
             categories.parallelStream().forEach((category) -> {
-                switch (category.toLowerCase()) {
+                switch (((String) category).toLowerCase()) {
                     case "security":
                         syncAddToSet(labels, "ACADEMIC");
                         break;

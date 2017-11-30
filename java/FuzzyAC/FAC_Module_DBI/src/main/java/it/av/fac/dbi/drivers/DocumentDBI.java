@@ -5,8 +5,6 @@
  */
 package it.av.fac.dbi.drivers;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
@@ -28,29 +26,31 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bson.Document;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
  * @author Diogo Regateiro
  */
 public class DocumentDBI implements Closeable {
-
+    
     private static final String PROVIDER = "document";
     private static final String DATABASE = "fac";
     private static DocumentDBI instance;
     private static Thread autosyncThr;
-
+    
     private final List<Document> bulk;
     private final MongoClient mongoClient;
     private final int bulkSize = 1000;
     private long lastSync;
     private MongoDatabase mongoDB;
     private MongoCollection<Document> collection;
-
+    
     private DocumentDBI() throws IOException {
         Properties msgProperties = new Properties();
         msgProperties.load(new FileInputStream(DBIConfig.PROPERTIES_FILE));
-
+        
         String addr = msgProperties.getProperty(PROVIDER + ".addr", "127.0.0.1");
         int port = Integer.valueOf(msgProperties.getProperty(PROVIDER + ".port", "27017"));
         String username = msgProperties.getProperty(PROVIDER + ".auth.user", "mongo");
@@ -62,7 +62,7 @@ public class DocumentDBI implements Closeable {
         this.bulk = new ArrayList<>(this.bulkSize);
         this.lastSync = System.currentTimeMillis();
     }
-
+    
     public static DocumentDBI getInstance(String collection) throws IOException {
         if (instance == null) {
             instance = new DocumentDBI();
@@ -70,7 +70,7 @@ public class DocumentDBI implements Closeable {
                 try {
                     while (!Thread.interrupted()) {
                         Thread.sleep(60000);
-
+                        
                         if (System.currentTimeMillis() > instance.lastSync + 60000 && !instance.bulk.isEmpty()) {
                             System.out.println("Autosyncing...");
                             instance.syncWithDB();
@@ -86,15 +86,21 @@ public class DocumentDBI implements Closeable {
         instance.useCollection(collection);
         return instance;
     }
-
+    
     public void useDatabase(String database) {
+        if (!this.bulk.isEmpty()) {
+            syncWithDB();
+        }
         this.mongoDB = this.mongoClient.getDatabase(database);
     }
-
+    
     public void useCollection(String collection) {
+        if (!this.bulk.isEmpty()) {
+            syncWithDB();
+        }
         this.collection = this.mongoDB.getCollection(collection);
     }
-
+    
     public synchronized void syncWithDB() {
         try {
             if (!bulk.isEmpty()) {
@@ -106,13 +112,13 @@ public class DocumentDBI implements Closeable {
             Logger.getLogger(DocumentDBI.class.getName()).log(Level.SEVERE, null, ex);
             System.err.print("There was an error while trying to sync with mongo, attempting to recover... ");
             this.bulk.stream().map((document) -> {
-                return new Document("_id", document.getString("_id"));
+                return new Document("_id", document.get("_id"));
             }).filter((document) -> {
                 return this.collection.count(document) != 0;
             }).forEach((document) -> {
                 this.collection.deleteOne(document);
             });
-
+            
             try {
                 this.collection.insertMany(bulk);
                 this.bulk.clear();
@@ -123,21 +129,26 @@ public class DocumentDBI implements Closeable {
             }
         }
     }
-
+    
     public void storeResource(JSONObject resource) {
-        if (this.collection.count(new Document("_id", resource.getString("_id"))) == 0) {
-            this.bulk.add(new Document(resource));
-
+        if (this.collection.count(new Document("_id", resource.get("_id"))) == 0) {
+            this.bulk.add(new Document(resource.toMap()));
+            
             if (this.bulk.size() >= this.bulkSize) {
                 System.out.println("Bulk syncing...");
                 syncWithDB();
             }
+        } else {
+            Document filter = new Document("_id", resource.get("_id"));
+            resource.remove("_id");
+            Document update = new Document("$set", new Document(resource.toMap()));
+            this.collection.updateOne(filter, update);
         }
     }
-
+    
     public void updateResource(JSONObject resource, String field) {
         this.collection.updateOne(
-                eq("_id", resource.getString("_id")),
+                eq("_id", resource.get("_id")),
                 set(field, resource.getString(field))
         );
     }
@@ -150,15 +161,15 @@ public class DocumentDBI implements Closeable {
      */
     public JSONArray query(String query) {
         JSONArray ret = new JSONArray();
-
+        
         FindIterable<Document> documents = this.collection.find(text(query));
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
-                ret.add(JSONObject.parse(doc.toJson()));
+                ret.put(new JSONObject(doc.toJson()));
             }
         });
-
+        
         return ret;
     }
 
@@ -168,23 +179,42 @@ public class DocumentDBI implements Closeable {
      * @param resourceId
      * @return
      */
-    public IReply findResource(String resourceId) {
+    public IReply findResource(Object resourceId) {
         IReply reply = new BDFISReply();
-
+        
         this.collection.find(eq("_id", resourceId)).forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
                 reply.addData(doc.toJson());
             }
         });
-
+        
         return reply;
     }
 
+    /**
+     * TODO: Add more query functionalities.
+     *
+     * @param matchingFields
+     * @return
+     */
+    public IReply findResource(JSONObject matchingFields) {
+        IReply reply = new BDFISReply();
+        
+        this.collection.find(new Document(matchingFields.toMap())).forEach(new Consumer<Document>() {
+            @Override
+            public void accept(Document doc) {
+                reply.addData(doc.toJson());
+            }
+        });
+        
+        return reply;
+    }
+    
     public void processResources(Consumer<Document> handler) {
         this.collection.find().forEach(handler);
     }
-
+    
     @Override
     public void close() throws IOException {
         try {
@@ -192,13 +222,13 @@ public class DocumentDBI implements Closeable {
             DocumentDBI.autosyncThr.join();
         } catch (InterruptedException ex) {
         }
-
+        
         syncWithDB();
         this.mongoClient.close();
         DocumentDBI.autosyncThr = null;
         DocumentDBI.instance = null;
     }
-
+    
     public static void main(String[] args) throws IOException {
         //connection test
         try (DocumentDBI dbi = DocumentDBI.getInstance("wikipages")) {

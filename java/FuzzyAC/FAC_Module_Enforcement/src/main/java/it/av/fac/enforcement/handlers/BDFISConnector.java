@@ -5,8 +5,6 @@
  */
 package it.av.fac.enforcement.handlers;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.util.EnforcementConfig;
 import it.av.fac.messaging.client.BDFISDecision;
 import it.av.fac.messaging.client.BDFISReply;
@@ -27,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.SynchronousQueue;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Class responsible for handling query requests.
@@ -39,9 +39,11 @@ public class BDFISConnector {
     private final SynchronousQueue<IReply> decisionQueue = new SynchronousQueue<>();
     private final SynchronousQueue<IReply> dbiQueue = new SynchronousQueue<>();
     private final SynchronousQueue<IReply> riacQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<IReply> infoQueue = new SynchronousQueue<>();
     private final RabbitMQClient decisionConn;
     private final RabbitMQClient dbiConn;
     private final RabbitMQClient riacConn;
+    private final RabbitMQClient infoConn;
 
     public BDFISConnector() throws Exception {
         this.decisionConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
@@ -53,6 +55,9 @@ public class BDFISConnector {
         this.riacConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_RIAC_RESPONSE,
                 RabbitMQConstants.QUEUE_RIAC_REQUEST, EnforcementConfig.MODULE_KEY, riacHandler);
+        this.infoConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
+                RabbitMQConstants.QUEUE_INFORMATION_RESPONSE,
+                RabbitMQConstants.QUEUE_INFORMATION_REQUEST, EnforcementConfig.MODULE_KEY, infoHandler);
     }
 
     public static BDFISConnector getInstance() throws Exception {
@@ -77,16 +82,16 @@ public class BDFISConnector {
 
         System.out.println("Requesting resource metadata...");
         IRequest metadataRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.GetMetadata);
-        IReply resourceMetaReply = requestMetadata(metadataRequest);
+        IReply resourceMetaReply = requestResource(metadataRequest);
 
         System.out.println("Requesting access control decision for each security label...");
         List<IReply> decisionsReplies = new ArrayList<>();
         Set<String> pageSecurityLabels = new HashSet<>();
         resourceMetaReply.getData().stream().forEach((String metadataStr) -> {
-            JSONObject metadata = JSONObject.parseObject(metadataStr);
+            JSONObject metadata = new JSONObject(metadataStr);
 
             JSONArray sections = metadata.getJSONArray("text");
-            for (int i = 0; i < sections.size(); i++) {
+            for (int i = 0; i < sections.length(); i++) {
                 JSONObject section = sections.getJSONObject(i);
                 pageSecurityLabels.add(section.getString("security_label"));
             }
@@ -111,11 +116,11 @@ public class BDFISConnector {
         System.out.println("Filtering headings according to access control decisions...");
         JSONArray sections = resource.getJSONArray("text");
         JSONArray filteredSections = new JSONArray();
-        for (int i = 0; i < sections.size(); i++) {
+        for (int i = 0; i < sections.length(); i++) {
             JSONObject section = sections.getJSONObject(i);
             BDFISDecision decision = decisions.get(section.getString("security_label"));
             if(decision.isGranted()) {
-                filteredSections.add(section);
+                filteredSections.put(section);
             }
         }
         resource.put("text", filteredSections);
@@ -126,9 +131,59 @@ public class BDFISConnector {
     public boolean store(JSONObject resource, String userToken) {
         System.out.println("Processing store request...");
         IRequest storeRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.AddMetadata);
-        storeRequest.setResource(resource.toJSONString());
+        storeRequest.setResource(resource.toString());
         IReply storeReply = requestResourceStorage(storeRequest);
         return storeReply.getStatus() == ReplyStatus.OK;
+    }
+    
+    /**
+     * Registers a user and returns a token. Returns a token if it has been registered already.
+     * @param userName
+     * @return 
+     */
+    public String registerUser(String userName) {
+        System.out.println("Processing user register request...");
+        IRequest storeRequest = new BDFISRequest(null, userName, RequestType.AddSubject);
+        IReply storeReply = requestUserRegistration(storeRequest);
+        if(storeReply.getStatus() == ReplyStatus.OK) {
+            return storeReply.getData().get(0);
+        }
+        return null;
+    }
+    
+    /**
+     * Registers a user and returns a token. Returns a token if it has been registered already.
+     * @param userName
+     * @return 
+     */
+    public JSONObject getUserInfo(String token) {
+        System.out.println("Processing user info retrieval request...");
+        IRequest request = new BDFISRequest(token, null, RequestType.GetSubjectInfo);
+        request.setResource(new JSONObject().put("token", token).toString());
+        IReply reply = requestUserInfo(request);
+        if(reply.getStatus() == ReplyStatus.OK) {
+            return new JSONObject(reply.getData().get(0));
+        }
+        return null;
+    }
+    
+    /**
+     * Request documents to the DBI.
+     *
+     * @param request The request with the document to classify and store.
+     * @return The storage process status.
+     */
+    private IReply requestUserInfo(IRequest request) {
+        IReply reply;
+
+        try {
+            infoConn.send(request.convertToBytes());
+            return infoQueue.take();
+        } catch (IOException | InterruptedException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+
+        return reply;
     }
 
     /**
@@ -137,7 +192,7 @@ public class BDFISConnector {
      * @param request The request with the document to classify and store.
      * @return The storage process status.
      */
-    private IReply requestMetadata(IRequest request) {
+    private IReply requestResource(IRequest request) {
         IReply reply;
 
         try {
@@ -162,6 +217,25 @@ public class BDFISConnector {
         try {
             decisionConn.send(request.convertToBytes());
             reply = decisionQueue.take();
+        } catch (IOException | InterruptedException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+
+        return reply;
+    }
+    
+    /**
+     * Request documents to the DBI.
+     *
+     * @param request The request with the document to classify and store.
+     * @return The storage process status.
+     */
+    private IReply requestUserRegistration(IRequest request) {
+        IReply reply;
+
+        try {
+            infoConn.send(request.convertToBytes());
+            return infoQueue.take();
         } catch (IOException | InterruptedException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
@@ -216,5 +290,15 @@ public class BDFISConnector {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
         riacQueue.add(reply);
+    };
+    
+    private final IClientHandler<byte[]> infoHandler = (byte[] replyBytes) -> {
+        IReply reply;
+        try {
+            reply = BDFISReply.readFromBytes(replyBytes);
+        } catch (IOException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+        infoQueue.add(reply);
     };
 }

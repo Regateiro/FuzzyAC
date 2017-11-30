@@ -5,8 +5,6 @@
  */
 package it.av.fac.datasources.wikipedia;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -14,6 +12,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -25,7 +25,7 @@ public class WikiParser {
         JSONArray sections = new JSONArray();
         Pattern pattern = Pattern.compile("^([=]+)([^=]+)[=]+$");
         JSONObject currentSection = createSection(title, 1);
-        sections.add(currentSection);
+        sections.put(currentSection);
 
         try (BufferedReader dumpReader = new BufferedReader(new StringReader(text))) {
             String line;
@@ -37,9 +37,9 @@ public class WikiParser {
                         i = matcher.group(1).length();
                         String subSectionTitle = matcher.group(2);
                         currentSection = createSection(subSectionTitle, i);
-                        sections.add(currentSection);
+                        sections.put(currentSection);
                     } else {
-                        currentSection.getJSONArray("paragraphs").add(line);
+                        currentSection.getJSONArray("paragraphs").put(line);
                     }
                 }
             }

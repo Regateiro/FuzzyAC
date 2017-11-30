@@ -5,12 +5,12 @@
  */
 package it.av.fac.webserver.handlers;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.enforcement.handlers.BDFISConnector;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -34,10 +34,10 @@ public class WikiHandler {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
 
         JSONArray pages = fetcher.fetchPage(pageName.toLowerCase());
-        if (pages.isEmpty()) {
+        if (pages.length() == 0) {
             html.append("<h1>Page Not Found!</h1><h2>Similar pages:</h2>");
             pages = fetcher.search(pageName.toLowerCase());
-            for (int i = 0; i < pages.size(); i++) {
+            for (int i = 0; i < pages.length(); i++) {
                 String page = pages.getJSONObject(i).getString("title");
                 html.append("[[").append(page).append("]]</br>");
             }
@@ -46,13 +46,13 @@ public class WikiHandler {
             //append wrapper div
             html.append("<style type=\"text/css\">").append(".wrapit {word-wrap: break-word;}").append("</style>");
             html.append("<div class=\"wrapit\">\n");
-            JSONArray sections = JSONArray.parseArray(filteredPage.getString("text"));
+            JSONArray sections = new JSONArray(filteredPage.getString("text"));
 
-            for (int i = 0; i < sections.size(); i++) {
+            for (int i = 0; i < sections.length(); i++) {
                 JSONObject section = sections.getJSONObject(i);
-                html.append(String.format("<h%d>%s</h%d>\n", section.getIntValue("level"), section.getString("heading"), section.getIntValue("level")));
+                html.append(String.format("<h%d>%s</h%d>\n", section.getInt("level"), section.getString("heading"), section.getInt("level")));
                 JSONArray paragraphs = section.getJSONArray("paragraphs");
-                for (int j = 0; j < paragraphs.size(); j++) {
+                for (int j = 0; j < paragraphs.length(); j++) {
                     html.append(String.format("<p>%s</p>\n", paragraphs.getString(j)));
                 }
             }
@@ -95,6 +95,40 @@ public class WikiHandler {
         } else {
             html.append("<h1>")
                     .append("The resource was NOT stored.")
+                    .append("</h1>");
+        }
+
+        return html.append("</body>").append("</html>").toString();
+    }
+    
+    public String registerUser(String userName) {
+        StringBuilder html = new StringBuilder("<html>").append("<body>");
+
+        String token;
+        if ((token = connector.registerUser(userName)) != null) {
+            html.append("<h1>")
+                    .append("The resource was stored successfully!")
+                    .append("</h1><p>User info: ").append(token).append("</p>");
+        } else {
+            html.append("<h1>")
+                    .append("The user was NOT registered.")
+                    .append("</h1>");
+        }
+
+        return html.append("</body>").append("</html>").toString();
+    }
+    
+    public String getUser(String userToken) {
+        StringBuilder html = new StringBuilder("<html>").append("<body>");
+        
+        JSONObject userInfo;
+        if ((userInfo = connector.getUserInfo(userToken)) != null) {
+            html.append("<pre>")
+                    .append(userInfo.toString(2))
+                    .append("</pre>");
+        } else {
+            html.append("<h1>")
+                    .append("The user was NOT found.")
                     .append("</h1>");
         }
 

@@ -5,8 +5,6 @@
  */
 package it.av.fac.webserver.handlers;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -19,6 +17,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -60,7 +60,7 @@ public class WikiPageFetcher implements Closeable {
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
-                ret.add(JSONObject.parse(doc.toJson()));
+                ret.put(new JSONObject(doc.toJson()));
             }
         });
 
@@ -84,7 +84,7 @@ public class WikiPageFetcher implements Closeable {
         documents.forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
-                ret.add(JSONObject.parseObject(doc.toJson()));
+                ret.put(new JSONObject(doc.toJson()));
             }
         });
         return ret;

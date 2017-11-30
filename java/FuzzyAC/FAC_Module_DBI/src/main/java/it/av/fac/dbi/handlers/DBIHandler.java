@@ -5,7 +5,6 @@
  */
 package it.av.fac.dbi.handlers;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.dbi.drivers.DocumentDBI;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
@@ -21,6 +20,7 @@ import it.av.fac.messaging.rabbitmq.test.Server;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 
 /**
  * Class responsible for handling RIaC requests.
@@ -51,10 +51,14 @@ public class DBIHandler implements IServerHandler<byte[], String> {
                 return requestResource(request, "metadata");
             case AddMetadata:
                 return storeResource(request, "metadata");
-            case GetSubject:
-                return requestResource(request, "subjects");
+            case GetSubjectInfo:
+                return requestResource(request, "wikiusers");
             case AddSubject:
-                return storeResource(request, "subjects");
+                return storeResource(request, "wikiusers");
+            case GetUserContributions:
+                return requestResource(request, "contribs");
+            case AddUserContribution:
+                return storeResource(request, "contribs");
             default:
                 return new BDFISReply(ReplyStatus.ERROR, "Invalid request type for the DBI module.");
         }
@@ -69,7 +73,7 @@ public class DBIHandler implements IServerHandler<byte[], String> {
     private IReply storeResource(IRequest request, String collection) {
         IReply reply = new BDFISReply();
         try {
-            DocumentDBI.getInstance(collection).storeResource(JSONObject.parseObject(request.getResource()));
+            DocumentDBI.getInstance(collection).storeResource(new JSONObject(request.getResource()));
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
@@ -85,7 +89,12 @@ public class DBIHandler implements IServerHandler<byte[], String> {
     private IReply requestResource(IRequest request, String collection) {
         IReply reply = new BDFISReply();
         try {
-            reply = DocumentDBI.getInstance(collection).findResource(request.getResourceId());
+            Object id = request.getResourceId();
+            if(id != null) {
+                reply = DocumentDBI.getInstance(collection).findResource(id);
+            } else {
+                reply = DocumentDBI.getInstance(collection).findResource(new JSONObject(request.getResource()));
+            }
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }

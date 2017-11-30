@@ -5,7 +5,6 @@
  */
 package it.av.fac.driver;
 
-import com.alibaba.fastjson.JSONObject;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -23,6 +22,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 /**
  *
@@ -70,7 +70,7 @@ public class APIClient {
             HttpPost httpPost = new HttpPost(endpoint + ADMIN_PATH);
 
             List<NameValuePair> nvps = new ArrayList<>();
-            nvps.add(new BasicNameValuePair("resource", URLEncoder.encode(resource.toJSONString(), "UTF-8")));
+            nvps.add(new BasicNameValuePair("resource", URLEncoder.encode(resource.toString(), "UTF-8")));
             nvps.add(new BasicNameValuePair("token", URLEncoder.encode(userToken, "UTF-8")));
             httpPost.setEntity(new UrlEncodedFormEntity(nvps));
 

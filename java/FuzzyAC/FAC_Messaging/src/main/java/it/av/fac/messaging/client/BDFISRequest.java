@@ -5,9 +5,9 @@
  */
 package it.av.fac.messaging.client;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.interfaces.IRequest;
 import java.io.IOException;
+import org.json.JSONObject;
 import org.xerial.snappy.Snappy;
 
 /**
@@ -24,7 +24,7 @@ public class BDFISRequest implements IRequest {
     /**
      * The id of the resource to query from.
      */
-    private final String resourceId;
+    private final Object resourceId;
     
     /**
      * The resource to add/store.
@@ -36,7 +36,7 @@ public class BDFISRequest implements IRequest {
      */
     private final RequestType requestType;
 
-    public BDFISRequest(String userToken, String resourceId, RequestType requestType) {
+    public BDFISRequest(String userToken, Object resourceId, RequestType requestType) {
         this.userToken = userToken;
         this.resourceId = resourceId;
         this.requestType = requestType;
@@ -48,7 +48,7 @@ public class BDFISRequest implements IRequest {
     }
 
     @Override
-    public String getResourceId() {
+    public Object getResourceId() {
         return resourceId;
     }
 
@@ -66,19 +66,19 @@ public class BDFISRequest implements IRequest {
         ret.put("resource", resource);
         ret.put("requesttype", requestType);
 
-        return Snappy.compress(ret.toJSONString());
+        return Snappy.compress(ret.toString());
     }
 
     public static BDFISRequest readFromBytes(byte[] bytes) throws IOException {
         String data = Snappy.uncompressString(bytes, "UTF-8");
-        JSONObject obj = JSONObject.parseObject(data);
+        JSONObject obj = new JSONObject(data);
 
         BDFISRequest request = new BDFISRequest(
-                obj.getString("userToken"),
-                obj.getString("resource_id"),
-                RequestType.valueOf(obj.getString("requesttype"))
+                obj.optString("userToken"),
+                obj.opt("resource_id"),
+                RequestType.valueOf(obj.optString("requesttype"))
         );
-        request.setResource(obj.getString("resource"));
+        request.setResource(obj.optString("resource"));
 
         return request;
     }

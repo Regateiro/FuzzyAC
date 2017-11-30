@@ -10,5 +10,5 @@ package it.av.fac.messaging.client;
  * @author Diogo Regateiro
  */
 public enum RequestType {
-    GetPolicy, AddPolicy, GetMetadata, Decision, AddMetadata, AddSubject, GetSubject;
+    GetPolicy, AddPolicy, GetMetadata, Decision, AddMetadata, AddSubject, GetSubjectInfo, AddUserContribution, GetUserContributions;
 }

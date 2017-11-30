@@ -5,9 +5,9 @@
  */
 package it.av.fac.datasources.wikipedia;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -24,8 +24,8 @@ public class Page {
     }
 
     public Page(String jsonPage) {
-        JSONObject obj = JSONObject.parseObject(jsonPage);
-        this.redirecting = obj.getBooleanValue("redirecting");
+        JSONObject obj = new JSONObject(jsonPage);
+        this.redirecting = obj.getBoolean("redirecting");
         this.title = obj.getString("title");
         this.text = obj.getString("text");
         this.categories = obj.getJSONArray("categories");
@@ -64,7 +64,7 @@ public class Page {
     }
     
     public String toJSONString() {
-        return toJSON().toJSONString();
+        return toJSON().toString();
     }
     
     public JSONObject toJSON() {

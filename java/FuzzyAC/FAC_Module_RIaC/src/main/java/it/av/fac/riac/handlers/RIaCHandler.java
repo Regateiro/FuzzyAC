@@ -5,7 +5,6 @@
  */
 package it.av.fac.riac.handlers;
 
-import com.alibaba.fastjson.JSONObject;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
 import it.av.fac.messaging.client.ReplyStatus;
@@ -24,6 +23,7 @@ import java.io.IOException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 
 /**
  * Class responsible for handling RIaC requests.
@@ -58,7 +58,7 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
 
     private IReply handle(IRequest request) {
         // classify the document in the request
-        System.out.println("Classifying " + JSONObject.parseObject(request.getResource()).getOrDefault("title", "no title"));
+        System.out.println("Classifying " + new JSONObject(request.getResource()).optString("title", "no title"));
         classifier.classify(request);
         return requestStorage(request);
     }
