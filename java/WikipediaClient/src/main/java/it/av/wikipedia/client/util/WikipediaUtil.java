@@ -122,6 +122,7 @@ public class WikipediaUtil {
         params.subparameter("uclimit", "500"); // can request 500 at a time
         params.subparameter("ucprop", "ids|title|timestamp|comment|size|sizediff|flags|tags|oresscores");
         params.subparameter("ucuserids", userid);
+        params.subparameter("ucdir", "newer");
         if (ucend != null) {
             params.subparameter("ucend", ucend);
         }
