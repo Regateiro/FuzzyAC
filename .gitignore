@@ -10,3 +10,23 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/java/FuzzyAC/FuzzyLogicEngine/target/
+/java/FuzzyAC/FAC_EnforcementModule/target/
+/java/FuzzyAC/FAC_Messaging/target/
+/java/FuzzyAC/FAC_FLEngine/target/
+/java/FuzzyAC/FAC_Client/target/
+/java/FuzzyAC/FAC_Module_Enforcement/target/
+/java/FuzzyAC/FAC_Module_Information/target/
+/java/FuzzyAC/FAC_Module_Administration/target/
+/java/FuzzyAC/FAC_Module_Decision/target/
+/java/FuzzyAC/FAC_Module_PolicyRetrieval/target/
+/java/FuzzyAC/FAC_Driver/target/
+/java/FuzzyAC/FAC_Module_RIaC/target/
+/java/FuzzyAC/FAC_CognitiveEngine/target/
+/java/FuzzyAC/FAC_Webserver/target/
+/java/FuzzyAC/FAC_Datasources/target/
+/java/FuzzyAC/FAC_Module_DBI/target/
+/java/FuzzyAC/FAC_Module_Monitor/target/
+!/java/FuzzyAC/FAC_Module_Decision/src/main/resources/jFuzzyLogic_core.jar
+!/java/FuzzyAC/FAC_Module_Decision/src/main/resources/jFuzzyLogic.jar
+/java/WikipediaClient/target/

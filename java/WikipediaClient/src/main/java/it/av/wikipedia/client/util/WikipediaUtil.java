@@ -95,6 +95,26 @@ public class WikipediaUtil {
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
 
+    public JSONArray GetUserByName(String userName) {
+        params = new QueryParameters();
+        params.format(FormatValue.json, true);
+        params.list(ListValue.users);
+        params.subparameter("ususers", userName);
+        params.subparameter("maxlag", "5");
+        queryParam = "users";
+
+        JSONObject reply;
+        do {
+            reply = new JSONObject(WikipediaClient.Query(params));
+        } while (isNonQueryReply(reply));
+
+        return reply.getJSONObject("query").getJSONArray(queryParam);
+    }
+    
+    public JSONArray GetAllUserContributions(String userid) {
+        return GetAllUserContributions(userid, null, null);
+    }
+
     public JSONArray GetAllUserContributions(String userid, String continueCode, String ucend) {
         params = new QueryParameters();
         params.format(FormatValue.json, true);
@@ -102,7 +122,9 @@ public class WikipediaUtil {
         params.subparameter("uclimit", "500"); // can request 500 at a time
         params.subparameter("ucprop", "ids|title|timestamp|comment|size|sizediff|flags|tags|oresscores");
         params.subparameter("ucuserids", userid);
-        params.subparameter("ucend", ucend);
+        if (ucend != null) {
+            params.subparameter("ucend", ucend);
+        }
         params.subparameter("maxlag", "5");
         queryParam = "usercontribs";
         continueLabel = "uccontinue";
