@@ -153,7 +153,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
             if(!reply.getData().isEmpty()) {
                 JSONObject contrib = new JSONObject(reply.getData().get(0));
                 continueCode = String.format("%s|%d", 
-                        this.toWikiDF.format(fromWikiDF.parse(contrib.getString("timestamp"))),
+                        this.toWikiDF.format(fromMongoDBDF.parse(contrib.getString("timestamp"))),
                         contrib.getInt("_id"));
             }
         } catch (Exception ex) {
