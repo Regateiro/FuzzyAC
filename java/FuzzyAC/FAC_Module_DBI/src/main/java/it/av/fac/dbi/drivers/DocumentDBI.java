@@ -15,6 +15,7 @@ import static com.mongodb.client.model.Filters.text;
 import static com.mongodb.client.model.Updates.set;
 import it.av.fac.dbi.util.DBIConfig;
 import it.av.fac.messaging.client.BDFISReply;
+import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.interfaces.IReply;
 import java.io.Closeable;
 import java.io.FileInputStream;
@@ -202,6 +203,28 @@ public class DocumentDBI implements Closeable {
         IReply reply = new BDFISReply();
         
         this.collection.find(new Document(matchingFields.toMap())).forEach(new Consumer<Document>() {
+            @Override
+            public void accept(Document doc) {
+                reply.addData(doc.toJson());
+            }
+        });
+        
+        return reply;
+    }
+    
+    /**
+     * TODO: Add more query functionalities.
+     *
+     * @param id
+     * @param sortFields
+     * @return
+     */
+    public IReply findLastResource(Object id, JSONObject sortFields) {
+        IReply reply = new BDFISReply();
+        
+        Document filter = new Document();
+        if(id != null) filter.put("userid", id);
+        this.collection.find(filter).sort(new Document(sortFields.toMap())).limit(1).forEach(new Consumer<Document>() {
             @Override
             public void accept(Document doc) {
                 reply.addData(doc.toJson());

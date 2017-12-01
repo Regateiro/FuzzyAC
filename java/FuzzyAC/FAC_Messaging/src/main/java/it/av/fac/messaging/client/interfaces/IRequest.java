@@ -18,5 +18,5 @@ public interface IRequest {
     public RequestType getRequestType();
     public byte[] convertToBytes() throws IOException;
     public String getResource();
-    public void setResource(String resource);
+    public IRequest setResource(String resource);
 }

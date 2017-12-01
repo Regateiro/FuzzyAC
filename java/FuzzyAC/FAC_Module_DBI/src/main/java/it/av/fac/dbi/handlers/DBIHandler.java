@@ -59,6 +59,8 @@ public class DBIHandler implements IServerHandler<byte[], String> {
                 return requestResource(request, "contribs");
             case AddUserContribution:
                 return storeResource(request, "contribs");
+            case GetLastUserContribution:
+                return requestLastResource(request, "contribs");
             default:
                 return new BDFISReply(ReplyStatus.ERROR, "Invalid request type for the DBI module.");
         }
@@ -90,11 +92,27 @@ public class DBIHandler implements IServerHandler<byte[], String> {
         IReply reply = new BDFISReply();
         try {
             Object id = request.getResourceId();
-            if(id != null) {
+            if (id != null) {
                 reply = DocumentDBI.getInstance(collection).findResource(id);
             } else {
                 reply = DocumentDBI.getInstance(collection).findResource(new JSONObject(request.getResource()));
             }
+        } catch (IOException ex) {
+            reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
+        }
+        return reply;
+    }
+
+    /**
+     * Request resources from the datastore.
+     *
+     * @param request The request with the document id to retrieve.
+     * @return The storage process status.
+     */
+    private IReply requestLastResource(IRequest request, String collection) {
+        IReply reply;
+        try {
+            reply = DocumentDBI.getInstance(collection).findLastResource(request.getResourceId(), new JSONObject(request.getResource()));
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }

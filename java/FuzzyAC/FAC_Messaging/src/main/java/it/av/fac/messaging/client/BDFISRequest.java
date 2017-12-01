@@ -89,7 +89,8 @@ public class BDFISRequest implements IRequest {
     }
 
     @Override
-    public void setResource(String resource) {
+    public BDFISRequest setResource(String resource) {
         this.resource = resource;
+        return this;
     }
 }

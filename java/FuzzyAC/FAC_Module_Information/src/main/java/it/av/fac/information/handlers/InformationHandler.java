@@ -41,10 +41,11 @@ public class InformationHandler implements IServerHandler<byte[], String> {
 
     private final SynchronousQueue<IReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
-    private final SimpleDateFormat fromWikiDF, fromMongoDBDF;
+    private final SimpleDateFormat fromWikiDF, fromMongoDBDF, toWikiDF;
 
     public InformationHandler() throws Exception {
         this.fromWikiDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        this.toWikiDF = new SimpleDateFormat("yyyyMMddHHmmss");
         this.fromMongoDBDF = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
         this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE,
@@ -100,7 +101,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
         WikipediaUtil util = new WikipediaUtil();
         JSONObject user = util.GetUserByName((String) request.getResourceId()).getJSONObject(0);
         int userid = user.getInt("userid");
-        
+
         if (!user.keySet().contains("missing")) {
             try {
                 IRequest checkRequest = new BDFISRequest(null, user.getInt("userid"), RequestType.GetSubjectInfo);
@@ -109,7 +110,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
                 if (subjectInfo.getData().isEmpty() || new Date().after(fromMongoDBDF.parse(new JSONObject(subjectInfo.getData().get(0)).getString("token_expires")))) {
                     user.put("_id", userid);
                     user.put("token", token);
-                    user.put("token_expires", new Date(System.currentTimeMillis() + (1000*60*60*24)));
+                    user.put("token_expires", new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)));
                     user.remove("userid");
                     request.setResource(user.toString());
                     conn.send(request.convertToBytes());
@@ -142,7 +143,23 @@ public class InformationHandler implements IServerHandler<byte[], String> {
 
         WikipediaUtil util = new WikipediaUtil();
 
+        // determine the continue code
         String continueCode = null;
+        try {
+            conn.send(new BDFISRequest(token, userid, RequestType.GetLastUserContribution).setResource(new JSONObject().put("timestamp", -1).toString()).convertToBytes());
+            if ((reply = queue.take()).getStatus() == ReplyStatus.ERROR) {
+                return reply;
+            }
+            if(!reply.getData().isEmpty()) {
+                JSONObject contrib = new JSONObject(reply.getData().get(0));
+                continueCode = String.format("%s|%d", 
+                        this.toWikiDF.format(fromWikiDF.parse(contrib.getString("timestamp"))),
+                        contrib.getInt("_id"));
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(InformationHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         JSONArray batchContribs = util.GetAllUserContributions(String.valueOf(userid), continueCode, null);
 
         do {
