@@ -72,18 +72,26 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         System.out.println("Processing request for user: " + request.getUserToken());
         System.out.println("Requesting the FCL files for the security label..."); //PolicyRetrieval
         String securityLabel = (String) request.getResourceId();
-        
+
         IRequest polRequest = new BDFISRequest(request.getUserToken(), securityLabel, RequestType.GetPolicy);
         IReply polReply = requestPolicies(polRequest);
 
         System.out.println("Requesting the user attributes..."); //Information
+        IRequest infoRequest = new BDFISRequest(request.getUserToken(), null, RequestType.GetSubjectInfo);
+        IReply infoReply = requestInformation(infoRequest);
+
         Map<String, Double> userVariables = new HashMap<>();
-        userVariables.put("Number_Of_Publications", 12.0);
-        userVariables.put("Number_Of_Citations", 50.0);
-        userVariables.put("Role", 0.0);
-        userVariables.put("Years_Of_Service", 0.0);
-        userVariables.put("Years_Partened", 0.0);
-        userVariables.put("Number_Of_Projects_Funded", 0.0);
+        JSONObject userAttributes = new JSONObject(infoReply.getData().get(0)).getJSONObject("attributes");
+        userVariables.put("Number_Of_Publications", userAttributes.optDouble("Number_Of_Publications", 12.0));
+        userVariables.put("Number_Of_Citations", userAttributes.optDouble("Number_Of_Citations", 50.0));
+        userVariables.put("Role", userAttributes.optDouble("Role", 0.0));
+        userVariables.put("Years_Of_Service", userAttributes.optDouble("Years_Of_Service", 0.0));
+        userVariables.put("Years_Partened", userAttributes.optDouble("Years_Partened", 0.0));
+        userVariables.put("Number_Of_Projects_Funded", userAttributes.optDouble("Number_Of_Projects_Funded", 0.0));
+        
+        infoRequest = new BDFISRequest(request.getUserToken(), null, RequestType.GetUserContributions);
+        infoReply = requestInformation(infoRequest);
+        CustomMF cmf = new ORESCustomMF(infoReply.getData());
 
         System.out.println("Evaluating user permissions...");
 
@@ -93,8 +101,9 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
                 if (fcl != null && !fcl.equals("")) {
                     Map<String, Double> neededVariables = new HashMap<>(userVariables);
                     BDFIS feval = new BDFIS(fcl, true);
+                    feval.registerCustomInputFunction(cmf);
                     userVariables.keySet().stream().filter((varName) -> !feval.getVariableNameList().contains(varName)).forEach((notNeededVarName) -> {
-                            neededVariables.remove(notNeededVarName);
+                        neededVariables.remove(notNeededVarName);
                     });
                     Map<String, Variable> evaluation = feval.evaluate(neededVariables, false);
                     evaluation.keySet().stream().forEach((permission) -> {

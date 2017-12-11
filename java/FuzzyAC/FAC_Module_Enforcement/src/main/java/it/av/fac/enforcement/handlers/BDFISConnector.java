@@ -74,10 +74,9 @@ public class BDFISConnector {
      * @param resource
      * @param userToken
      * @param permission
-     * @param mustBeGrantedForEveryLabel
      * @return
      */
-    public JSONObject filterPage(JSONObject resource, String userToken, String permission, boolean mustBeGrantedForEveryLabel) {
+    public JSONObject filterPage(JSONObject resource, String userToken, String permission) {
         System.out.println("Processing query for: " + resource);
 
         System.out.println("Requesting resource metadata...");
@@ -101,7 +100,7 @@ public class BDFISConnector {
                 decisionsReplies.add(requestDecision(decisionRequest));
             });
         });
-        
+
         System.out.println("Parsing decisions...");
         Map<String, BDFISDecision> decisions = new HashMap<>();
         decisionsReplies.stream().forEach((IReply decisionReply) -> {
@@ -112,19 +111,73 @@ public class BDFISConnector {
                 }
             });
         });
-        
+
         System.out.println("Filtering headings according to access control decisions...");
         JSONArray sections = resource.getJSONArray("text");
         JSONArray filteredSections = new JSONArray();
         for (int i = 0; i < sections.length(); i++) {
             JSONObject section = sections.getJSONObject(i);
             BDFISDecision decision = decisions.get(section.getString("security_label"));
-            if(decision.isGranted()) {
+            if (decision.isGranted()) {
                 filteredSections.put(section);
             }
         }
         resource.put("text", filteredSections);
-        
+
+        return resource;
+    }
+
+    /**
+     * TODO: cache the decisions for some time.
+     *
+     * @param resource
+     * @param userToken
+     * @return
+     */
+    public JSONObject flagWritableSections(JSONObject resource, String userToken) {
+        System.out.println("Processing query for: " + resource);
+
+        System.out.println("Requesting resource metadata...");
+        IRequest metadataRequest = new BDFISRequest(userToken, resource.getString("_id"), RequestType.GetMetadata);
+        IReply resourceMetaReply = requestResource(metadataRequest);
+
+        System.out.println("Requesting access control decision for each security label...");
+        List<IReply> decisionsReplies = new ArrayList<>();
+        Set<String> pageSecurityLabels = new HashSet<>();
+        resourceMetaReply.getData().stream().forEach((String metadataStr) -> {
+            JSONObject metadata = new JSONObject(metadataStr);
+
+            JSONArray sections = metadata.getJSONArray("text");
+            for (int i = 0; i < sections.length(); i++) {
+                JSONObject section = sections.getJSONObject(i);
+                pageSecurityLabels.add(section.getString("security_label"));
+            }
+
+            pageSecurityLabels.forEach((pageSecurityLabel) -> {
+                IRequest decisionRequest = new BDFISRequest(userToken, pageSecurityLabel, RequestType.Decision);
+                decisionsReplies.add(requestDecision(decisionRequest));
+            });
+        });
+
+        System.out.println("Parsing decisions...");
+        Map<String, BDFISDecision> decisions = new HashMap<>();
+        decisionsReplies.stream().forEach((IReply decisionReply) -> {
+            decisionReply.getData().stream().forEach((String decisionStr) -> {
+                BDFISDecision decision = BDFISDecision.readFromString(decisionStr);
+                if (decision.getPermission().equalsIgnoreCase("*") || decision.getPermission().equalsIgnoreCase("write")) {
+                    decisions.put(decision.getSecurityLabel(), decision);
+                }
+            });
+        });
+
+        System.out.println("Flagging headings according to access control decisions...");
+        JSONArray sections = resource.getJSONArray("text");
+        for (int i = 0; i < sections.length(); i++) {
+            JSONObject section = sections.getJSONObject(i);
+            BDFISDecision decision = decisions.get(section.getString("security_label"));
+            section.put("editable", decision.isGranted());
+        }
+
         return resource;
     }
 
@@ -135,38 +188,41 @@ public class BDFISConnector {
         IReply storeReply = requestResourceStorage(storeRequest);
         return storeReply.getStatus() == ReplyStatus.OK;
     }
-    
+
     /**
-     * Registers a user and returns a token. Returns a token if it has been registered already.
+     * Registers a user and returns a token. Returns a token if it has been
+     * registered already.
+     *
      * @param userName
-     * @return 
+     * @return
      */
     public String registerUser(String userName) {
         System.out.println("Processing user register request...");
         IRequest storeRequest = new BDFISRequest(null, userName, RequestType.AddSubject);
         IReply storeReply = requestUserRegistration(storeRequest);
-        if(storeReply.getStatus() == ReplyStatus.OK) {
+        if (storeReply.getStatus() == ReplyStatus.OK) {
             return storeReply.getData().get(0);
         }
         return null;
     }
-    
+
     /**
-     * Registers a user and returns a token. Returns a token if it has been registered already.
-     * @param userName
-     * @return 
+     * Registers a user and returns a token. Returns a token if it has been
+     * registered already.
+     *
+     * @param token
+     * @return
      */
     public JSONObject getUserInfo(String token) {
         System.out.println("Processing user info retrieval request...");
         IRequest request = new BDFISRequest(token, null, RequestType.GetSubjectInfo);
-        request.setResource(new JSONObject().put("token", token).toString());
         IReply reply = requestUserInfo(request);
-        if(reply.getStatus() == ReplyStatus.OK) {
+        if (reply.getStatus() == ReplyStatus.OK) {
             return new JSONObject(reply.getData().get(0));
         }
         return null;
     }
-    
+
     /**
      * Request documents to the DBI.
      *
@@ -223,7 +279,7 @@ public class BDFISConnector {
 
         return reply;
     }
-    
+
     /**
      * Request documents to the DBI.
      *
@@ -291,7 +347,7 @@ public class BDFISConnector {
         }
         riacQueue.add(reply);
     };
-    
+
     private final IClientHandler<byte[]> infoHandler = (byte[] replyBytes) -> {
         IReply reply;
         try {

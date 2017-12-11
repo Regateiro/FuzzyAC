@@ -5,11 +5,13 @@
  */
 package it.av.fac.webserver;
 
+import it.av.fac.webserver.handlers.QueryString;
 import it.av.fac.webserver.handlers.WikiHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -39,11 +41,14 @@ public class WikiAPI extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             String html = "";
             try {
-                if (request.getPathInfo() != null){// && request.getParameter("token") != null) {
+                if (request.getPathInfo() != null) {
+                    Map<String, String> params = QueryString.parseQueryString(request.getQueryString());
                     String page = URLDecoder.decode((String) request.getPathInfo().substring(1), "UTF-8");
-                    //String userToken = URLDecoder.decode((String) request.getParameter("token"), "UTF-8");
+                    String userToken = params.get("token");
+                    
                     System.out.println("Received query for page: " + page);
-                    html = handler.fetch("", page);
+                    
+                    html = handler.fetch(userToken, page);
                     html = html.replaceAll("\\[\\[([^]]*)\\|([^]]*)\\]\\]", "<a href=\"/FAC_Webserver/WikiAPI/$1\">$2</a>");
                     html = html.replaceAll("\\[\\[([^]]*)\\]\\]", "<a href=\"/FAC_Webserver/WikiAPI/$1\">$1</a>");
                 }

@@ -5,8 +5,8 @@
  */
 package it.av.fac.decision.fis;
 
+import it.av.fac.decision.handlers.CustomMF;
 import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
-import it.av.fac.decision.util.handlers.NullHandler;
 import it.av.fac.decision.util.handlers.ValidatorHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +34,7 @@ public class BDFIS {
 
     public final static String FB_VARIABLE_INFERENCE_PHASE_NAME = "VariableInference";
     public final static String FB_ACCESS_CONTROL_PHASE_NAME = "AccessControl";
+    protected final Set<CustomMF> cifunctions;
     protected final FIS fis;
 
     public BDFIS(String fcl, boolean inlineFcl) throws RecognitionException {
@@ -42,6 +43,16 @@ public class BDFIS {
         } else {
             this.fis = FIS.load(fcl, false);
         }
+        
+        this.cifunctions = new HashSet<>();
+    }
+    
+    public void registerCustomInputFunction(CustomMF customMF) {
+        this.cifunctions.add(customMF);
+    }
+    
+    public void removeCustomInputFunctions() {
+        this.cifunctions.clear();
     }
 
     public Collection<String> getVariableNameList() {
@@ -51,8 +62,12 @@ public class BDFIS {
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
     }
-
+    
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
+        return evaluate(inVariables, null, debug);
+    }
+
+    public Map<String, Variable> evaluate(Map<String, Double> inVariables, Map<String, Object> ciInput, boolean debug) {
         Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
 
@@ -71,6 +86,11 @@ public class BDFIS {
         FunctionBlock acfb = fis.getFunctionBlock(FB_ACCESS_CONTROL_PHASE_NAME);
         vifb.reset();
         acfb.reset();
+        
+        // Call the custom functions
+        this.cifunctions.forEach((cifunction) -> {
+            inVariables.putAll(cifunction.process(vifb, ciInput));
+        });
 
         // Set inputs
         inVariables.keySet().forEach((varName) -> {

@@ -42,7 +42,9 @@ public class WikiHandler {
                 html.append("[[").append(page).append("]]</br>");
             }
         } else {
-            JSONObject filteredPage = connector.filterPage(pages.getJSONObject(0), userToken, "read", true);
+            //JSONObject filteredPage = connector.filterPage(pages.getJSONObject(0), userToken, "read");
+            JSONObject filteredPage = connector.flagWritableSections(pages.getJSONObject(0), userToken);
+            
             //append wrapper div
             html.append("<style type=\"text/css\">").append(".wrapit {word-wrap: break-word;}").append("</style>");
             html.append("<div class=\"wrapit\">\n");
@@ -50,7 +52,7 @@ public class WikiHandler {
 
             for (int i = 0; i < sections.length(); i++) {
                 JSONObject section = sections.getJSONObject(i);
-                html.append(String.format("<h%d>%s</h%d>\n", section.getInt("level"), section.getString("heading"), section.getInt("level")));
+                html.append(String.format("<h%d>%s</h%d>\n", section.getInt("level"), section.getString("heading") + (section.getBoolean("editable") ? " (Edit)" : ""), section.getInt("level")));
                 JSONArray paragraphs = section.getJSONArray("paragraphs");
                 for (int j = 0; j < paragraphs.length(); j++) {
                     html.append(String.format("<p>%s</p>\n", paragraphs.getString(j)));
