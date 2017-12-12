@@ -48,7 +48,7 @@ public class WikiHandler {
             //append wrapper div
             html.append("<style type=\"text/css\">").append(".wrapit {word-wrap: break-word;}").append("</style>");
             html.append("<div class=\"wrapit\">\n");
-            JSONArray sections = new JSONArray(filteredPage.getString("text"));
+            JSONArray sections = filteredPage.getJSONArray("text");
 
             for (int i = 0; i < sections.length(); i++) {
                 JSONObject section = sections.getJSONObject(i);

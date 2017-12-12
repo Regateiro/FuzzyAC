@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
@@ -43,14 +45,14 @@ public class BDFIS {
         } else {
             this.fis = FIS.load(fcl, false);
         }
-        
+
         this.cifunctions = new HashSet<>();
     }
-    
+
     public void registerCustomInputFunction(CustomMF customMF) {
         this.cifunctions.add(customMF);
     }
-    
+
     public void removeCustomInputFunctions() {
         this.cifunctions.clear();
     }
@@ -62,7 +64,7 @@ public class BDFIS {
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
     }
-    
+
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
         return evaluate(inVariables, null, debug);
     }
@@ -86,14 +88,14 @@ public class BDFIS {
         FunctionBlock acfb = fis.getFunctionBlock(FB_ACCESS_CONTROL_PHASE_NAME);
         vifb.reset();
         acfb.reset();
-        
+
         // Call the custom functions
         this.cifunctions.forEach((cifunction) -> {
             inVariables.putAll(cifunction.process(vifb, ciInput));
         });
 
-        // Set inputs
-        inVariables.keySet().forEach((varName) -> {
+        // Set inputs as needed
+        inVariables.keySet().stream().filter(((varName) -> getVariableNameList().contains(varName))).forEach((varName) -> {
             fis.setVariable(vifb.getName(), varName, inVariables.get(varName));
         });
 

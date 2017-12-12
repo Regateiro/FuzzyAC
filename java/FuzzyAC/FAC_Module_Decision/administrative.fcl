@@ -10,9 +10,10 @@ VAR_OUTPUT
 END_VAR
 	
 FUZZIFY Role
-	TERM Receptionist := 1 ;
-	TERM Administrator := 2 ;
-	TERM CEO := 3 ;
+	TERM None := 1 ;
+	TERM Receptionist := 2 ;
+	TERM Administrator := 3 ;
+	TERM CEO := 4 ;
 END_FUZZIFY
 
 FUZZIFY Years_Of_Service
@@ -33,7 +34,7 @@ RULEBLOCK Trust
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Role IS Receptionist) THEN Trust IS Low;
+RULE 0: IF (Role IS None) OR (Role IS Receptionist) THEN Trust IS Low;
 RULE 1: IF (Role IS CEO) THEN Trust IS High;
 RULE 2: IF (Role IS Administrator) AND (Years_Of_Service IS Few) THEN Trust IS Low;
 RULE 3: IF (Role IS Administrator) AND (Years_Of_Service IS Considerable) THEN Trust IS Medium;

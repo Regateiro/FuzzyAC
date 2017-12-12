@@ -75,10 +75,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
                 if (reply.getStatus() == ReplyStatus.OK) {
                     JSONObject user = new JSONObject(reply.getData().get(0));
                     IReply contribReply;
-                    if ((contribReply = registerContributions(
-                            user.getString("token"),
-                            user.getInt("_id")
-                    )).getStatus() == ReplyStatus.ERROR) {
+                    if ((contribReply = updateSubjectInformation(user)).getStatus() == ReplyStatus.ERROR) {
                         return contribReply;
                     }
                 }
@@ -111,6 +108,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
                     user.put("_id", userid);
                     user.put("token", token);
                     user.put("token_expires", new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)));
+                    user.put("attributes", new JSONObject());
                     user.remove("userid");
                     request.setResource(user.toString());
                     conn.send(request.convertToBytes());
@@ -138,21 +136,39 @@ public class InformationHandler implements IServerHandler<byte[], String> {
      * @param request The request with the subject information.
      * @return The storage process status.
      */
-    private IReply registerContributions(String token, int userid) {
+    private IReply updateSubjectInformation(JSONObject user) {
         IReply reply;
+        
+        String token = user.getString("token");
+        int userid = user.getInt("_id");
 
-        WikipediaUtil util = new WikipediaUtil();
+        // update the subject attributes
+        try {
+            JSONObject subjectAttributes = getUserAttributes(userid);
+            JSONObject subjectUpdate = new JSONObject().put("_id", userid).put("attributes", subjectAttributes);
+            conn.send(new BDFISRequest(token, userid, RequestType.AddSubject).setResource(subjectUpdate.toString()).convertToBytes());
+            
+            if ((reply = queue.take()).getStatus() == ReplyStatus.ERROR) {
+                return reply;
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(InformationHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         // determine the continue code
         String continueCode = null;
         try {
-            conn.send(new BDFISRequest(token, userid, RequestType.GetLastUserContribution).setResource(new JSONObject().put("timestamp", -1).toString()).convertToBytes());
+            conn.send(new BDFISRequest(token, userid, RequestType.GetLastUserContribution).setResource(
+                    new JSONObject().put("timestamp", -1).toString()
+            ).convertToBytes());
+            
             if ((reply = queue.take()).getStatus() == ReplyStatus.ERROR) {
                 return reply;
             }
-            if(!reply.getData().isEmpty()) {
+            
+            if (!reply.getData().isEmpty()) {
                 JSONObject contrib = new JSONObject(reply.getData().get(0));
-                continueCode = String.format("%s|%d", 
+                continueCode = String.format("%s|%d",
                         this.toWikiDF.format(fromMongoDBDF.parse(contrib.getString("timestamp"))),
                         contrib.getInt("_id"));
             }
@@ -160,6 +176,8 @@ public class InformationHandler implements IServerHandler<byte[], String> {
             Logger.getLogger(InformationHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        // Query Wikipedia for all new contributions and add them to mongo
+        WikipediaUtil util = new WikipediaUtil();
         JSONArray batchContribs = util.GetAllUserContributions(String.valueOf(userid), continueCode, null);
 
         do {
@@ -187,7 +205,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
             }
         } while (!((batchContribs = util.next()).length() == 0));
 
-        return new BDFISReply(ReplyStatus.OK, "");
+        return new BDFISReply();
     }
 
     /**
@@ -218,4 +236,22 @@ public class InformationHandler implements IServerHandler<byte[], String> {
         }
         queue.add(reply);
     };
+
+    /**
+     * TODO: Use actual data sources. Currently adds random attributes.
+     * @param userid
+     * @return 
+     */
+    private JSONObject getUserAttributes(int userid) {
+        JSONObject attr = new JSONObject();
+        
+        attr.put("Number_Of_Publications", Math.floor(Math.random() * 20));
+        attr.put("Number_Of_Citations", Math.floor(Math.random() * 100));
+        attr.put("Role", Math.floor(Math.random() * 4) + 1);
+        attr.put("Years_Of_Service", Math.floor(Math.random() * 20));
+        attr.put("Years_Partened", Math.floor(Math.random() * 20));
+        attr.put("Number_Of_Projects_Funded", Math.floor(Math.random() * 20));
+        
+        return attr;
+    }
 }

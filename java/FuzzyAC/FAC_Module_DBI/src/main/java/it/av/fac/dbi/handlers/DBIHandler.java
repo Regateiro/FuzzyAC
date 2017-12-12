@@ -97,7 +97,7 @@ public class DBIHandler implements IServerHandler<byte[], String> {
             } else if (request.getResource() != null){
                 reply = DocumentDBI.getInstance(collection).findResource(new JSONObject(request.getResource()));
             } else {
-                reply = DocumentDBI.getInstance(collection).findResource(new JSONObject().append("token", request.getUserToken()));
+                reply = DocumentDBI.getInstance(collection).findResource(new JSONObject().put("token", request.getUserToken()));
             }
         } catch (IOException ex) {
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());

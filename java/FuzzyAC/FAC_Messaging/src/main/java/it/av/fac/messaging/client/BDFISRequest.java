@@ -40,6 +40,7 @@ public class BDFISRequest implements IRequest {
         this.userToken = userToken;
         this.resourceId = resourceId;
         this.requestType = requestType;
+        this.resource = null;
     }
 
     @Override
@@ -78,7 +79,7 @@ public class BDFISRequest implements IRequest {
                 obj.opt("resource_id"),
                 RequestType.valueOf(obj.optString("requesttype"))
         );
-        request.setResource(obj.optString("resource"));
+        request.setResource(obj.optString("resource", null));
 
         return request;
     }
