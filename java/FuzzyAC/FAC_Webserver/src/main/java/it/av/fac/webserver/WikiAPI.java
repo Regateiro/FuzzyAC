@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -50,8 +51,8 @@ public class WikiAPI extends HttpServlet {
                     System.out.println("Received query for page: " + page);
 
                     html = handler.fetch(userToken, page);
-                    html = html.replaceAll("\\[\\[([^]]*)\\|([^]]*)\\]\\]", "<a href=\"/FAC_Webserver/WikiAPI/$1\">$2</a>");
-                    html = html.replaceAll("\\[\\[([^]]*)\\]\\]", "<a href=\"/FAC_Webserver/WikiAPI/$1\">$1</a>");
+                    html = html.replaceAll("\\[\\[([^]]*)\\|([^]]*)\\]\\]", String.format("<a href=\"/FAC_Webserver/WikiAPI/$1?token=%s\">$2</a>", URLEncoder.encode(userToken, "UTF-8")));
+                    html = html.replaceAll("\\[\\[([^]]*)\\]\\]", String.format("<a href=\"/FAC_Webserver/WikiAPI/$1?token=%s\">$1</a>", URLEncoder.encode(userToken, "UTF-8")));
                 }
             } catch (UnsupportedEncodingException ex) {
                 html = handler.generateErrorPage(ex);

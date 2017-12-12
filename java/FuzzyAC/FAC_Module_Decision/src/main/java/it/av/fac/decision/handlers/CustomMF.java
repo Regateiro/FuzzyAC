@@ -21,11 +21,10 @@ public abstract class CustomMF {
     /**
      * Generate all membership degrees given the input for this function.
      *
-     * @param ciInput A set of inputs indexed by name.
      * @return The membership degrees of the linguistic terms this custom
      * function handles for each input variable.
      */
-    protected abstract Map<String, Map<String, Double>> processInternal(Map<String, Object> ciInput);
+    protected abstract Map<String, Map<String, Double>> processInternal();
 
     /**
      * Generate all membership degrees given the input for this function. It
@@ -33,12 +32,11 @@ public abstract class CustomMF {
      *
      * @param fb The function block of the FIS where the membership degrees are
      * to be used.
-     * @param ciInput A set of inputs indexed by name.
      * @return The membership degrees of the linguistic terms this custom
      * function handles.
      */
-    public final Map<String, Double> process(FunctionBlock fb, Map<String, Object> ciInput) {
-        Map<String, Map<String, Double>> ret = processInternal(ciInput);
+    public final Map<String, Double> process(FunctionBlock fb) {
+        Map<String, Map<String, Double>> ret = processInternal();
         return mapToMembershipFunctions(fb, ret);
     }
 

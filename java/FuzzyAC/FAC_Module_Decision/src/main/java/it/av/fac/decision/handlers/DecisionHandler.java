@@ -81,7 +81,8 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         IReply infoReply = requestInformation(infoRequest);
 
         Map<String, Double> userVariables = new HashMap<>();
-        JSONObject userAttributes = new JSONObject(infoReply.getData().get(0)).getJSONObject("attributes");
+        JSONObject user = new JSONObject(infoReply.getData().get(0));
+        JSONObject userAttributes = user.getJSONObject("attributes");
         userVariables.put("Number_Of_Publications", userAttributes.optDouble("Number_Of_Publications", 12.0));
         userVariables.put("Number_Of_Citations", userAttributes.optDouble("Number_Of_Citations", 50.0));
         userVariables.put("Role", userAttributes.optDouble("Role", 0.0));
@@ -90,6 +91,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         userVariables.put("Number_Of_Projects_Funded", userAttributes.optDouble("Number_Of_Projects_Funded", 0.0));
         
         infoRequest = new BDFISRequest(request.getUserToken(), null, RequestType.GetUserContributions);
+        infoRequest.setResource(new JSONObject().put("userid", user.getInt("_id")).toString());
         infoReply = requestInformation(infoRequest);
         CustomMF cmf = new ORESCustomMF(infoReply.getData());
 

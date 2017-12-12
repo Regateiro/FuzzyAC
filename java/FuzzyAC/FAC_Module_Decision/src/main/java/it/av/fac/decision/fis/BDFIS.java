@@ -15,8 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
@@ -66,10 +64,6 @@ public class BDFIS {
     }
 
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
-        return evaluate(inVariables, null, debug);
-    }
-
-    public Map<String, Variable> evaluate(Map<String, Double> inVariables, Map<String, Object> ciInput, boolean debug) {
         Map<String, Variable> ret = new HashMap<>();
         List<Variable> outVariables = new ArrayList<>();
 
@@ -91,7 +85,7 @@ public class BDFIS {
 
         // Call the custom functions
         this.cifunctions.forEach((cifunction) -> {
-            inVariables.putAll(cifunction.process(vifb, ciInput));
+            inVariables.putAll(cifunction.process(vifb));
         });
 
         // Set inputs as needed
