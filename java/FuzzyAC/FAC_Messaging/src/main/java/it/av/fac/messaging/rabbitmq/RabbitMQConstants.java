@@ -7,7 +7,7 @@ package it.av.fac.messaging.rabbitmq;
 
 /**
  * Complete list of queues to use by the architecture.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public abstract class RabbitMQConstants {
     

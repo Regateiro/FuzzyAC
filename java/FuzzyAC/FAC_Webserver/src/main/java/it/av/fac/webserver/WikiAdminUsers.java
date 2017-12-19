@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WikiAdminUsers extends HttpServlet {
 

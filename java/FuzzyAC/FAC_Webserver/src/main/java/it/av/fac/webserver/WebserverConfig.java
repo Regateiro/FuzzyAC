@@ -7,7 +7,7 @@ package it.av.fac.webserver;
 
 /**
  * TODO: Change this into configuration files.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WebserverConfig {
     public static final String MODULE_KEY = "webserver";

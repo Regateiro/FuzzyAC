@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Does nothing with the results.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class NullHandler implements IResultHandler {
 

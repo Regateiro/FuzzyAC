@@ -7,7 +7,7 @@ package it.av.fac.messaging.util;
 
 /**
  * TODO: Change this into configuration files.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class MessagingConfig {
     public static final String PROPERTIES_FILE = System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Messaging\\messaging.properties";

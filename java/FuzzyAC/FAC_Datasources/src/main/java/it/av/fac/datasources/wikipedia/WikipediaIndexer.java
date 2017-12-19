@@ -20,7 +20,7 @@ import org.xml.sax.SAXException;
 /**
  * Splits a XML file into manageable chunks.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WikipediaIndexer {
 

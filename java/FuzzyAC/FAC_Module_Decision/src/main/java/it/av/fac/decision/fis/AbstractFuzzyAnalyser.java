@@ -14,7 +14,7 @@ import java.util.List;
  * Abstract class used to analyze the inputs that get a certain permission
  * decision.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public abstract class AbstractFuzzyAnalyser {
 

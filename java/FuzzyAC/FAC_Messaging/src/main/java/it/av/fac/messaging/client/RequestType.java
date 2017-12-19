@@ -7,7 +7,7 @@ package it.av.fac.messaging.client;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum RequestType {
     GetPolicy, 

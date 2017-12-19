@@ -9,7 +9,7 @@ import it.av.fac.decision.util.variables.Contribution;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum Decision {
     Granted, Denied;

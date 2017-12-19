@@ -7,7 +7,7 @@ package it.av.fac.information.handlers;
 
 /**
  * TODO: Change this into configuration files.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class InformationConfig {
     public static final String MODULE_KEY = "information";

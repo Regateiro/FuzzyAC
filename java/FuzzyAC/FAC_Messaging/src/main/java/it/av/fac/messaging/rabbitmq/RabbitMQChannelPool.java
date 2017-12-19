@@ -16,7 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * Stores channels for reuse.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class RabbitMQChannelPool {
 

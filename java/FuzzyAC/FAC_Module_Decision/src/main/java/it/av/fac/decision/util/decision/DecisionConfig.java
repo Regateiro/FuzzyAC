@@ -7,7 +7,7 @@ package it.av.fac.decision.util.decision;
 
 /**
  * TODO: Change this into configuration files.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class DecisionConfig {
     public static final String MODULE_KEY = "decision";

@@ -24,7 +24,7 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class SBDFISAuditor extends AbstractFuzzyAnalyser {
 

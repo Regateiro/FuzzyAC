@@ -12,18 +12,18 @@
     <modules>
         <module>FAC_Messaging</module>
         <module>FAC_FLEngine</module>
-        <module>FAC_Module_Enforcement</module>
         <module>FAC_Module_Decision</module>
         <module>FAC_Module_Information</module>
         <module>FAC_Module_Administration</module>
         <module>FAC_Module_PolicyRetrieval</module>
         <module>FAC_Driver</module>
         <module>FAC_Client</module>
-        <module>FAC_CognitiveEngine</module>
         <module>FAC_Module_RIaC</module>
         <module>FAC_Webserver</module>
         <module>FAC_Datasources</module>
         <module>FAC_Module_DBI</module>
         <module>FAC_Module_Monitor</module>
+        <module>FAC_Enforcement</module>
+        <module>FAC_DFCL</module>
     </modules>
 </project>

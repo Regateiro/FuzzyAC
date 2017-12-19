@@ -9,7 +9,7 @@ import java.io.Closeable;
 
 /**
  * User connection interface to connect to the central messaging node.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface IFACConnection extends Closeable {
     /**

@@ -7,7 +7,7 @@ package it.av.fac.messaging.interfaces;
 
 /**
  * An interface to handle messages.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  * @param <R> The type of the message to handle.
  */
 public interface IClientHandler<R> {

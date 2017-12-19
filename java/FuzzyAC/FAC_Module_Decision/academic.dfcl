@@ -1,0 +1,90 @@
+FUNCTION_BLOCK VariableInference
+	VAR_INPUT
+		Number_Of_Publications	:	REAL;
+		Number_Of_Citations		:	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		Expertise	:	REAL ;
+	END_VAR
+		
+	FUZZIFY Number_Of_Publications
+		TERM Low := (3, 1) (5, 0) ;
+		TERM Considerable := (3, 0) (5, 1) (13, 1) (18, 0) ;
+		TERM High := (10, 0) (15, 1) ;
+	END_FUZZIFY
+
+	FUZZIFY Number_Of_Citations
+		TERM Low := (0, 1) (4, 1) (10, 0) ;
+		TERM Considerable := (4, 0) (10, 1) (40, 1) (80, 0) ;
+		TERM High := (30, 0) (100, 1) ;
+	END_FUZZIFY
+
+	DYNAMIC_FUZZIFY Draft_Quality
+		TERM OK ;
+		TERM Spam ;
+		TERM Vandalism ;
+		TERM Attack ;
+	END_DYNAMIC_FUZZIFY
+
+	DYNAMIC_FUZZIFY Damaging
+		TERM True ;
+		TERM False ;
+	END_DYNAMIC_FUZZIFY
+
+	DYNAMIC_FUZZIFY Good_Faith
+		TERM True ;
+		TERM False ;
+	END_DYNAMIC_FUZZIFY
+
+	DEFUZZIFY Expertise
+		TERM Low := 1 ;
+		TERM Medium := 2 ;
+		TERM High := 3 ;
+		TERM Very_High := 4 ;
+		METHOD: COGS ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK Expertise
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 0: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
+		RULE 1: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS Considerable) THEN Expertise IS High;
+		RULE 2: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS High) THEN Expertise IS Very_High;
+		RULE 3: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
+		RULE 4: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS Considerable) THEN Expertise IS Medium;
+		RULE 5: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS High) THEN Expertise IS High;
+		RULE 6: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
+		RULE 7: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS Considerable) THEN Expertise IS Medium;
+		RULE 8: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS High) THEN Expertise IS Very_High;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK AccessControl
+	VAR_INPUT
+		Expertise	:	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		Write	: 	REAL;
+	END_VAR
+	
+	DIRECT_CONNECTOR
+		Expertise;
+	END_DIRECT_CONNECTOR
+	
+	DEFUZZIFY Write
+		TERM Deny := 0 ;
+		TERM Grant := 1 ;
+		METHOD: COGS ;
+	END_DEFUZZIFY
+
+	RULEBLOCK Write
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 0: IF (Expertise IS Very_Low) OR (Expertise IS Low) OR (Expertise IS Medium_Low) OR (Expertise IS Medium) OR (Expertise IS Medium_High) THEN Write IS Deny;
+		RULE 1: IF (Expertise IS High) OR (Expertise IS Very_High) THEN Write IS Grant;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK

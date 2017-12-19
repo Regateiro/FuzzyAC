@@ -25,7 +25,7 @@ import org.json.JSONObject;
 /**
  * Class responsible for handling RIaC requests.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class DBIHandler implements IServerHandler<byte[], String> {
 

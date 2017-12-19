@@ -31,7 +31,7 @@ import org.json.JSONObject;
 /**
  * Class responsible for handling query requests.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class BDFISConnector {
 

@@ -7,7 +7,7 @@ package it.av.fac.decision.util.variables;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum SlopeType {
     POSITIVE, NEGATIVE, FLAT, UNKNOWN;

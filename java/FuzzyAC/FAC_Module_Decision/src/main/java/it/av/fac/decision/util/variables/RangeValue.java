@@ -14,7 +14,7 @@ import java.util.List;
  * max and then down once the max value is reached. Helps with making sure that
  * only one variable at a tie is updated and only by a step of 1;
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class RangeValue {
 

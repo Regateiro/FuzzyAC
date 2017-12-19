@@ -10,7 +10,7 @@ import java.io.IOException;
 
 /**
  * Interface for the Request objects.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface IRequest {
     public String getUserToken();

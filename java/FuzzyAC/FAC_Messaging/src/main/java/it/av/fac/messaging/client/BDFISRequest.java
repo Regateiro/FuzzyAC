@@ -12,7 +12,7 @@ import org.xerial.snappy.Snappy;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class BDFISRequest implements IRequest {
 

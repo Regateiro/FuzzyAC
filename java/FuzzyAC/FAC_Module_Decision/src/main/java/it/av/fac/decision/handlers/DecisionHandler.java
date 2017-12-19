@@ -7,6 +7,7 @@ package it.av.fac.decision.handlers;
 
 import it.av.fac.decision.fis.BDFIS;
 import it.av.fac.decision.util.decision.DecisionConfig;
+import it.av.fac.dfcl.DynamicFunction;
 import it.av.fac.messaging.client.BDFISDecision;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
@@ -35,7 +36,7 @@ import org.json.JSONObject;
 /**
  * Class responsible for handling query requests.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class DecisionHandler implements IServerHandler<byte[], String> {
 
@@ -93,7 +94,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         infoRequest = new BDFISRequest(request.getUserToken(), null, RequestType.GetUserContributions);
         infoRequest.setResource(new JSONObject().put("userid", user.getInt("_id")).toString());
         infoReply = requestInformation(infoRequest);
-        CustomMF cmf = new ORESCustomMF(infoReply.getData());
+        DynamicFunction df = new ORES(infoReply.getData());
 
         System.out.println("Evaluating user permissions...");
 
@@ -103,8 +104,8 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
                 if (fcl != null && !fcl.equals("")) {
                     Map<String, Double> neededVariables = new HashMap<>(userVariables);
                     BDFIS feval = new BDFIS(fcl, true);
-                    feval.registerCustomInputFunction(cmf);
-                    userVariables.keySet().stream().filter((varName) -> !feval.getVariableNameList().contains(varName)).forEach((notNeededVarName) -> {
+                    feval.registerDynamicFunction(df);
+                    userVariables.keySet().stream().filter((varName) -> !feval.getInputVariableNameList().contains(varName)).forEach((notNeededVarName) -> {
                         neededVariables.remove(notNeededVarName);
                     });
                     Map<String, Variable> evaluation = feval.evaluate(neededVariables, false);
@@ -114,7 +115,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
                 } else {
                     addDecisionToReplySync(decisionReply, securityLabel, "*", true);
                 }
-            } catch (RecognitionException ex) {
+            } catch (IOException | RecognitionException ex) {
                 Logger.getLogger(DecisionHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         });

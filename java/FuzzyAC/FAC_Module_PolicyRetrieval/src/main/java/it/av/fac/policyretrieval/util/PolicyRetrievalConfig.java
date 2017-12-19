@@ -7,7 +7,7 @@ package it.av.fac.policyretrieval.util;
 
 /**
  * TODO: Change this into configuration files.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class PolicyRetrievalConfig {
     public static final String MODULE_KEY = "policyretrieval";

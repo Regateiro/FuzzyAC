@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Allows to send and receive messages within the FAC architecture.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class RabbitMQServer implements IFACConnection {
 

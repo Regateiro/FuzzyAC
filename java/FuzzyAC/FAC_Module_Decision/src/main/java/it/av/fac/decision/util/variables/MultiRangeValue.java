@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class MultiRangeValue {
 

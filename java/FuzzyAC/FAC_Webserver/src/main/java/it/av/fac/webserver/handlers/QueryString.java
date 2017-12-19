@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class QueryString {
 

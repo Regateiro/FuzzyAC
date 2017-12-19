@@ -9,7 +9,7 @@ import it.av.fac.riac.classifier.IClassifier;
 
 /**
  * Reads and converts XML files from the Wikipedia dumps, classifying them.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WikiXMLReader extends Thread {
 

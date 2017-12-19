@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 /**
  * Launches the DBI server.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class DBIServer {
     public static void main(String[] args) {

@@ -5,6 +5,7 @@
  */
 package it.av.fac.decision.handlers;
 
+import it.av.fac.dfcl.DynamicFunction;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,16 +16,16 @@ import org.json.JSONObject;
 /**
  * Generates ORES related linguistic term membership degrees.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
-public class ORESCustomMF extends CustomMF {
+public class ORES extends DynamicFunction {
 
     private static final String DRAFT_QUALITY = "Draft_Quality";
     private static final String DAMAGING = "Damaging";
     private static final String GOOD_FAITH = "Good_Faith";
     private final List<String> oresUserHistory;
 
-    public ORESCustomMF(List<String> oresUserHistory) {
+    public ORES(List<String> oresUserHistory) {
         this.oresUserHistory = oresUserHistory;
     }
 

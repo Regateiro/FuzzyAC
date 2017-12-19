@@ -19,7 +19,7 @@ import it.av.fac.decision.util.handlers.IResultHandler;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
@@ -56,7 +56,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         List<String> inputVars = new ArrayList<>();
 
         //Retrieves the variables for the VariableInference function block, filtering for only used input variables and adds their name to the inputVars list.
-        bdfis.getVariableNameList().stream().filter((varName) -> this.vda.variableIsUsed(varName)).forEach((varName) -> inputVars.add(varName));
+        bdfis.getInputVariableNameList().stream().filter((varName) -> this.vda.variableIsUsed(varName)).forEach((varName) -> inputVars.add(varName));
 
         if (order != null) {
             //do ordering

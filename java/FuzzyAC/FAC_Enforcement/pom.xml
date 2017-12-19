@@ -6,13 +6,13 @@
         <artifactId>FuzzyAC</artifactId>
         <version>0.0.1</version>
     </parent>
-    <artifactId>FAC_Module_Enforcement</artifactId>
+    <artifactId>FAC_Enforcement</artifactId>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    <name>FAC_Module_Enforcement</name>
+    <name>FAC_Enforcement</name>
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

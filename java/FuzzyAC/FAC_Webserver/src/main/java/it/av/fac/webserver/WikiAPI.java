@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Entry point to the architecture.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WikiAPI extends HttpServlet {
 

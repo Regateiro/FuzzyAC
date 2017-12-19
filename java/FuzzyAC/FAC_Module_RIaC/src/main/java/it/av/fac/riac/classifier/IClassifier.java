@@ -9,7 +9,7 @@ import it.av.fac.messaging.client.interfaces.IRequest;
 
 /**
  * Interface for the classifier classes.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface IClassifier {
     public void classify(IRequest request);

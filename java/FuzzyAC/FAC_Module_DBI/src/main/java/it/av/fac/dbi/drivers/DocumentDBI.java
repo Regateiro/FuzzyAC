@@ -32,7 +32,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class DocumentDBI implements Closeable {
     

@@ -20,7 +20,7 @@ import org.bson.Document;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class FieldUpdater {
 

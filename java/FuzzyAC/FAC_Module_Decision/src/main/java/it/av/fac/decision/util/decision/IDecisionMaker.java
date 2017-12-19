@@ -9,7 +9,7 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
 
 /**
  * Makes a decision based on the value associated with the output value from the FIS.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface IDecisionMaker {
     public Decision makeDecision(Variable fisOutput);

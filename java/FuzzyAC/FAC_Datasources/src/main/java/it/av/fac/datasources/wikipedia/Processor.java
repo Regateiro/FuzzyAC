@@ -7,7 +7,7 @@ package it.av.fac.datasources.wikipedia;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface Processor<T> {
     public void process(T a);

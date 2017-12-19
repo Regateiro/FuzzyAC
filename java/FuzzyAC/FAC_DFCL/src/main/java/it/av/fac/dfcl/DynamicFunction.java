@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.decision.handlers;
+package it.av.fac.dfcl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,9 +14,9 @@ import net.sourceforge.jFuzzyLogic.membership.Value;
 /**
  * Custom Membership Function
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
-public abstract class CustomMF {
+public abstract class DynamicFunction {
 
     /**
      * Generate all membership degrees given the input for this function.

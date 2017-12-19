@@ -14,7 +14,7 @@ import java.util.Queue;
 /**
  * Can be used to validate if two sets of results are exactly the same.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class ValidatorHandler implements IResultHandler {
 

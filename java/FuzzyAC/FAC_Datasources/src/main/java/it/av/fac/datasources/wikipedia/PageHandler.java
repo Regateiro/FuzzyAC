@@ -13,7 +13,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class PageHandler extends DefaultHandler {
 

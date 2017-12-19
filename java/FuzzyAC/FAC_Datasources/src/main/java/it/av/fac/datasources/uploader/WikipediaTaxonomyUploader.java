@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WikipediaTaxonomyUploader {
 

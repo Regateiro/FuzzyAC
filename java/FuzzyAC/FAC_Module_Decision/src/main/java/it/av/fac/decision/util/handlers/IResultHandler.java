@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface IResultHandler extends Closeable {
     public void handleResults(List<DecisionResult> results);

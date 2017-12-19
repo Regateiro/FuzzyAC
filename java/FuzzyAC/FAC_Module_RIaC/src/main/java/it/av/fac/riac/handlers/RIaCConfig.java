@@ -7,7 +7,7 @@ package it.av.fac.riac.handlers;
 
 /**
  * TODO: Change this into configuration files.
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class RIaCConfig {
     public static final String MODULE_KEY = "riac";

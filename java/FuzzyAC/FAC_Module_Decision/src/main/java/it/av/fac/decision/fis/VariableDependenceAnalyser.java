@@ -21,7 +21,7 @@ import net.sourceforge.jFuzzyLogic.rule.RuleTerm;
 /**
  * Variable Dependence Analyser.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class VariableDependenceAnalyser {
 

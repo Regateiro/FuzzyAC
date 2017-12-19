@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 /**
  * Class responsible for handling query requests.
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
 

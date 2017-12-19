@@ -17,7 +17,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class RabbitMQConnectionWrapper implements Closeable {
 
