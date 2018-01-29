@@ -6,13 +6,13 @@
         <artifactId>FuzzyAC</artifactId>
         <version>0.0.1</version>
     </parent>
-    <artifactId>FAC_FLEngine</artifactId>
+    <artifactId>FAC_MLEngine</artifactId>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    <name>FAC_FLEngine</name>
+    <name>FAC_MLEngine</name>
     <dependencies>
         <dependency>
             <groupId>org.sevarac</groupId>
