@@ -32,3 +32,6 @@ hs_err_pid*
 /java/WikipediaClient/target/
 /java/FuzzyAC/FAC_Enforcement/target/
 /java/FuzzyAC/FAC_DFCL/target/
+!/java/FuzzyAC/FAC_FLEngine/src/main/resources/neuroph-core-2.94.jar
+!/java/FuzzyAC/FAC_FLEngine/src/main/resources/neuroph-core-2.94-javadoc.jar
+!/java/FuzzyAC/FAC_FLEngine/src/main/resources/neuroph-core-2.94-sources.jar
