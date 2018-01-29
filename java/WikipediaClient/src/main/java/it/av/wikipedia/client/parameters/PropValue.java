@@ -7,7 +7,7 @@ package it.av.wikipedia.client.parameters;
 
 /**
  * Which properties to get for the queried pages.
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum PropValue {
     /**

@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public interface IStorage<T> {
     public boolean insert(T data);

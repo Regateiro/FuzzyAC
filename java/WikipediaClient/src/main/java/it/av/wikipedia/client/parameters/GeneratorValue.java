@@ -7,7 +7,7 @@ package it.av.wikipedia.client.parameters;
 
 /**
  * Get the list of pages to work on by executing the specified query module.
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum GeneratorValue {
 

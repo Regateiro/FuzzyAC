@@ -22,7 +22,7 @@ import org.apache.http.util.EntityUtils;
 
 /**
  *
- * @author Diogo Regateiro
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class WikipediaClient {
 

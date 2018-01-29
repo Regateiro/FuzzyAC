@@ -8,7 +8,7 @@ package it.av.wikipedia.client.parameters;
 /**
  * Which lists to get.
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum ListValue {
     /**

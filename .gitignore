@@ -30,3 +30,5 @@ hs_err_pid*
 !/java/FuzzyAC/FAC_Module_Decision/src/main/resources/jFuzzyLogic_core.jar
 !/java/FuzzyAC/FAC_Module_Decision/src/main/resources/jFuzzyLogic.jar
 /java/WikipediaClient/target/
+/java/FuzzyAC/FAC_Enforcement/target/
+/java/FuzzyAC/FAC_DFCL/target/

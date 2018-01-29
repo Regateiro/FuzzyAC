@@ -7,7 +7,7 @@ package it.av.wikipedia.client.parameters;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum FormatValue {
     /**

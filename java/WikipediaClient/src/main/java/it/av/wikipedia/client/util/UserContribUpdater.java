@@ -19,7 +19,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class UserContribUpdater extends TimerTask {
 

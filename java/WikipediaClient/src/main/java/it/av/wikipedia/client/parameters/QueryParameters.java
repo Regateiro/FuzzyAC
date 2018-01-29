@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 /**
  * https://en.wikipedia.org/w/api.php?action=help&modules=query
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public class QueryParameters {
 

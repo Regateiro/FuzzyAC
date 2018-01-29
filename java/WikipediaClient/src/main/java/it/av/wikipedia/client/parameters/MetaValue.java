@@ -8,7 +8,7 @@ package it.av.wikipedia.client.parameters;
 /**
  * Which metadata to get.
  *
- * @author DiogoJosé
+ * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
 public enum MetaValue {
 
