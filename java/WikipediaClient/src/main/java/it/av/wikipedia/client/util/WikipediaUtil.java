@@ -149,6 +149,38 @@ public class WikipediaUtil {
 
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
+    
+    public JSONArray GetRecentUserContributions(String userid, int numContribs, String continueCode) {
+        params = new QueryParameters();
+        params.format(FormatValue.json, true);
+        params.list(ListValue.usercontribs);
+        params.subparameter("uclimit", String.valueOf(numContribs)); // can request 500 at a time
+        params.subparameter("ucprop", "ids|title|timestamp|comment|size|sizediff|flags|tags|oresscores");
+        params.subparameter("ucuserids", userid);
+        params.subparameter("ucdir", "older");
+        params.subparameter("maxlag", "5");
+        queryParam = "usercontribs";
+        continueLabel = "uccontinue";
+
+        if (continueCode != null && !continueCode.equalsIgnoreCase("")) {
+            batchComplete = false;
+            params.subparameter(continueLabel, continueCode);
+        }
+
+        JSONObject reply;
+        do {
+            reply = new JSONObject(WikipediaClient.Query(params));
+        } while (isNonQueryReply(reply));
+
+        if (reply.keySet().contains("continue")) {
+            batchComplete = false;
+            params.subparameter(continueLabel, reply.getJSONObject("continue").getString(continueLabel));
+        } else {
+            batchComplete = true;
+        }
+
+        return reply.getJSONObject("query").getJSONArray(queryParam);
+    }
 
     private boolean isNonQueryReply(JSONObject reply) {
         if (!reply.keySet().contains("query")) {
