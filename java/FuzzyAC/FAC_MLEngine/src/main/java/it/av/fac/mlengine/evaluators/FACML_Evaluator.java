@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.mlengine;
+package it.av.fac.mlengine.evaluators;
 
 /**
  *
  * @author Regateiro
  */
-public class NewClass {
+public abstract class FACML_Evaluator {
     
 }
