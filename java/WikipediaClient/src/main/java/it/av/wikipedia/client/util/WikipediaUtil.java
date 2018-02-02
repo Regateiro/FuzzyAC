@@ -8,6 +8,7 @@ package it.av.wikipedia.client.util;
 import it.av.wikipedia.client.WikipediaClient;
 import it.av.wikipedia.client.parameters.FormatValue;
 import it.av.wikipedia.client.parameters.ListValue;
+import it.av.wikipedia.client.parameters.PropValue;
 import it.av.wikipedia.client.parameters.QueryParameters;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,6 +23,7 @@ public class WikipediaUtil {
 
     private QueryParameters params;
     private String continueLabel;
+    private String[] path;
     private String queryParam;
     private boolean batchComplete;
 
@@ -53,7 +55,14 @@ public class WikipediaUtil {
                 batchComplete = true;
             }
 
-            ret = reply.getJSONObject("query").getJSONArray(queryParam);
+            reply = reply.getJSONObject("query");
+            if(path != null) {
+                for(String step : path) {
+                    reply = reply.getJSONObject(step);
+                }
+            }
+            
+            ret = reply.getJSONArray(queryParam);
         }
 
         return ret;
@@ -72,6 +81,7 @@ public class WikipediaUtil {
         params.subparameter("aulimit", "500"); // can request 500 at a time
         params.subparameter("auprop", "editcount");
         params.subparameter("maxlag", "5");
+        path = null;
         queryParam = "allusers";
         continueLabel = "aufrom";
 
@@ -101,6 +111,7 @@ public class WikipediaUtil {
         params.list(ListValue.users);
         params.subparameter("ususers", userName);
         params.subparameter("maxlag", "5");
+        path = null;
         queryParam = "users";
 
         JSONObject reply;
@@ -127,6 +138,7 @@ public class WikipediaUtil {
             params.subparameter("ucend", ucend);
         }
         params.subparameter("maxlag", "5");
+        path = null;
         queryParam = "usercontribs";
         continueLabel = "uccontinue";
 
@@ -159,6 +171,7 @@ public class WikipediaUtil {
         params.subparameter("ucuserids", userid);
         params.subparameter("ucdir", "older");
         params.subparameter("maxlag", "5");
+        path = null;
         queryParam = "usercontribs";
         continueLabel = "uccontinue";
 
@@ -180,6 +193,40 @@ public class WikipediaUtil {
         }
 
         return reply.getJSONObject("query").getJSONArray(queryParam);
+    }
+    
+    public JSONArray GetPageContributionsAfterRevision(String pageid, String revid, int numContribs, String continueCode) {
+        params = new QueryParameters();
+        params.format(FormatValue.json, true);
+        params.prop(PropValue.revisions);
+        params.subparameter("pageids", pageid);
+        params.subparameter("rvlimit", String.valueOf(numContribs)); // can request 500 at a time
+        params.subparameter("rvprop", "ids|timestamp|userid|comment|size|flags|flagged|tags|oresscores");
+        params.subparameter("rvstartid", revid);
+        params.subparameter("rvdir", "newer");
+        params.subparameter("maxlag", "5");
+        path = new String[] {"pages", pageid};
+        queryParam = "revisions";
+        continueLabel = "rvcontinue";
+
+        if (continueCode != null && !continueCode.equalsIgnoreCase("")) {
+            batchComplete = false;
+            params.subparameter(continueLabel, continueCode);
+        }
+
+        JSONObject reply;
+        do {
+            reply = new JSONObject(WikipediaClient.Query(params));
+        } while (isNonQueryReply(reply));
+
+        if (reply.keySet().contains("continue")) {
+            batchComplete = false;
+            params.subparameter(continueLabel, reply.getJSONObject("continue").getString(continueLabel));
+        } else {
+            batchComplete = true;
+        }
+
+        return reply.getJSONObject("query").getJSONObject("pages").getJSONObject(pageid).getJSONArray(queryParam);
     }
 
     private boolean isNonQueryReply(JSONObject reply) {
