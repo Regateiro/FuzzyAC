@@ -76,8 +76,7 @@ public class TrainingDatasetCreator {
         }
 
         // For each user
-        try (BufferedReader in_users = new BufferedReader(new FileReader(usersFile));
-                PrintWriter out = new PrintWriter(new FileWriter(contribsFile, true))) {
+        try (BufferedReader in_users = new BufferedReader(new FileReader(usersFile))) {
             String line;
             while ((line = in_users.readLine()) != null) {
                 JSONObject user = new JSONObject(line);
@@ -93,10 +92,13 @@ public class TrainingDatasetCreator {
                 // Get the most recent contributions
                 System.out.println(" - Getting recent contributions from user [" + user.getString("name") + "]...");
                 JSONArray contribs = getUserRecentContributions(String.valueOf(user.getInt("userid")));
-                for (int i = 0; i < contribs.length(); i++) {
-                    out.println(contribs.getJSONObject(i));
+
+                try (PrintWriter out = new PrintWriter(new FileWriter(contribsFile, true))) {
+                    for (int i = 0; i < contribs.length(); i++) {
+                        out.println(contribs.getJSONObject(i));
+                    }
+                    out.flush();
                 }
-                out.flush();
             }
         } catch (IOException ex) {
             Logger.getLogger(TrainingDatasetCreator.class.getName()).log(Level.SEVERE, null, ex);

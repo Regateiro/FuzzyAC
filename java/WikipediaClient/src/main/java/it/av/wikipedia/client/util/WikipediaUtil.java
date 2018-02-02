@@ -230,7 +230,7 @@ public class WikipediaUtil {
     }
 
     private boolean isNonQueryReply(JSONObject reply) {
-        if (!reply.keySet().contains("query")) {
+        if (reply != null && !reply.keySet().contains("query")) {
             try {
                 System.out.print(reply.toString());
                 Thread.sleep(5000);
