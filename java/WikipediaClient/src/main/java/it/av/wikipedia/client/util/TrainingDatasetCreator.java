@@ -118,11 +118,14 @@ public class TrainingDatasetCreator {
                 System.out.println(" - Getting next contributions on the page for revision [" + rev.getInt("revid") + "]...");
                 JSONArray contribs = getPageContributionsAfterRevision(String.valueOf(rev.getInt("pageid")), String.valueOf(rev.getInt("revid")));
 
-                try (PrintWriter out = new PrintWriter(new FileWriter(new File(pagerevsFolder, String.valueOf(rev.getInt("revid"))), true))) {
-                    for (int i = 0; i < contribs.length(); i++) {
-                        out.println(contribs.getJSONObject(i));
+                File pagerev = new File(pagerevsFolder, String.valueOf(rev.getInt("revid")));
+                if (!pagerev.exists()) {
+                    try (PrintWriter out = new PrintWriter(new FileWriter(pagerev, true))) {
+                        for (int i = 0; i < contribs.length(); i++) {
+                            out.println(contribs.getJSONObject(i));
+                        }
+                        out.flush();
                     }
-                    out.flush();
                 }
             }
         } catch (IOException ex) {
