@@ -33,7 +33,7 @@ public class WikipediaClient {
             StringBuilder url = new StringBuilder(ENDPOINT);
             url.append(params.toURLQueryString());
 
-            System.out.println("GET: " + url);
+            //System.out.println("GET: " + url);
             HttpGet request = new HttpGet(url.toString());
             request.setHeader("User-Agent", "FACWikiTool");
 

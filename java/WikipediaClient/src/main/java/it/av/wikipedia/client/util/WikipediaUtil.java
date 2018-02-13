@@ -43,9 +43,12 @@ public class WikipediaUtil {
         JSONArray ret = new JSONArray();
 
         if (hasNext()) {
-            JSONObject reply;
+            JSONObject reply = null;
             do {
-                reply = new JSONObject(WikipediaClient.Query(params));
+                String replyStr = WikipediaClient.Query(params);
+                if (replyStr != null) {
+                    reply = new JSONObject(replyStr);
+                }
             } while (isNonQueryReply(reply));
 
             if (reply.keySet().contains("continue")) {
@@ -56,12 +59,12 @@ public class WikipediaUtil {
             }
 
             reply = reply.getJSONObject("query");
-            if(path != null) {
-                for(String step : path) {
+            if (path != null) {
+                for (String step : path) {
                     reply = reply.getJSONObject(step);
                 }
             }
-            
+
             ret = reply.getJSONArray(queryParam);
         }
 
@@ -90,9 +93,12 @@ public class WikipediaUtil {
             params.subparameter(continueLabel, continueCode);
         }
 
-        JSONObject reply;
+        JSONObject reply = null;
         do {
-            reply = new JSONObject(WikipediaClient.Query(params));
+            String replyStr = WikipediaClient.Query(params);
+            if (replyStr != null) {
+                reply = new JSONObject(replyStr);
+            }
         } while (isNonQueryReply(reply));
 
         if (reply.keySet().contains("continue")) {
@@ -114,14 +120,17 @@ public class WikipediaUtil {
         path = null;
         queryParam = "users";
 
-        JSONObject reply;
+        JSONObject reply = null;
         do {
-            reply = new JSONObject(WikipediaClient.Query(params));
+            String replyStr = WikipediaClient.Query(params);
+            if (replyStr != null) {
+                reply = new JSONObject(replyStr);
+            }
         } while (isNonQueryReply(reply));
 
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
-    
+
     public JSONArray GetAllUserContributions(String userid) {
         return GetAllUserContributions(userid, null, null);
     }
@@ -147,9 +156,12 @@ public class WikipediaUtil {
             params.subparameter(continueLabel, continueCode);
         }
 
-        JSONObject reply;
+        JSONObject reply = null;
         do {
-            reply = new JSONObject(WikipediaClient.Query(params));
+            String replyStr = WikipediaClient.Query(params);
+            if (replyStr != null) {
+                reply = new JSONObject(replyStr);
+            }
         } while (isNonQueryReply(reply));
 
         if (reply.keySet().contains("continue")) {
@@ -161,15 +173,15 @@ public class WikipediaUtil {
 
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
-    
-    public JSONArray GetRecentUserContributions(String userid, int numContribs, String continueCode) {
+
+    public JSONArray GetUserContributions(String userid, int numContribs, String continueCode, boolean newFirst) {
         params = new QueryParameters();
         params.format(FormatValue.json, true);
         params.list(ListValue.usercontribs);
         params.subparameter("uclimit", String.valueOf(numContribs)); // can request 500 at a time
         params.subparameter("ucprop", "ids|title|timestamp|comment|size|sizediff|flags|tags|oresscores");
         params.subparameter("ucuserids", userid);
-        params.subparameter("ucdir", "older");
+        params.subparameter("ucdir", (newFirst ? "older" : "newer"));
         params.subparameter("maxlag", "5");
         path = null;
         queryParam = "usercontribs";
@@ -180,9 +192,12 @@ public class WikipediaUtil {
             params.subparameter(continueLabel, continueCode);
         }
 
-        JSONObject reply;
+        JSONObject reply = null;
         do {
-            reply = new JSONObject(WikipediaClient.Query(params));
+            String replyStr = WikipediaClient.Query(params);
+            if (replyStr != null) {
+                reply = new JSONObject(replyStr);
+            }
         } while (isNonQueryReply(reply));
 
         if (reply.keySet().contains("continue")) {
@@ -194,18 +209,18 @@ public class WikipediaUtil {
 
         return reply.getJSONObject("query").getJSONArray(queryParam);
     }
-    
+
     public JSONArray GetPageContributionsAfterRevision(String pageid, String revid, int numContribs, String continueCode) {
         params = new QueryParameters();
         params.format(FormatValue.json, true);
         params.prop(PropValue.revisions);
         params.subparameter("pageids", pageid);
         params.subparameter("rvlimit", String.valueOf(numContribs)); // can request 500 at a time
-        params.subparameter("rvprop", "ids|timestamp|userid|comment|size|flags|flagged|tags|oresscores");
+        params.subparameter("rvprop", "ids|timestamp|userid|comment|size|flags|flagged|tags");
         params.subparameter("rvstartid", revid);
         params.subparameter("rvdir", "newer");
         params.subparameter("maxlag", "5");
-        path = new String[] {"pages", pageid};
+        path = new String[]{"pages", pageid};
         queryParam = "revisions";
         continueLabel = "rvcontinue";
 
@@ -214,9 +229,12 @@ public class WikipediaUtil {
             params.subparameter(continueLabel, continueCode);
         }
 
-        JSONObject reply;
+        JSONObject reply = null;
         do {
-            reply = new JSONObject(WikipediaClient.Query(params));
+            String replyStr = WikipediaClient.Query(params);
+            if (replyStr != null) {
+                reply = new JSONObject(replyStr);
+            }
         } while (isNonQueryReply(reply));
 
         if (reply.keySet().contains("continue")) {
@@ -224,6 +242,10 @@ public class WikipediaUtil {
             params.subparameter(continueLabel, reply.getJSONObject("continue").getString(continueLabel));
         } else {
             batchComplete = true;
+        }
+
+        if (!reply.getJSONObject("query").getJSONObject("pages").getJSONObject(pageid).keySet().contains(queryParam)) {
+            return new JSONArray();
         }
 
         return reply.getJSONObject("query").getJSONObject("pages").getJSONObject(pageid).getJSONArray(queryParam);
