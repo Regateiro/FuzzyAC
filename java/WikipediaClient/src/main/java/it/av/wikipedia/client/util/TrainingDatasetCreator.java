@@ -39,7 +39,6 @@ public class TrainingDatasetCreator {
         File dataset = new File(DATASET_PATH);
         File preparedDataset = new File("prepDataset.csv");
         assertRequirements(dataset);
-        dataset.setReadOnly();
 
         boolean verbose = false;
         int count = 0;
