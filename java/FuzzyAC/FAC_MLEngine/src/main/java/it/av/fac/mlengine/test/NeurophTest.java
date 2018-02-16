@@ -22,8 +22,9 @@ import org.neuroph.core.Neuron;
 import org.neuroph.core.data.DataSet;
 import org.neuroph.core.data.DataSetRow;
 import org.neuroph.core.input.Min;
+import org.neuroph.core.input.WeightedSum;
 import org.neuroph.core.learning.SupervisedLearning;
-import org.neuroph.core.transfer.Gaussian;
+import org.neuroph.core.transfer.Sigmoid;
 import org.neuroph.nnet.MultiLayerPerceptron;
 import org.neuroph.nnet.comp.layer.InputLayer;
 import org.neuroph.nnet.comp.neuron.InputNeuron;
@@ -36,7 +37,7 @@ import org.neuroph.nnet.learning.BackPropagation;
 public class NeurophTest {
 
     private static final File MODEL = new File("ores.nnet");
-    private static final boolean LOAD_EXISTING_MODEL = false;
+    private static final boolean LOAD_EXISTING_MODEL = true;
     private static final int ITERATIONS = 100;
 
     public static void main(String[] args) {
@@ -45,6 +46,7 @@ public class NeurophTest {
             try {
                 System.out.println("Loading...");
                 neuralNetwork = MultiLayerPerceptron.load(new FileInputStream(MODEL));
+                System.out.println(" - Loaded " + MODEL.getAbsolutePath());
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(NeurophTest.class.getName()).log(Level.SEVERE, null, ex);
                 System.exit(1);
@@ -52,12 +54,11 @@ public class NeurophTest {
         } else {
             System.out.println("Init...");
             // create new perceptron network
-            neuralNetwork = new NeuralNetwork();
-            initNetwork(neuralNetwork);
+            neuralNetwork = initNetwork();
 
             System.out.println("Getting dataset...");
             // create training set
-            DataSet dataset = DataSet.createFromFile(System.getProperty("user.home") + "/Documents/NetBeansProjects/FuzzyAC/java/WikipediaClient/prepDataset.csv", 6, 1, ",");
+            DataSet dataset = DataSet.createFromFile(System.getProperty("user.home") + "/Documents/NetBeansProjects/FuzzyAC/java/WikipediaClient/autoDataset.csv", 6, 1, ",");
             dataset.shuffle();
             DataSet[] datasets = dataset.createTrainingAndTestSubsets(75, 25);
             System.out.println(" - Loaded " + dataset.size() + " observations.");
@@ -69,17 +70,17 @@ public class NeurophTest {
             System.out.println("Learning...");
             SupervisedLearning rule = new BackPropagation();
             rule.setNeuralNetwork(neuralNetwork);
+            rule.setTrainingSet(datasets[0]);
             for (int itr = 0; itr < ITERATIONS; itr++) {
-                rule.doOneLearningIteration(datasets[0]);
-                System.out.println(String.format(" - Iteration %03d/%03d", itr + 1, ITERATIONS));
+                rule.doLearningEpoch(datasets[0]);
+                System.out.println(String.format(" - Iteration %03d/%03d...", itr + 1, ITERATIONS));
+                testNetwork(neuralNetwork, datasets[1]);
             }
 
             // save the trained network into file
             System.out.println("Saving...");
-            neuralNetwork.save("ores.nnet");
+            //neuralNetwork.save("ores.nnet");
             System.out.println(" - Saved to ores.nnet");
-
-            testNetwork(neuralNetwork, datasets[1]);
         }
         System.out.println("Done!\n");
 
@@ -100,17 +101,41 @@ public class NeurophTest {
 
         connections.stream().forEach((connection)
                 -> outputOrder.put(
-                        connection.getWeight().value,
+                        connection.getWeight().getValue(),
                         String.format("[%s] * %f --> [%s]",
                                 connection.getFromNeuron().getLabel(),
-                                connection.getWeight().value,
+                                connection.getWeight().getValue(),
                                 connection.getToNeuron().getLabel()))
         );
 
         outputOrder.values().stream().forEachOrdered((line) -> System.out.println(line));
     }
 
-    private static void initNetwork(NeuralNetwork neuralNetwork) {
+    private static NeuralNetwork initNetwork2(int numHiddenNeurons) {
+        MultiLayerPerceptron neuralNetwork = new MultiLayerPerceptron(6, numHiddenNeurons, 1);
+        //neuralNetwork.connectInputsToOutputs();
+
+        String[] ilabels = new String[]{"DQ_OK", "DQ_ATTACK", "DQ_SPAM", "DQ_VANDALISM", "DAMAGING", "GOOD_FAITH"};
+        List<Neuron> ineurons = neuralNetwork.getInputNeurons();
+        for (int i = 0; i < ineurons.size(); i++) {
+            ineurons.get(i).setLabel(ilabels[i]);
+        }
+
+        List<Neuron> hneurons = ((Layer) neuralNetwork.getLayers().get(1)).getNeurons();
+        int hiddenCount = 1;
+        for (int i = 0; i < hneurons.size(); i++) {
+            hneurons.get(i).setLabel("HIDDEN_" + hiddenCount++);
+        }
+
+        List<Neuron> oneurons = neuralNetwork.getOutputNeurons();
+        oneurons.get(0).setLabel("OUTPUT");
+
+        return neuralNetwork;
+    }
+
+    private static NeuralNetwork initNetwork() {
+        NeuralNetwork neuralNetwork = new NeuralNetwork();
+
         System.out.println(" - Creating layers...");
         Layer inputLayer = new InputLayer(6);
         Layer middleLayer = new Layer(21);
@@ -130,17 +155,17 @@ public class NeurophTest {
         Neuron[] dHiddenNeurons = new Neuron[inputNeurons.length];
         System.out.println(" - Creating direct hidden neurons...");
         for (int i = 0; i < inputNeurons.length; i++) {
-            dHiddenNeurons[i] = new Neuron(new Min(), new Gaussian());
+            dHiddenNeurons[i] = new Neuron(new Min(), new Sigmoid());
             dHiddenNeurons[i].setLabel("H_" + ilabels[i]);
             dHiddenNeurons[i].setParentLayer(middleLayer);
             middleLayer.addNeuron(dHiddenNeurons[i]);
         }
-
+        
         Neuron[][] hiddenNeurons = new Neuron[inputNeurons.length][inputNeurons.length];
         System.out.println(" - Creating 2 by 2 hidden neurons...");
         for (int i = 0; i < inputNeurons.length; i++) {
             for (int j = i + 1; j < inputNeurons.length; j++) {
-                hiddenNeurons[i][j] = new Neuron(new Min(), new Gaussian());
+                hiddenNeurons[i][j] = new Neuron(new Min(), new Sigmoid());
                 hiddenNeurons[i][j].setLabel(ilabels[i] + " + " + ilabels[j]);
                 hiddenNeurons[i][j].setParentLayer(middleLayer);
                 middleLayer.addNeuron(hiddenNeurons[i][j]);
@@ -148,7 +173,7 @@ public class NeurophTest {
         }
 
         System.out.println(" - Creating output neurons...");
-        Neuron outputNeuron = new Neuron(new Min(), new Gaussian());
+        Neuron outputNeuron = new Neuron(new WeightedSum(), new Sigmoid());
         outputNeuron.setLabel("OUTPUT");
         outputNeuron.setParentLayer(outputLayer);
         outputLayer.addNeuron(outputNeuron);
@@ -177,10 +202,10 @@ public class NeurophTest {
 
         System.out.println(" - Randomizing weights...");
         neuralNetwork.randomizeWeights();
+        return neuralNetwork;
     }
 
     public static void testNetwork(NeuralNetwork nnet, DataSet testSet) {
-        System.out.println("Evaluating...");
         double tp = 0, tn = 0, fp = 0, fn = 0;
         for (DataSetRow dataRow : testSet.getRows()) {
             nnet.setInput(dataRow.getInput());
@@ -202,9 +227,9 @@ public class NeurophTest {
             }
         }
 
-        System.out.println(" - Precision: " + (tp / (tp + fp)));
-        System.out.println(" - True Positive Rate: " + (tp / (tp + fn)));
-        System.out.println(" - True Negative Rate: " + (tn / (tn + fp)));
-        System.out.println(" - Accuracy: " + ((tp + tn) / (tp + tn + fp + fn)));
+        System.out.println("   --> Precision: " + (tp / (tp + fp)));
+        System.out.println("   --> True Positive Rate: " + (tp / (tp + fn)));
+        System.out.println("   --> True Negative Rate: " + (tn / (tn + fp)));
+        System.out.println("   --> Accuracy: " + ((tp + tn) / (tp + tn + fp + fn)));
     }
 }
