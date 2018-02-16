@@ -14,11 +14,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -34,10 +34,12 @@ public class TrainingDatasetCreator {
             .append("Thesis").append(File.separator)
             .append("Data").append(File.separator)
             .append("complete_dataset.gz").toString();
+    
+    private static int undone = 0;
 
     public static void main(String[] args) {
         File dataset = new File(DATASET_PATH);
-        File preparedDataset = new File("prepDataset.csv");
+        File preparedDataset = new File("autoDataset.csv");
         assertRequirements(dataset);
 
         boolean verbose = false;
@@ -126,6 +128,7 @@ public class TrainingDatasetCreator {
         }
 
         System.out.println("Found a total of " + count + " undone revisions.");
+        System.out.println(undone + " revisions were set as undone.");
     }
 
     private static void assertRequirements(File dataset) {
@@ -147,16 +150,23 @@ public class TrainingDatasetCreator {
         JSONObject damaging = scores.getJSONObject("damaging");
         JSONObject goodFaith = scores.getJSONObject("goodfaith");
         
-        return String.format("%f,%f,%f,%f,%f,%f,%f,%f,%d", 
+        boolean undo = false;
+        if(draftQuality.getDouble("OK") < 0.6) undo = true;
+        if(draftQuality.getDouble("attack") > 0.7) undo = true;
+        if(draftQuality.getDouble("spam") > 0.8) undo = true;
+        if(draftQuality.getDouble("vandalism") > 0.6) undo = true;
+        if(damaging.getDouble("true") > 0.7) undo = true;
+        if(Math.sqrt(goodFaith.getDouble("true")) < 0.3) undo = true;
+        if(undo) undone++;
+        
+        return String.format(Locale.US, "%f,%f,%f,%f,%f,%f,%d", 
                 draftQuality.getDouble("OK"),
                 draftQuality.getDouble("attack"),
                 draftQuality.getDouble("spam"),
                 draftQuality.getDouble("vandalism"),
                 damaging.getDouble("true"),
-                damaging.getDouble("false"),
                 goodFaith.getDouble("true"),
-                goodFaith.getDouble("false"),
-                (wasUndone ? 0 : 1)
+                (undo ? 0 : 1)
         );
     }
 }
