@@ -2,6 +2,7 @@ FUNCTION_BLOCK VariableInference
 	VAR_INPUT
 		Number_Of_Publications	:	REAL;
 		Number_Of_Citations		:	REAL;
+		WikiUser				:	REAL;
 	END_VAR
 
 	VAR_OUTPUT
@@ -20,22 +21,14 @@ FUNCTION_BLOCK VariableInference
 		TERM High := (30, 0) (100, 1) ;
 	END_FUZZIFY
 
-	DYNAMIC_FUZZIFY Draft_Quality
+	EXTERNAL_FUZZIFY WikiUser
 		TERM OK ;
 		TERM Spam ;
 		TERM Vandalism ;
 		TERM Attack ;
-	END_DYNAMIC_FUZZIFY
-
-	DYNAMIC_FUZZIFY Damaging
-		TERM True ;
-		TERM False ;
-	END_DYNAMIC_FUZZIFY
-
-	DYNAMIC_FUZZIFY Good_Faith
-		TERM True ;
-		TERM False ;
-	END_DYNAMIC_FUZZIFY
+		TERM Good_Faith ;
+		TERM Damaging ;
+	END_EXTERNAL_FUZZIFY
 
 	DEFUZZIFY Expertise
 		TERM Low := 1 ;
@@ -44,6 +37,10 @@ FUNCTION_BLOCK VariableInference
 		TERM Very_High := 4 ;
 		METHOD: COGS ;
 	END_DEFUZZIFY
+		
+	EXTERNAL_RULEBLOCK Expertise
+		MODE: NO_DEFUZZIFY; (* NO_DEFUZZIFY | DEFUZZIFY *)
+	END_EXTERNAL_RULEBLOCK
 		
 	RULEBLOCK Expertise
 		AND:MIN;
@@ -70,7 +67,7 @@ FUNCTION_BLOCK AccessControl
 		Write	: 	REAL;
 	END_VAR
 	
-	DIRECT_CONNECTOR
+	DIRECT_CONNECTOR VariableInference
 		Expertise;
 	END_DIRECT_CONNECTOR
 	

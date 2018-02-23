@@ -86,12 +86,12 @@ public class DFIS {
                         functionBlock = matcher.group(1);
                         fbNameOrder.add(functionBlock);
                     }
-                } else if (line.contains("DYNAMIC_FUZZIFY")) {
-                    Matcher matcher = Pattern.compile("\\s*DYNAMIC_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
+                } else if (line.contains("EXTERNAL_FUZZIFY")) {
+                    Matcher matcher = Pattern.compile("\\s*EXTERNAL_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
                     if (matcher.matches()) {
-                        fcl.append(line.replace("DYNAMIC_", "")).append("\n");
+                        fcl.append(line.replace("EXTERNAL_", "")).append("\n");
 
-                        while (!(line = in.readLine()).contains("END_DYNAMIC_FUZZIFY")) {
+                        while (!(line = in.readLine()).contains("END_EXTERNAL_FUZZIFY")) {
                             if (line.contains("TERM")) {
                                 line = line.replace(";", " := (0, 1) ;");
                                 fcl.append(line).append("\n");
@@ -100,17 +100,17 @@ public class DFIS {
                         fcl.append(line.replace("DYNAMIC_", "")).append("\n");
                     }
                 } else if (line.contains("DYNAMIC_RULER")) {
-                } else if (line.contains("INDIRECT_CONNECTOR")) {
+                } else if (line.contains("CRISP_INPUT_CONNECTOR")) {
                     Pattern varPattern = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
-                    while (!(line = in.readLine()).contains("END_INDIRECT_CONNECTOR")) {
+                    while (!(line = in.readLine()).contains("END_CRISP_INPUT_CONNECTOR")) {
                         Matcher matcher = varPattern.matcher(line);
                         if (matcher.matches()) {
                             connectingVars.put(functionBlock, matcher.group(1));
                         }
                     }
-                } else if (line.contains("DIRECT_CONNECTOR")) {
+                } else if (line.contains("FUZZY_INPUT_CONNECTOR")) {
                     Pattern varPattern = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
-                    while (!(line = in.readLine()).contains("END_DIRECT_CONNECTOR")) {
+                    while (!(line = in.readLine()).contains("END_FUZZY_INPUT_CONNECTOR")) {
                         Matcher matcher = varPattern.matcher(line);
                         if (matcher.matches()) {
                             connectingVars.put(functionBlock, matcher.group(1));
