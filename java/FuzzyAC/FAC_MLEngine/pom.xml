@@ -13,7 +13,23 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <name>FAC_MLEngine</name>
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
     <dependencies>
+        <dependency>
+            <groupId>com.github.sanity</groupId>
+            <artifactId>quickml</artifactId>
+            <version>10.16</version>
+        </dependency>  
+        <dependency>
+            <groupId>com.github.ptnplanet</groupId>
+            <artifactId>Java-Naive-Bayes-Classifier</artifactId>
+            <version>1.0.7</version>
+        </dependency>
         <dependency>
             <groupId>org.sevarac</groupId>
             <artifactId>neuroph</artifactId>

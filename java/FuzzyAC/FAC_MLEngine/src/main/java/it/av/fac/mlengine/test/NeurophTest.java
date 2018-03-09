@@ -21,6 +21,8 @@ import org.neuroph.core.NeuralNetwork;
 import org.neuroph.core.Neuron;
 import org.neuroph.core.data.DataSet;
 import org.neuroph.core.data.DataSetRow;
+import org.neuroph.core.events.NeuralNetworkEvent;
+import org.neuroph.core.events.NeuralNetworkEventListener;
 import org.neuroph.core.input.Min;
 import org.neuroph.core.input.WeightedSum;
 import org.neuroph.core.learning.SupervisedLearning;
@@ -85,6 +87,13 @@ public class NeurophTest {
         System.out.println("Done!\n");
 
         printNetwork(neuralNetwork);
+        
+//        neuralNetwork.setInput(1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+//        neuralNetwork.calculate();
+//        System.out.println("\nOutput: ");
+//        for(double output : neuralNetwork.getOutput()) {
+//            System.out.print(output + " ");
+//        }
     }
 
     private static void printNetwork(NeuralNetwork neuralNetwork) {
@@ -160,7 +169,7 @@ public class NeurophTest {
             dHiddenNeurons[i].setParentLayer(middleLayer);
             middleLayer.addNeuron(dHiddenNeurons[i]);
         }
-        
+
         Neuron[][] hiddenNeurons = new Neuron[inputNeurons.length][inputNeurons.length];
         System.out.println(" - Creating 2 by 2 hidden neurons...");
         for (int i = 0; i < inputNeurons.length; i++) {
