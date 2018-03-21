@@ -1,0 +1,110 @@
+SOURCE Retailer1
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer2
+	INPUT ProductID ;
+END_SOURCE
+
+FUNCTION_BLOCK rec_afis
+
+	VAR_INPUT
+		ProductID 	 	: REAL ;
+		AvgCrossSale 	: REAL ;
+		Recommendation	: REAL ;
+	END_VAR
+
+	VAR_OUTPUT
+		Interest	: REAL ;
+	END_VAR
+	
+	ENSEMBLE_FUZZIFY Recommendation
+		SOURCE Retailer1 ;
+		SOURCE Retailer2 ;
+		FUNCTION_BLOCK rec_efis ;
+	END_ENSEMBLE_FUZZIFY
+		
+	FUZZIFY AvgCrossSale
+		TERM Low 	:= (0,1)(10,0) ;
+		TERM Medium := (5,0)(30,1)(50,1)(70,0);
+		TERM High 	:= (60,0)(80,1) ;
+	END_FUZZIFY
+
+	DEFUZZIFY Interest
+		TERM Low	:= 0 ;
+		TERM Some	:= 0.5 ;
+		TERM High	:= 1 ;
+		METHOD	: COGS ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK Expertise
+
+		AND:MIN;
+		ACCU:MAX;
+		RULE 0: IF AvgCrossSale IS Low
+				 AND Recommendation IS NOT High
+				THEN Interest IS Low;
+		RULE 1: IF AvgCrossSale IS Low
+				 AND Recommendation IS High
+				THEN Interest IS Some;
+		RULE 2: IF AvgCrossSale IS Medium
+				 AND Recommendation IS NOT High
+				THEN Interest IS Some;
+		RULE 3: IF AvgCrossSale IS Medium
+				 AND Recommendation IS High
+				THEN Interest IS High;
+		RULE 4: IF AvgCrossSale IS High
+				THEN Interest IS High;
+
+	END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK rec_efis
+
+	VAR_INPUT
+		Rec_by_R1 : REAL ;
+		Rec_b1_R2 : REAL ;
+	END_VAR
+
+	VAR_OUTPUT
+		Recommendation  : REAL ;
+	END_VAR
+	
+	FUZZIFY Rec_by_R1
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R2
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	DEFUZZIFY Recommendation
+		TERM Low	:= 0 ;
+		TERM Medium	:= 0.5 ;
+		TERM High	:= 1 ;
+		METHOD	: COGS ;
+	END_DEFUZZIFY
+	
+	RULEBLOCK Expertise
+
+		AND:MIN;
+		ACCU:MAX;
+		RULE 0: IF Rec_by_R1 IS No
+				 AND Rec_by_R2 IS No
+				THEN Recommendation IS Low;
+		RULE 1: IF Rec_by_R1 IS Yes
+				 AND Rec_by_R2 IS No
+				THEN Recommendation IS Medium;
+		RULE 2: IF Rec_by_R1 IS No
+				 AND Rec_by_R2 IS Yes
+				THEN Recommendation IS Medium;
+		RULE 3: IF Rec_by_R1 IS Yes
+				 AND Rec_by_R2 IS Yes
+				THEN Recommendation IS High;
+
+	END_RULEBLOCK
+
+END_FUNCTION_BLOCK

@@ -44,6 +44,9 @@ public class DFIS {
     private final Set<EIFS> eifs;
     private final Map<String, DefuzzifyEIOMS> d_ioms;
     private final Map<String, NoDefuzzifyEIOMS> nd_ioms;
+    private final Map<String, ESource> esources;
+    private final List<SourceIO> sources;
+    private final List<EnsembleBlock> ensembles;
     private final List<String> fbNameOrder;
 
     /**
@@ -55,6 +58,9 @@ public class DFIS {
         this.eifs = new HashSet<>();
         this.d_ioms = new HashMap<>();
         this.nd_ioms = new HashMap<>();
+        this.esources = new HashMap<>();
+        this.sources = new ArrayList<>();
+        this.ensembles = new ArrayList<>();
         this.connectorDependencies = new HashMap<>();
         this.fbNameOrder = new ArrayList<>();
         this.verbose = verbose;
@@ -74,6 +80,9 @@ public class DFIS {
         this.eifs = new HashSet<>();
         this.d_ioms = new HashMap<>();
         this.nd_ioms = new HashMap<>();
+        this.esources = new HashMap<>();
+        this.sources = new ArrayList<>();
+        this.ensembles = new ArrayList<>();
         this.connectorDependencies = new HashMap<>();
         this.fbNameOrder = new ArrayList<>();
         this.verbose = verbose;
@@ -81,6 +90,7 @@ public class DFIS {
     }
 
     private FIS parse(String dfclStr) throws RecognitionException {
+        long time = System.nanoTime();
         StringBuilder fcl = new StringBuilder();
 
         String functionBlock = "";
@@ -93,6 +103,43 @@ public class DFIS {
                     if (matcher.matches()) {
                         functionBlock = matcher.group(1);
                         fbNameOrder.add(functionBlock);
+                    }
+                } else if (line.contains("SOURCE")) {
+                    Matcher matcher = Pattern.compile("\\s*SOURCE\\s+(\\w+)\\s*").matcher(line);
+                    Pattern inputPattern = Pattern.compile("\\s*INPUT\\s+(\\w+)\\s*;\\s*");
+
+                    if (matcher.matches()) {
+                        SourceIO source = new SourceIO(matcher.group(1));
+                        while (!(line = in.readLine()).contains("END_SOURCE")) {
+                            Matcher inputMatcher = inputPattern.matcher(line);
+
+                            if (inputMatcher.matches()) {
+                                source.addInput(inputMatcher.group(1));
+                            }
+                        }
+                        this.sources.add(source);
+                    }
+                } else if (line.contains("ENSEMBLE_FUZZIFY")) {
+                    Matcher matcher = Pattern.compile("\\s*ENSEMBLE_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
+                    if (matcher.matches()) {
+                        fcl.append(line.replace("ENSEMBLE_", "")).append("\n");
+
+                        Pattern sourcePattern = Pattern.compile("\\s*SOURCE\\s+(\\w+)\\s*;\\s*");
+                        Pattern fbPattern = Pattern.compile("\\s*FUNCTION_BLOCK\\s+(\\w+)\\s*;\\s*");
+
+                        EnsembleBlock ensembleBlock = new EnsembleBlock(functionBlock);
+                        while (!(line = in.readLine()).contains("END_ENSEMBLE_FUZZIFY")) {
+                            Matcher sourceMatcher = sourcePattern.matcher(line);
+                            Matcher fbMatcher = fbPattern.matcher(line);
+
+                            if (sourceMatcher.matches()) {
+                                ensembleBlock.addSource(sourceMatcher.group(1));
+                            } else if (fbMatcher.matches()) {
+                                ensembleBlock.setEFIS(fbMatcher.group(1));
+                            }
+                        }
+                        fcl.append(line.replace("ENSEMBLE_", "")).append("\n");
+                        this.ensembles.add(ensembleBlock);
                     }
                 } else if (line.contains("EXTERNAL_FUZZIFY")) {
                     Matcher matcher = Pattern.compile("\\s*EXTERNAL_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
@@ -207,7 +254,17 @@ public class DFIS {
             Logger.getLogger(DFIS.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        time = System.nanoTime() - time;
+        System.out.println("Parse overhead: " + (time / 1000000.0) + " ms.");
         return FIS.createFromString(fcl.toString(), this.verbose);
+    }
+
+    public void registerExternalSource(ESource source) {
+        this.esources.put(source.getSourceLabel(), source);
+    }
+
+    public void removeAllExternalSources() {
+        this.esources.clear();
     }
 
     public void registerExternalInputFuzzifierService(EIFS eifs) {
@@ -273,6 +330,57 @@ public class DFIS {
         for (int i = 0; i < fbOrder.size(); i++) {
             FunctionBlock currFB = fbOrder.get(i);
 
+            long time = System.nanoTime();
+            // If the current function block is used as an E.FIS, skip it
+            if (ensembles.parallelStream().anyMatch(e -> currFB.getName().equals(e.getEFISName()))) {
+                continue;
+            }
+
+            // execute the sources
+            List<String> efisList = new ArrayList<>();
+            ensembles.parallelStream().filter(e -> e.getAFISName().equals(currFB.getName())).forEach(e -> {
+                e.getSources().parallelStream().forEach(sourceName -> {
+                    inVariables.putAll(esources.get(sourceName).process(inVariables));
+                });
+                efisList.add(e.getEFISName());
+            });
+
+            //execute the E.FIS
+            fbOrder.parallelStream().filter(fb -> efisList.contains(fb.getName())).forEach(efis -> {
+                // Set inputs as needed
+                inVariables.keySet().stream().filter(((varName) -> getInputVariableNameList(efis).contains(varName))).forEach((varName) -> {
+                    fis.setVariable(efis.getName(), varName, inVariables.get(varName));
+                });
+
+                // evaluate E.FIS
+                efis.evaluate();
+
+                // Show 
+                if (debug) {
+                    JFuzzyChart.get().chart(efis);
+                }
+
+                // add fuzzy outputs as fuzzy inputs for A.FIS 
+                efis.getVariables().values().parallelStream().filter(var -> var.isOutput()).forEach(outVariable -> {
+                    Variable inVariable = currFB.getVariable(outVariable.getName());
+                    outVariable.getLinguisticTerms().values().stream().forEach((lt) -> {
+                        //Add the linguistic term with x as the common crisp value and y as the membership degree
+                        //This will put all linguistic terms on the same x, which will be the value for the AccessControl input variable
+                        DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
+                        MembershipFunctionSingleton mfunction = new MembershipFunctionSingleton(
+                                new Value(outVariable.getValue()),
+                                new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
+                        );
+                        inVariable.add(new LinguisticTerm(lt.getTermName(), mfunction));
+                    });
+
+                    // Set the mapping input
+                    inVariable.setValue(outVariable.getValue());
+                });
+            });
+            time = System.nanoTime() - time;
+            System.out.println("FCLE overhead: " + (time / 1000000.0) + " ms.");
+
             // Set inputs as needed
             inVariables.keySet().stream().filter(((varName) -> getInputVariableNameList(currFB).contains(varName))).forEach((varName) -> {
                 fis.setVariable(currFB.getName(), varName, inVariables.get(varName));
@@ -328,13 +436,13 @@ public class DFIS {
                 }
             }
 
+            // Evaluate static rule blocks
+            currFB.evaluate();
+
             // Show 
             if (debug) {
                 JFuzzyChart.get().chart(currFB);
             }
-
-            // Evaluate static rule blocks
-            currFB.evaluate();
 
             // Process the output variables
             currFB.variables().stream().filter((variable) -> (variable.isOutput())).forEach((outVariable) -> {
