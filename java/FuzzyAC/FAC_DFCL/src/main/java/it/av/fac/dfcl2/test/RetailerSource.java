@@ -28,7 +28,7 @@ public class RetailerSource implements ESource {
     @Override
     public Map<String, Double> process(Map<String, Double> inputValues) {
         Map<String, Double> ret = new HashMap<>();
-        ret.put(outputLabel, 1.0);//Math.floor(Math.random() * 2));
+        ret.put(outputLabel, Math.floor(Math.random() * 2));
         return ret;
     }
 

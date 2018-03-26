@@ -90,7 +90,7 @@ public class DFIS {
     }
 
     private FIS parse(String dfclStr) throws RecognitionException {
-        long time = System.nanoTime();
+        //long time = System.nanoTime();
         StringBuilder fcl = new StringBuilder();
 
         String functionBlock = "";
@@ -254,8 +254,9 @@ public class DFIS {
             Logger.getLogger(DFIS.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        time = System.nanoTime() - time;
-        System.out.println("Parse overhead: " + (time / 1000000.0) + " ms.");
+        //time = System.nanoTime() - time;
+        //System.out.print(time / 1000000.0);
+        //System.out.print(" ");
         return FIS.createFromString(fcl.toString(), this.verbose);
     }
 
@@ -330,7 +331,7 @@ public class DFIS {
         for (int i = 0; i < fbOrder.size(); i++) {
             FunctionBlock currFB = fbOrder.get(i);
 
-            long time = System.nanoTime();
+            //long time = System.nanoTime();
             // If the current function block is used as an E.FIS, skip it
             if (ensembles.parallelStream().anyMatch(e -> currFB.getName().equals(e.getEFISName()))) {
                 continue;
@@ -378,9 +379,9 @@ public class DFIS {
                     inVariable.setValue(outVariable.getValue());
                 });
             });
-            time = System.nanoTime() - time;
-            System.out.println("FCLE overhead: " + (time / 1000000.0) + " ms.");
-
+            //time = System.nanoTime() - time;
+            //System.out.println(time / 1000000.0);
+            
             // Set inputs as needed
             inVariables.keySet().stream().filter(((varName) -> getInputVariableNameList(currFB).contains(varName))).forEach((varName) -> {
                 fis.setVariable(currFB.getName(), varName, inVariables.get(varName));

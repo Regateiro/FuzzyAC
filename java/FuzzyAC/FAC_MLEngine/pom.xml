@@ -18,13 +18,18 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>sanity-maven-repo</id>
+            <name>Sanity's Maven repository on GitHub</name>
+            <url>http://sanity.github.com/maven-repo/repository/</url>
+        </repository>
     </repositories>
-    <dependencies>
+    <dependencies>  
         <dependency>
-            <groupId>com.github.sanity</groupId>
-            <artifactId>quickml</artifactId>
-            <version>10.16</version>
-        </dependency>  
+            <groupId>quickdt</groupId>
+            <artifactId>quickdt</artifactId>
+            <version>0.2.0.8</version>
+        </dependency>
         <dependency>
             <groupId>com.github.ptnplanet</groupId>
             <artifactId>Java-Naive-Bayes-Classifier</artifactId>

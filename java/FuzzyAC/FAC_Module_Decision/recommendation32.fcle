@@ -1,0 +1,474 @@
+SOURCE Retailer1
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer2
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer3
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer4
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer5
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer6
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer7
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer8
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer9
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer10
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer11
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer12
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer13
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer14
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer15
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer16
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer17
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer18
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer19
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer20
+	INPUT ProductID ;
+END_SOURCE
+SOURCE Retailer21
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer22
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer23
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer24
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer25
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer26
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer27
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer28
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer29
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer30
+	INPUT ProductID ;
+END_SOURCE
+SOURCE Retailer31
+	INPUT ProductID ;
+END_SOURCE
+
+SOURCE Retailer32
+	INPUT ProductID ;
+END_SOURCE
+
+FUNCTION_BLOCK rec_afis
+
+	VAR_INPUT
+		ProductID 	 	: REAL ;
+		AvgCrossSale 	: REAL ;
+		Recommendation	: REAL ;
+	END_VAR
+
+	VAR_OUTPUT
+		Interest	: REAL ;
+	END_VAR
+	
+	ENSEMBLE_FUZZIFY Recommendation
+		SOURCE Retailer1 ;
+		SOURCE Retailer2 ;
+		SOURCE Retailer3 ;
+		SOURCE Retailer4 ;
+		SOURCE Retailer5 ;
+		SOURCE Retailer6 ;
+		SOURCE Retailer7 ;
+		SOURCE Retailer8 ;
+		SOURCE Retailer9 ;
+		SOURCE Retailer10 ;
+		SOURCE Retailer11 ;
+		SOURCE Retailer12 ;
+		SOURCE Retailer13 ;
+		SOURCE Retailer14 ;
+		SOURCE Retailer15 ;
+		SOURCE Retailer16 ;
+		SOURCE Retailer17 ;
+		SOURCE Retailer18 ;
+		SOURCE Retailer19 ;
+		SOURCE Retailer20 ;
+		SOURCE Retailer21 ;
+		SOURCE Retailer22 ;
+		SOURCE Retailer23 ;
+		SOURCE Retailer24 ;
+		SOURCE Retailer25 ;
+		SOURCE Retailer26 ;
+		SOURCE Retailer27 ;
+		SOURCE Retailer28 ;
+		SOURCE Retailer29 ;
+		SOURCE Retailer30 ;
+		SOURCE Retailer31 ;
+		SOURCE Retailer32 ;
+		FUNCTION_BLOCK rec_efis ;
+	END_ENSEMBLE_FUZZIFY
+		
+	FUZZIFY AvgCrossSale
+		TERM Low 	:= (0,1)(10,0) ;
+		TERM Medium := (5,0)(30,1)(50,1)(70,0);
+		TERM High 	:= (60,0)(80,1) ;
+	END_FUZZIFY
+
+	DEFUZZIFY Interest
+		TERM Low	:= 0 ;
+		TERM Some	:= 0.5 ;
+		TERM High	:= 1 ;
+		METHOD	: COGS ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK Expertise
+
+		AND:MIN;
+		ACCU:MAX;
+		RULE 0: IF AvgCrossSale IS Low
+				 AND Recommendation IS NOT High
+				THEN Interest IS Low;
+		RULE 1: IF AvgCrossSale IS Low
+				 AND Recommendation IS High
+				THEN Interest IS Some;
+		RULE 2: IF AvgCrossSale IS Medium
+				 AND Recommendation IS NOT High
+				THEN Interest IS Some;
+		RULE 3: IF AvgCrossSale IS Medium
+				 AND Recommendation IS High
+				THEN Interest IS High;
+		RULE 4: IF AvgCrossSale IS High
+				THEN Interest IS High;
+
+	END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK rec_efis
+
+	VAR_INPUT
+		Rec_by_R1 : REAL ;
+		Rec_by_R2 : REAL ;
+		Rec_by_R3 : REAL ;
+		Rec_by_R4 : REAL ;
+		Rec_by_R5 : REAL ;
+		Rec_by_R6 : REAL ;
+		Rec_by_R7 : REAL ;
+		Rec_by_R8 : REAL ;
+		Rec_by_R9 : REAL ;
+		Rec_by_R10 : REAL ;
+		Rec_by_R11 : REAL ;
+		Rec_by_R12 : REAL ;
+		Rec_by_R13 : REAL ;
+		Rec_by_R14 : REAL ;
+		Rec_by_R15 : REAL ;
+		Rec_by_R16 : REAL ;
+		Rec_by_R17 : REAL ;
+		Rec_by_R18 : REAL ;
+		Rec_by_R19 : REAL ;
+		Rec_by_R20 : REAL ;
+		Rec_by_R21 : REAL ;
+		Rec_by_R22 : REAL ;
+		Rec_by_R23 : REAL ;
+		Rec_by_R24 : REAL ;
+		Rec_by_R25 : REAL ;
+		Rec_by_R26 : REAL ;
+		Rec_by_R27 : REAL ;
+		Rec_by_R28 : REAL ;
+		Rec_by_R29 : REAL ;
+		Rec_by_R30 : REAL ;
+		Rec_by_R31 : REAL ;
+		Rec_by_R32 : REAL ;
+	END_VAR
+
+	VAR_OUTPUT
+		Recommendation  : REAL ;
+	END_VAR
+	
+	FUZZIFY Rec_by_R1
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R2
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R3
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R4
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R5
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R6
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R7
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R8
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R9
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R10
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R11
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R12
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R13
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R14
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R15
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R16
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R17
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R18
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R19
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R20
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R21
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R22
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R23
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R24
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R25
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R26
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R27
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R28
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R29
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R30
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R31
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	FUZZIFY Rec_by_R32
+		TERM No		:= 0 ;
+		TERM Yes 	:= 1 ;
+	END_FUZZIFY
+	
+	DEFUZZIFY Recommendation
+		TERM Low	:= 0 ;
+		TERM Medium	:= 0.5 ;
+		TERM High	:= 1 ;
+		METHOD	: COGS ;
+	END_DEFUZZIFY
+	
+	RULEBLOCK Expertise
+
+		AND:MIN;
+		ACCU:MAX;
+		RULE 0: IF Rec_by_R1 IS No
+				 AND Rec_by_R2 IS No
+				THEN Recommendation IS Low;
+		RULE 1: IF Rec_by_R3 IS Yes
+				 AND Rec_by_R4 IS No
+				THEN Recommendation IS Medium;
+		RULE 2: IF Rec_by_R5 IS No
+				 AND Rec_by_R6 IS Yes
+				THEN Recommendation IS Medium;
+		RULE 3: IF Rec_by_R7 IS Yes
+				 AND Rec_by_R8 IS Yes
+				THEN Recommendation IS High;
+		RULE 4: IF Rec_by_R9 IS No
+				 AND Rec_by_R10 IS No
+				THEN Recommendation IS Low;
+		RULE 5: IF Rec_by_R11 IS Yes
+				 AND Rec_by_R12 IS No
+				THEN Recommendation IS Medium;
+		RULE 6: IF Rec_by_R13 IS No
+				 AND Rec_by_R14 IS Yes
+				THEN Recommendation IS Medium;
+		RULE 7: IF Rec_by_R15 IS Yes
+				 AND Rec_by_R16 IS Yes
+				THEN Recommendation IS High;
+		RULE 8: IF Rec_by_R17 IS No
+				 AND Rec_by_R18 IS No
+				THEN Recommendation IS Low;
+		RULE 9: IF Rec_by_R19 IS Yes
+				 AND Rec_by_R20 IS No
+				THEN Recommendation IS Medium;
+		RULE 10: IF Rec_by_R21 IS No
+				 AND Rec_by_R22 IS Yes
+				THEN Recommendation IS Medium;
+		RULE 11: IF Rec_by_R23 IS Yes
+				 AND Rec_by_R24 IS Yes
+				THEN Recommendation IS High;
+		RULE 12: IF Rec_by_R25 IS No
+				 AND Rec_by_R26 IS No
+				THEN Recommendation IS Low;
+		RULE 13: IF Rec_by_R27 IS Yes
+				 AND Rec_by_R28 IS No
+				THEN Recommendation IS Medium;
+		RULE 14: IF Rec_by_R29 IS No
+				 AND Rec_by_R30 IS Yes
+				THEN Recommendation IS Medium;
+		RULE 15: IF Rec_by_R31 IS Yes
+				 AND Rec_by_R32 IS Yes
+				THEN Recommendation IS High;
+
+	END_RULEBLOCK
+
+END_FUNCTION_BLOCK
