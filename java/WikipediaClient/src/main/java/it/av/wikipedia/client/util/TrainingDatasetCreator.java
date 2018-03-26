@@ -169,4 +169,29 @@ public class TrainingDatasetCreator {
                 (undo ? 0 : 1)
         );
     }
+    
+    
+
+    public static void makeCategoricalDataset() {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream("autoDataset.csv")));
+                PrintWriter out = new PrintWriter(new FileWriter("autoCatDataset.csv", false))) {
+            out.println(in.readLine()); // header
+
+            String line;
+            while ((line = in.readLine()) != null) {
+                String[] fields = line.split(",");
+                out.println(String.format("%s,%s,%s,%s,%s,%s,%s",
+                        fields[0],
+                        fields[1],
+                        fields[2],
+                        fields[3],
+                        fields[4],
+                        fields[5],
+                        (fields[6].equals("1") ? "Allow" : "Stop")
+                ));
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(DatasetStats.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
