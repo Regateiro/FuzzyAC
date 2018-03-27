@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,13 +24,19 @@ import org.antlr.runtime.RecognitionException;
 public class DFCLTest {
 
     public static void main(String[] args) throws IOException, RecognitionException {
+        Map<String, Double> input = new HashMap<>();
+        input.put("Revision", 0.0);
+
         String dfcl = fileToString(new File(System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\ores.dfcl"));
 
-        DFIS dfis = new DFIS(dfcl, true);
-        ORESService ores = new ORESService("Revision");
-        dfis.registerExternalInputFuzzifierService(ores);
+        for (int i = 0; i < 1000000; i++) {
+            DFIS dfis = new DFIS(dfcl, true);
+            ORESService ores = new ORESService("Revision");
+            dfis.registerExternalInputFuzzifierService(ores);
+            dfis.evaluate(input, false);
+        }
 
-        calculateAccuracy(dfis, ores);
+        //calculateAccuracy(dfis, ores);
     }
 
     private static String fileToString(File file) {
