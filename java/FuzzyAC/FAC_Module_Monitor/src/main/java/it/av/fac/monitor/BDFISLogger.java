@@ -23,11 +23,12 @@ public class BDFISLogger implements Closeable {
     private final PrintWriter out;
 
     public BDFISLogger() throws IOException {
-        this.out = new PrintWriter(new FileWriter(SDF.format(new Date() + ".log"), true), true);
+        this.out = new PrintWriter(new FileWriter(SDF.format(new Date()) + ".log", true), true);
     }
-    
+
     public void log(LogLevel level, String module, String msg) {
         out.println(String.format("%s -> [%s] %s: %s", DETAILED_SDF.format(new Date()), level.name(), module, msg));
+        out.flush();
     }
 
     @Override
@@ -35,7 +36,7 @@ public class BDFISLogger implements Closeable {
         this.out.flush();
         this.out.close();
     }
-    
+
     public enum LogLevel {
         Info, Warning, Error;
     }

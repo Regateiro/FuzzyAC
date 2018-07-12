@@ -27,11 +27,13 @@ public class FACLogger implements Closeable {
         this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_MONITOR_RESPONSE,
                 RabbitMQConstants.QUEUE_MONITOR_REQUEST, module_key, (byte[] message) -> {});
+        info("Initiated.");
     }
     
     public void info(String msg) {
         try {
-            BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogInfo);
+            BDFISRequest request = new BDFISRequest(module_key, null, RequestType.LogInfo);
+            request.setResource(msg);
             conn.send(request.convertToBytes());
         } catch (IOException ex) {
         }
@@ -55,6 +57,7 @@ public class FACLogger implements Closeable {
 
     @Override
     public void close() throws IOException {
+        info("Terminated.");
         this.conn.close();
     }
 }
