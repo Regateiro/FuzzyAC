@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.av.fac.monitor;
+package it.av.fac.monitor.handlers;
 
 /**
- *
+ * TODO: Change this into configuration files.
  * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
-public class LogHandler {
-    
+public class MonitorConfig {
+    public static final String MODULE_KEY = "monitor";
 }

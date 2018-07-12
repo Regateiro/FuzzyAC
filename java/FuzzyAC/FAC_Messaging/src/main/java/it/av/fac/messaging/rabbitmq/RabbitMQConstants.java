@@ -54,4 +54,10 @@ public abstract class RabbitMQConstants {
      */
     public static final String QUEUE_POLICY_RETRIEVAL_REQUEST = ":policyretrieval_request";
     public static final String QUEUE_POLICY_RETRIEVAL_RESPONSE = ":policyretrieval_response";
+    
+     /**
+     * Queues for Monitor.
+     */
+    public static final String QUEUE_MONITOR_REQUEST = ":monitor_request";
+    public static final String QUEUE_MONITOR_RESPONSE = ":monitor_response";
 }

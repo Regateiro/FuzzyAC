@@ -71,12 +71,12 @@ ACCU:MAX;
 RULE 0: IF (Days_Since_Last_Publication IS Low) AND (Number_Of_Publications IS Low) THEN Activity IS Medium;
 RULE 1: IF (Days_Since_Last_Publication IS Low) AND (Number_Of_Publications IS Considerable) THEN Activity IS High;
 RULE 2: IF (Days_Since_Last_Publication IS Low) AND (Number_Of_Publications IS High) THEN Activity IS Very_High;
-RULE 0: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS Low) THEN Activity IS Low;
-RULE 1: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS Considerable) THEN Activity IS Medium;
-RULE 2: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS High) THEN Activity IS High;
-RULE 0: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS Low) THEN Activity IS Very_Low;
-RULE 1: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS Considerable) THEN Activity IS Low;
-RULE 2: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS High) THEN Activity IS Low;
+RULE 3: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS Low) THEN Activity IS Low;
+RULE 4: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS Considerable) THEN Activity IS Medium;
+RULE 5: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS High) THEN Activity IS High;
+RULE 6: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS Low) THEN Activity IS Very_Low;
+RULE 7: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS Considerable) THEN Activity IS Low;
+RULE 8: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS High) THEN Activity IS Low;
 
 END_RULEBLOCK
 
