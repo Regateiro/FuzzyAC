@@ -7,6 +7,7 @@ package it.av.fac.policyretrieval.handlers;
 
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
+import it.av.fac.messaging.client.FACLogger;
 import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.interfaces.IReply;
 import it.av.fac.messaging.client.interfaces.IRequest;
@@ -17,12 +18,9 @@ import it.av.fac.messaging.rabbitmq.RabbitMQClient;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
-import it.av.fac.messaging.rabbitmq.test.Server;
 import it.av.fac.policyretrieval.util.PolicyRetrievalConfig;
 import java.io.IOException;
 import java.util.concurrent.SynchronousQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Class responsible for handling query requests.
@@ -33,8 +31,10 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
 
     private final SynchronousQueue<IReply> dbiQueue = new SynchronousQueue<>();
     private final RabbitMQClient dbiConn;
+    private final FACLogger logger;
 
-    public PolicyRetrievalHandler() throws Exception {
+    public PolicyRetrievalHandler(FACLogger logger) throws Exception {
+        this.logger = logger;
         this.dbiConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE,
                 RabbitMQConstants.QUEUE_DBI_REQUEST, PolicyRetrievalConfig.MODULE_KEY, dbiHandler);
@@ -48,16 +48,16 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
             IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error(ex.getMessage());
         }
     }
 
     private IReply handle(IRequest policyRequest) {
         IReply policyReply = new BDFISReply(ReplyStatus.OK, "");
 
-        System.out.println("Processing policy request");
+        logger.info("Processing policy request");
 
-        System.out.println("Requesting documents...");
+        logger.info("Requesting documents...");
         String policy = (String) policyRequest.getResourceId();
 
         // do stuff with the policy perhaps
@@ -65,7 +65,7 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
         IReply documentsReply = requestPolicy(policyRequest);
         documentsReply.getData().stream().forEach((doc) -> addPolicyToReplySync(policyReply, doc));
 
-        System.out.println("Replying with the filtered documents.");
+        logger.info("Replying with the filtered documents.");
         return policyReply;
     }
 
@@ -86,6 +86,7 @@ public class PolicyRetrievalHandler implements IServerHandler<byte[], String> {
             dbiConn.send(request.convertToBytes());
             return dbiQueue.take();
         } catch (IOException | InterruptedException ex) {
+            logger.error(ex.getMessage());
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 

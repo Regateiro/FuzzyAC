@@ -7,6 +7,7 @@ package it.av.fac.riac.handlers;
 
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
+import it.av.fac.messaging.client.FACLogger;
 import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.interfaces.IReply;
 import it.av.fac.messaging.client.interfaces.IRequest;
@@ -17,12 +18,9 @@ import it.av.fac.messaging.rabbitmq.RabbitMQClient;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
-import it.av.fac.messaging.rabbitmq.test.Server;
 import it.av.fac.riac.classifier.IClassifier;
 import java.io.IOException;
 import java.util.concurrent.SynchronousQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.JSONObject;
 
 /**
@@ -35,10 +33,12 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
     private final IClassifier classifier;
     private final SynchronousQueue<IReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
+    private final FACLogger logger;
 
-    public RIaCHandler(IClassifier classifier) throws Exception {
-        System.out.println("Using classifier: " + classifier.getClass().getSimpleName());
+    public RIaCHandler(IClassifier classifier, FACLogger logger) throws Exception {
+        logger.info("Using classifier: " + classifier.getClass().getSimpleName());
         this.classifier = classifier;
+        this.logger = logger;
         this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE,
                 RabbitMQConstants.QUEUE_DBI_REQUEST, RIaCConfig.MODULE_KEY, handler);
@@ -52,13 +52,13 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
             IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error(ex.getMessage());
         }
     }
 
     private IReply handle(IRequest request) {
         // classify the document in the request
-        System.out.println("Classifying " + new JSONObject(request.getResource()).optString("title", "no title"));
+        logger.info("Classifying " + new JSONObject(request.getResource()).optString("title", "no title"));
         classifier.classify(request);
         return requestStorage(request);
     }
@@ -76,6 +76,7 @@ public class RIaCHandler implements IServerHandler<byte[], String> {
             conn.send(request.convertToBytes());
             return queue.take();
         } catch (IOException | InterruptedException ex) {
+            logger.error(ex.getMessage());
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 

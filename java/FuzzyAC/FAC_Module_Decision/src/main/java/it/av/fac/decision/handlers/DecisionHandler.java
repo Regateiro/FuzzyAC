@@ -11,6 +11,7 @@ import it.av.fac.dfcl.DynamicFunction;
 import it.av.fac.messaging.client.BDFISDecision;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
+import it.av.fac.messaging.client.FACLogger;
 import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.RequestType;
 import it.av.fac.messaging.client.interfaces.IReply;
@@ -22,13 +23,10 @@ import it.av.fac.messaging.rabbitmq.RabbitMQClient;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQServer;
-import it.av.fac.messaging.rabbitmq.test.Server;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 import org.antlr.runtime.RecognitionException;
 import org.json.JSONObject;
@@ -44,9 +42,11 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
     private final SynchronousQueue<IReply> polretQueue = new SynchronousQueue<>();
     private final RabbitMQClient infoConn;
     private final RabbitMQClient polretConn;
+    private final FACLogger logger;
     private final double alphaCut = 0.5;
 
-    public DecisionHandler() throws Exception {
+    public DecisionHandler(FACLogger logger) throws Exception {
+        this.logger = logger;
         this.infoConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_INFORMATION_RESPONSE,
                 RabbitMQConstants.QUEUE_INFORMATION_REQUEST, DecisionConfig.MODULE_KEY, infoHandler);
@@ -63,21 +63,21 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
             IReply reply = handle(BDFISRequest.readFromBytes(requestBytes));
             clientConn.send(reply.convertToBytes());
         } catch (Exception ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error(ex.getMessage());
         }
     }
 
     private IReply handle(IRequest request) {
         IReply decisionReply = new BDFISReply();
 
-        System.out.println("Processing request for user: " + request.getUserToken());
-        System.out.println("Requesting the FCL files for the security label..."); //PolicyRetrieval
+        logger.info("Processing request for user: " + request.getUserToken());
+        logger.info("Requesting the FCL files for the security label..."); //PolicyRetrieval
         String securityLabel = (String) request.getResourceId();
 
         IRequest polRequest = new BDFISRequest(request.getUserToken(), securityLabel, RequestType.GetPolicy);
         IReply polReply = requestPolicies(polRequest);
 
-        System.out.println("Requesting the user attributes..."); //Information
+        logger.info("Requesting the user attributes..."); //Information
         IRequest infoRequest = new BDFISRequest(request.getUserToken(), null, RequestType.GetSubjectInfo);
         IReply infoReply = requestInformation(infoRequest);
 
@@ -90,13 +90,13 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
         userVariables.put("Years_Of_Service", userAttributes.optDouble("Years_Of_Service", 0.0));
         userVariables.put("Years_Partened", userAttributes.optDouble("Years_Partened", 0.0));
         userVariables.put("Number_Of_Projects_Funded", userAttributes.optDouble("Number_Of_Projects_Funded", 0.0));
-        
+
         infoRequest = new BDFISRequest(request.getUserToken(), null, RequestType.GetUserContributions);
         infoRequest.setResource(new JSONObject().put("userid", user.getInt("_id")).toString());
         infoReply = requestInformation(infoRequest);
         DynamicFunction df = new ORES(infoReply.getData());
 
-        System.out.println("Evaluating user permissions...");
+        logger.info("Evaluating user permissions...");
 
         polReply.getData().parallelStream().forEach((fclInfo) -> {
             try {
@@ -116,11 +116,11 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
                     addDecisionToReplySync(decisionReply, securityLabel, "*", true);
                 }
             } catch (IOException | RecognitionException ex) {
-                Logger.getLogger(DecisionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                logger.error(ex.getMessage());
             }
         });
 
-        System.out.println("Replying...");
+        logger.info("Replying...");
         return decisionReply;
     }
 
@@ -141,6 +141,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
             infoConn.send(request.convertToBytes());
             reply = infoQueue.take();
         } catch (IOException | InterruptedException ex) {
+            logger.error(ex.getMessage());
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 
@@ -160,6 +161,7 @@ public class DecisionHandler implements IServerHandler<byte[], String> {
             polretConn.send(request.convertToBytes());
             reply = polretQueue.take();
         } catch (IOException | InterruptedException ex) {
+            logger.error(ex.getMessage());
             reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
         }
 

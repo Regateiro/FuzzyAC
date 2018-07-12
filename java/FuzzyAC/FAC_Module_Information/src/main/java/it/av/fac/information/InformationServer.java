@@ -5,7 +5,9 @@
  */
 package it.av.fac.information;
 
+import it.av.fac.information.handlers.InformationConfig;
 import it.av.fac.information.handlers.InformationHandler;
+import it.av.fac.messaging.client.FACLogger;
 import it.av.fac.messaging.interfaces.IFACConnection;
 import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
@@ -24,15 +26,16 @@ public class InformationServer {
 
     @SuppressWarnings("empty-statement")
     public static void main(String[] args) {
-        try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance()) {
+        try (RabbitMQConnectionWrapper connWrapper = RabbitMQConnectionWrapper.getInstance();
+                FACLogger logger = new FACLogger(InformationConfig.MODULE_KEY)) {
             try (IFACConnection serverConn = new RabbitMQServer(
-                    connWrapper, RabbitMQConstants.QUEUE_INFORMATION_REQUEST, new InformationHandler())) {
+                    connWrapper, RabbitMQConstants.QUEUE_INFORMATION_REQUEST, new InformationHandler(logger))) {
                 System.out.println("Enforcement Server is now running... enter 'q' to quit.");
                 while (System.in.read() != 'q');
             } catch (Exception ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (NumberFormatException | IOException | TimeoutException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(RabbitMQServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
