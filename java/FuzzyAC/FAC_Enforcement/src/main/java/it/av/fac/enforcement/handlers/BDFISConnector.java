@@ -9,6 +9,7 @@ import it.av.fac.enforcement.util.EnforcementConfig;
 import it.av.fac.messaging.client.BDFISDecision;
 import it.av.fac.messaging.client.BDFISReply;
 import it.av.fac.messaging.client.BDFISRequest;
+import it.av.fac.messaging.client.FACLogger;
 import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.RequestType;
 import it.av.fac.messaging.client.interfaces.IReply;
@@ -44,6 +45,7 @@ public class BDFISConnector {
     private final RabbitMQClient dbiConn;
     private final RabbitMQClient riacConn;
     private final RabbitMQClient infoConn;
+    private final FACLogger logger;
 
     public BDFISConnector() throws Exception {
         this.decisionConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
@@ -58,6 +60,7 @@ public class BDFISConnector {
         this.infoConn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_INFORMATION_RESPONSE,
                 RabbitMQConstants.QUEUE_INFORMATION_REQUEST, EnforcementConfig.MODULE_KEY, infoHandler);
+        this.logger = new FACLogger("Webservice");
     }
 
     public static BDFISConnector getInstance() throws Exception {
@@ -66,6 +69,10 @@ public class BDFISConnector {
         }
 
         return instance;
+    }
+    
+    public FACLogger getLogger() {
+        return logger;
     }
 
     /**

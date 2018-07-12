@@ -10,6 +10,8 @@ import it.av.fac.messaging.rabbitmq.RabbitMQConnectionWrapper;
 import it.av.fac.messaging.rabbitmq.RabbitMQConstants;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -27,19 +29,28 @@ public class FACLogger implements Closeable {
                 RabbitMQConstants.QUEUE_MONITOR_REQUEST, module_key, (byte[] message) -> {});
     }
     
-    public void info(String msg) throws IOException {
-        BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogInfo);
-        conn.send(request.convertToBytes());
+    public void info(String msg) {
+        try {
+            BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogInfo);
+            conn.send(request.convertToBytes());
+        } catch (IOException ex) {
+        }
     }
     
-    public void warning(String msg) throws IOException {
-        BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogWarning);
-        conn.send(request.convertToBytes());
+    public void warning(String msg) {
+        try {
+            BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogWarning);
+            conn.send(request.convertToBytes());
+        } catch (IOException ex) {
+        }
     }
     
-    public void error(String msg) throws IOException {
-        BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogError);
-        conn.send(request.convertToBytes());
+    public void error(String msg) {
+        try {
+            BDFISRequest request = new BDFISRequest(module_key, msg, RequestType.LogError);
+            conn.send(request.convertToBytes());
+        } catch (IOException ex) {
+        }
     }
 
     @Override
