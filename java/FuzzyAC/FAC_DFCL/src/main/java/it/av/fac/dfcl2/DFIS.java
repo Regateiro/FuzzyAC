@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
+import net.sourceforge.jFuzzyLogic.defuzzifier.Defuzzifier;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionSingleton;
 import net.sourceforge.jFuzzyLogic.membership.Value;
@@ -39,6 +40,18 @@ import org.antlr.runtime.RecognitionException;
  */
 public class DFIS {
 
+    private final static Pattern FUNCTION_BLOCK_PATTERN = Pattern.compile("\\s*FUNCTION_BLOCK\\s+(\\w+)\\s*");
+    private final static Pattern SOURCE_BLOCK_PATTERN = Pattern.compile("\\s*SOURCE\\s+(\\w+)\\s*");
+    private final static Pattern SOURCE_INPUT_PATTERN = Pattern.compile("\\s*INPUT\\s+(\\w+)\\s*;\\s*");
+    private final static Pattern ENSEMBLE_FUZZIFY_BLOCK_PATTERN = Pattern.compile("\\s*ENSEMBLE_FUZZIFY\\s+(\\w+)\\s*");
+    private final static Pattern ENSEMBLE_FUZZIFY_SOURCE_PATTERN = Pattern.compile("\\s*SOURCE\\s+(\\w+)\\s*;\\s*");
+    private final static Pattern ENSEMBLE_FUZZIFY_FB_PATTERN = Pattern.compile("\\s*FUNCTION_BLOCK\\s+(\\w+)\\s*;\\s*");
+    private final static Pattern EXTERNAL_FUZZIFY_BLOCK_PATTERN = Pattern.compile("\\s*EXTERNAL_FUZZIFY\\s+(\\w+)\\s*");
+    private final static Pattern EXTERNAL_RULEBLOCK_PATTERN = Pattern.compile("\\s*EXTERNAL_RULEBLOCK\\s*(\\w+)\\s*");
+    private final static Pattern CRISP_INPUT_CONNECTOR_PATTERN = Pattern.compile("\\s*CRISP_INPUT_CONNECTOR\\s*(\\w+)\\s*");
+    private final static Pattern FUZZY_INPUT_CONNECTOR_PATTERN = Pattern.compile("\\s*FUZZY_INPUT_CONNECTOR\\s*(\\w+)\\s*");
+    private final static Pattern DEPENDENCY_PATTERN = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
+    
     private final FIS fis;
     private final boolean verbose;
     private final Set<EIFS> eifs;
@@ -99,19 +112,18 @@ public class DFIS {
             while ((line = in.readLine()) != null) {
                 if (line.contains("FUNCTION_BLOCK")) {
                     fcl.append(line).append("\n");
-                    Matcher matcher = Pattern.compile("\\s*FUNCTION_BLOCK\\s+(\\w+)\\s*").matcher(line);
+                    Matcher matcher = FUNCTION_BLOCK_PATTERN.matcher(line);
                     if (matcher.matches()) {
                         functionBlock = matcher.group(1);
                         fbNameOrder.add(functionBlock);
                     }
                 } else if (line.contains("SOURCE")) {
-                    Matcher matcher = Pattern.compile("\\s*SOURCE\\s+(\\w+)\\s*").matcher(line);
-                    Pattern inputPattern = Pattern.compile("\\s*INPUT\\s+(\\w+)\\s*;\\s*");
+                    Matcher matcher = SOURCE_BLOCK_PATTERN.matcher(line);
 
                     if (matcher.matches()) {
                         SourceIO source = new SourceIO(matcher.group(1));
                         while (!(line = in.readLine()).contains("END_SOURCE")) {
-                            Matcher inputMatcher = inputPattern.matcher(line);
+                            Matcher inputMatcher = SOURCE_INPUT_PATTERN.matcher(line);
 
                             if (inputMatcher.matches()) {
                                 source.addInput(inputMatcher.group(1));
@@ -120,17 +132,14 @@ public class DFIS {
                         this.sources.add(source);
                     }
                 } else if (line.contains("ENSEMBLE_FUZZIFY")) {
-                    Matcher matcher = Pattern.compile("\\s*ENSEMBLE_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
+                    Matcher matcher = ENSEMBLE_FUZZIFY_BLOCK_PATTERN.matcher(line);
                     if (matcher.matches()) {
                         fcl.append(line.replace("ENSEMBLE_", "")).append("\n");
 
-                        Pattern sourcePattern = Pattern.compile("\\s*SOURCE\\s+(\\w+)\\s*;\\s*");
-                        Pattern fbPattern = Pattern.compile("\\s*FUNCTION_BLOCK\\s+(\\w+)\\s*;\\s*");
-
                         EnsembleBlock ensembleBlock = new EnsembleBlock(functionBlock);
                         while (!(line = in.readLine()).contains("END_ENSEMBLE_FUZZIFY")) {
-                            Matcher sourceMatcher = sourcePattern.matcher(line);
-                            Matcher fbMatcher = fbPattern.matcher(line);
+                            Matcher sourceMatcher = ENSEMBLE_FUZZIFY_SOURCE_PATTERN.matcher(line);
+                            Matcher fbMatcher = ENSEMBLE_FUZZIFY_FB_PATTERN.matcher(line);
 
                             if (sourceMatcher.matches()) {
                                 ensembleBlock.addSource(sourceMatcher.group(1));
@@ -142,7 +151,7 @@ public class DFIS {
                         this.ensembles.add(ensembleBlock);
                     }
                 } else if (line.contains("EXTERNAL_FUZZIFY")) {
-                    Matcher matcher = Pattern.compile("\\s*EXTERNAL_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
+                    Matcher matcher = EXTERNAL_FUZZIFY_BLOCK_PATTERN.matcher(line);
                     if (matcher.matches()) {
                         fcl.append(line.replace("EXTERNAL_", "")).append("\n");
 
@@ -156,14 +165,13 @@ public class DFIS {
                     }
                 } else if (line.contains("EXTERNAL_RULEBLOCK")) {
                     // Determine which output variable the external ruleblock applies to
-                    Pattern varPattern = Pattern.compile("\\s*EXTERNAL_RULEBLOCK\\s*(\\w+)\\s*");
-                    Matcher matcher = varPattern.matcher(line);
+                    Matcher matcher = EXTERNAL_RULEBLOCK_PATTERN.matcher(line);
                     String outputVar = null;
                     if (matcher.matches()) {
                         outputVar = matcher.group(1);
                         //Create a faux ruleblock
                         fcl.append("RULEBLOCK ").append(outputVar).append("\n")
-                                .append("\tAND:MIN;\n").append("\tACCU_MAX;\n")
+                                .append("\tAND:MIN;\n").append("\tACCU:MAX;\n")
                                 .append("END_RULEBLOCK\n\n");
                     }
 
@@ -174,29 +182,9 @@ public class DFIS {
 
                     // Find the ruleblock mode of operation
                     // varPattern = Pattern.compile("\\s*MODE\\s*[:]\\s*(\\w+)\\s*;\\s*");
-                    while (!(line = in.readLine()).contains("END_EXTERNAL_RULEBLOCK")) {
-//                        matcher = varPattern.matcher(line);
-//                        if (matcher.matches()) {
-//                            // Check if the necessary external service was registered.
-//                            switch (matcher.group(1).toUpperCase()) {
-//                                case "DEFUZZIFY":
-//                                    if (!d_ioms.keySet().contains(outputVar)) {
-//                                        throw new RuntimeException("No external ruleblock service registered for output variable " + outputVar + ", or the incorrect mode is declared.");
-//                                    }
-//                                    break;
-//                                case "NO_DEFUZZIFY":
-//                                    if (!nd_ioms.keySet().contains(outputVar)) {
-//                                        throw new RuntimeException("No external ruleblock service registered for output variable " + outputVar + ", or the incorrect mode is declared.");
-//                                    }
-//                                    break;
-//                                default:
-//                                    throw new RuntimeException("Unrecognized external ruleblock mode: " + matcher.group(1));
-//                            }
-//                        }
-                    }
+                    while (!(line = in.readLine()).contains("END_EXTERNAL_RULEBLOCK"));
                 } else if (line.contains("CRISP_INPUT_CONNECTOR")) {
-                    Pattern varPattern = Pattern.compile("\\s*CRISP_INPUT_CONNECTOR\\s*(\\w+)\\s*");
-                    Matcher matcher = varPattern.matcher(line);
+                    Matcher matcher = CRISP_INPUT_CONNECTOR_PATTERN.matcher(line);
                     String connectedFB = null;
                     // Find the function block dependency
                     if (matcher.matches()) {
@@ -208,9 +196,8 @@ public class DFIS {
                     }
 
                     // Save the dependencies
-                    varPattern = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
                     while (!(line = in.readLine()).contains("END_CRISP_INPUT_CONNECTOR")) {
-                        matcher = varPattern.matcher(line);
+                        matcher = DEPENDENCY_PATTERN.matcher(line);
                         if (matcher.matches()) {
                             connectorDependencies.putIfAbsent(functionBlock, new ArrayList<>());
                             connectorDependencies.get(functionBlock).add(
@@ -219,8 +206,7 @@ public class DFIS {
                         }
                     }
                 } else if (line.contains("FUZZY_INPUT_CONNECTOR")) {
-                    Pattern varPattern = Pattern.compile("\\s*FUZZY_INPUT_CONNECTOR\\s*(\\w+)\\s*");
-                    Matcher matcher = varPattern.matcher(line);
+                    Matcher matcher = FUZZY_INPUT_CONNECTOR_PATTERN.matcher(line);
                     String connectedFB = null;
                     // Find the function block dependency
                     if (matcher.matches()) {
@@ -232,9 +218,8 @@ public class DFIS {
                     }
 
                     // Save the dependencies
-                    varPattern = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
                     while (!(line = in.readLine()).contains("END_FUZZY_INPUT_CONNECTOR")) {
-                        matcher = varPattern.matcher(line);
+                        matcher = DEPENDENCY_PATTERN.matcher(line);
                         if (matcher.matches()) {
                             connectorDependencies.putIfAbsent(functionBlock, new ArrayList<>());
                             connectorDependencies.get(functionBlock).add(
@@ -450,26 +435,34 @@ public class DFIS {
                 // Execute the no_defuzzify external rule blocks
                 if (nd_ioms.containsKey(outVariable.getName())) {
                     Map<String, Double> ltValues = nd_ioms.get(outVariable.getName()).process(currFB.variables());
+                    DefuzzifierCenterOfGravitySingletons defuzzifier = new DefuzzifierCenterOfGravitySingletons(outVariable);
 
                     // for each returned linguistic term value
                     ltValues.keySet().stream().forEach((ltName) -> {
                         double ltValue = ltValues.get(ltName);
                         // create a linguistic term for the variable x value and the returned y value
                         LinguisticTerm lt = new LinguisticTerm(ltName, new MembershipFunctionSingleton(
-                                new Value(outVariable.getValue()), new Value(ltValue)
+                                new Value(outVariable.getMembershipFunction(ltName).getParameter(0)), new Value(ltValue)
                         ));
                         // add the linguistic term
                         outVariable.add(lt);
+                        
+                        // set the same point on the defuzzifier
+                        defuzzifier.setPoint(outVariable.getMembershipFunction(ltName).getParameter(0), ltValue);
                     });
 
                     // defuzzify
-                    outVariable.setValue(outVariable.getDefuzzifier().defuzzify());
+                    outVariable.setDefuzzifier(defuzzifier);
+                    double value = outVariable.defuzzify();
+                    outVariable.setValue(value);
+                    outVariable.setLatestDefuzzifiedValue(value);
                 }
 
                 // execute defuzzify external rule blocks
                 if (d_ioms.containsKey(outVariable.getName())) {
                     double crispValue = d_ioms.get(outVariable.getName()).process(currFB.variables());
                     outVariable.setValue(crispValue);
+                    outVariable.setLatestDefuzzifiedValue(crispValue);
                 }
 
                 // show graphs

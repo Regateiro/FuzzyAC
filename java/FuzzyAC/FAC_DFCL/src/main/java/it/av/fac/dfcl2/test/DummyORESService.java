@@ -18,41 +18,26 @@ import java.util.Map;
  *
  * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
-public class ORESService implements EIFS {
+public class DummyORESService implements EIFS {
 
     private final String registeredVariable;
     private final List<double[]> scores;
     private final String[] labels;
 
-    public ORESService(String inputVariableLabel) throws IOException {
+    public DummyORESService(String inputVariableLabel) throws IOException {
         this.registeredVariable = inputVariableLabel;
         this.scores = new ArrayList<>();
 
         try (BufferedReader in = new BufferedReader(new FileReader(System.getProperty("user.home") + "/Documents/NetBeansProjects/FuzzyAC/java/WikipediaClient/autoDataset.csv"))) {
             labels = in.readLine().split(",");
-
-            String line;
-            while ((line = in.readLine()) != null) {
-                String[] fields = line.split(",");
-                this.scores.add(new double[]{
-                    Double.valueOf(fields[0]),
-                    Double.valueOf(fields[1]),
-                    Double.valueOf(fields[2]),
-                    Double.valueOf(fields[3]),
-                    Double.valueOf(fields[4]),
-                    Double.valueOf(fields[5]),
-                    Double.valueOf(fields[6])
-                });
-            }
         }
     }
 
     @Override
     public Map<String, Double> process(double inputValue) {
         Map<String, Double> ret = new HashMap<>();
-        double[] values = this.scores.get((int) inputValue);
         for (int i = 0; i < 6; i++) {
-            ret.put(labels[i], values[i]);
+            ret.put(labels[i], 1.0);
         }
         return ret;
     }

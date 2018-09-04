@@ -1,0 +1,89 @@
+FUNCTION_BLOCK VariableInference
+	VAR_INPUT
+		Rev_OK			:	REAL;
+		Rev_Spam		:	REAL;
+		Rev_Vandalism	:	REAL;
+		Rev_Attack		:	REAL;
+		Rev_Good_Faith	:	REAL;
+		Rev_Damaging	:	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		Edit	:	REAL ;
+	END_VAR
+
+	FUZZIFY Rev_OK
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+
+	FUZZIFY Rev_Spam
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+
+	FUZZIFY Rev_Vandalism
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+
+	FUZZIFY Rev_Attack
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+
+	FUZZIFY Rev_Good_Faith
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+
+	FUZZIFY Rev_Damaging
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+
+	DEFUZZIFY Edit
+		TERM Denied := 0 ;
+		TERM Granted := 1 ;
+		METHOD: COGS ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK Edit
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 0: IF (Rev_OK IS True) THEN Edit IS Granted;
+		RULE 1: IF (Rev_Spam IS True) AND (Rev_Vandalism IS True) THEN Edit IS Denied;
+		RULE 2: IF (Rev_Damaging IS True) THEN Edit IS Denied;
+		RULE 3: IF (Rev_Attack IS True) AND (Rev_Damaging IS True) THEN Edit IS Denied;
+		RULE 4: IF (Rev_Attack IS True) AND (Rev_Vandalism IS True) THEN Edit IS Denied;
+		RULE 5: IF (Rev_Attack IS True) THEN Edit IS Denied;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK AccessControl
+	VAR_INPUT
+		Edit_Denied	:	REAL;
+		Edit_Granted : 	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		OutEdit	: 	REAL;
+	END_VAR
+	
+	FUZZIFY Edit_Denied
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+	
+	FUZZIFY Edit_Granted
+		TERM True := (0,0)(1,1);
+	END_FUZZIFY
+	
+	DEFUZZIFY OutEdit
+		TERM Denied := 0 ;
+		TERM Granted := 1 ;
+		METHOD: COGS ;
+	END_DEFUZZIFY
+
+	RULEBLOCK OutEdit
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 0: IF (Edit_Denied IS True) THEN OutEdit IS Denied;
+		RULE 1: IF (Edit_Granted IS True) THEN OutEdit IS Granted;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK

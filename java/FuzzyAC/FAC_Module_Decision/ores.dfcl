@@ -22,17 +22,8 @@ FUNCTION_BLOCK VariableInference
 		METHOD: COGS ;
 	END_DEFUZZIFY
 		
-	RULEBLOCK Edit
-		AND:MIN;
-		ACCU:MAX;
-		
-		RULE 0: IF (Revision IS OK) THEN Edit IS Granted;
-		RULE 1: IF (Revision IS Spam) AND (Revision IS Vandalism) THEN Edit IS Denied;
-		RULE 2: IF (Revision IS Damaging) THEN Edit IS Denied;
-		RULE 3: IF (Revision IS Attack) AND (Revision IS Damaging) THEN Edit IS Denied;
-		RULE 4: IF (Revision IS Attack) AND (Revision IS Vandalism) THEN Edit IS Denied;
-		RULE 5: IF (Revision IS Attack) THEN Edit IS Denied;
-	END_RULEBLOCK
+	EXTERNAL_RULEBLOCK Edit
+	END_EXTERNAL_RULEBLOCK
 END_FUNCTION_BLOCK
 
 FUNCTION_BLOCK AccessControl
@@ -54,11 +45,7 @@ FUNCTION_BLOCK AccessControl
 		METHOD: COGS ;
 	END_DEFUZZIFY
 
-	RULEBLOCK OutEdit
-		AND:MIN;
-		ACCU:MAX;
-		
-		RULE 0: IF (Edit IS Denied) THEN OutEdit IS Denied;
-		RULE 1: IF (Edit IS Granted) THEN OutEdit IS Granted;
-	END_RULEBLOCK
+	EXTERNAL_RULEBLOCK OutEdit
+		MODE :	DEFUZZIFY ;
+	END_EXTERNAL_RULEBLOCK
 END_FUNCTION_BLOCK

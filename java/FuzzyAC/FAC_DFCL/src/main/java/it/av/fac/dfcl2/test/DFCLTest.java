@@ -6,15 +6,20 @@
 package it.av.fac.dfcl2.test;
 
 import it.av.fac.dfcl2.DFIS;
+import it.av.fac.dfcl2.DefuzzifyEIOMS;
+import it.av.fac.dfcl2.EIFS;
+import it.av.fac.dfcl2.NoDefuzzifyEIOMS;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.sourceforge.jFuzzyLogic.FIS;
+import net.sourceforge.jFuzzyLogic.FunctionBlock;
+import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
 import org.antlr.runtime.RecognitionException;
 
 /**
@@ -24,16 +29,49 @@ import org.antlr.runtime.RecognitionException;
 public class DFCLTest {
 
     public static void main(String[] args) throws IOException, RecognitionException {
+        testDFCL();
+        testFCL();
+    }
+
+    private static void testDFCL() throws IOException, RecognitionException {
+        EIFS ores = new DummyORESService("Revision");
+        NoDefuzzifyEIOMS ores_vi_iomap = new ORESInferenceService("Edit");
+        DefuzzifyEIOMS ores_ac_iomap = new ORESAccessControlInferenceService("OutEdit");
         Map<String, Double> input = new HashMap<>();
         input.put("Revision", 0.0);
 
         String dfcl = fileToString(new File(System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\ores.dfcl"));
 
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 100000000; i++) {
             DFIS dfis = new DFIS(dfcl, true);
-            ORESService ores = new ORESService("Revision");
             dfis.registerExternalInputFuzzifierService(ores);
+            dfis.registerExternalIOMappingService(ores_vi_iomap);
+            dfis.registerExternalIOMappingService(ores_ac_iomap);
             dfis.evaluate(input, false);
+        }
+
+        //calculateAccuracy(dfis, ores);
+    }
+
+    private static void testFCL() throws IOException, RecognitionException {
+        EIFS ores = new DummyORESService("Revision");
+
+        String fcl = fileToString(new File(System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\ores.fcl"));
+
+        for (int i = 0; i < 100000000; i++) {
+            FIS fis = FIS.createFromString(fcl, false);
+            
+            FunctionBlock vi_fb = fis.getFunctionBlock("VariableInference");
+            ores.process(0.0).forEach((ltName, ltValue) -> {
+                vi_fb.setVariable("Rev_" + ltName, ltValue);
+            });
+            vi_fb.evaluate();
+            
+            FunctionBlock ac_fb = fis.getFunctionBlock("AccessControl");
+            ac_fb.setVariable("Edit_Denied", ((DefuzzifierCenterOfGravitySingletons)vi_fb.getVariable("Edit").getDefuzzifier()).getDiscreteValue(0.0));
+            ac_fb.setVariable("Edit_Granted", ((DefuzzifierCenterOfGravitySingletons)vi_fb.getVariable("Edit").getDefuzzifier()).getDiscreteValue(1.0));
+            ac_fb.evaluate();
+            ac_fb.getVariable("OutEdit");
         }
 
         //calculateAccuracy(dfis, ores);
