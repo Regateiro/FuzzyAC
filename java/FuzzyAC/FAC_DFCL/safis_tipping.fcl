@@ -1,0 +1,370 @@
+FUNCTION_BLOCK safis_service
+	VAR_INPUT
+		service_op_payer	:	REAL;
+		service_op_A	:	REAL;
+		service_op_B	:	REAL;
+		service_op_C	:	REAL;
+		service_op_D	:	REAL;
+		service_op_E	:	REAL;
+		service_op_F	:	REAL;
+		service_op_G	:	REAL;
+		service_op_H	:	REAL;
+		service_op_I	:	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		service		:	REAL ;
+	END_VAR
+
+	FUZZIFY service_op_payer
+		TERM very_poor := (0,1)(4,0);
+		TERM poor := (2,0)(4,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_A
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_B
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_C
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_D
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_E
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_F
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_G
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_H
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY service_op_I
+		TERM poor := (0,1)(6,0);
+		TERM good := (4,0)(6,1)(7,1)(8,0);
+		TERM excellent := (6,0)(9,1);
+	END_FUZZIFY
+
+	DEFUZZIFY service
+		TERM poor := 1;
+		TERM good := 6;
+		TERM excellent := 9;
+		METHOD: COGS ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK No1
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 1: IF service_op_payer IS very_poor
+				OR service_op_payer IS poor
+				THEN service IS poor;
+				
+		RULE 2: IF service_op_payer IS good
+				THEN service IS good;
+				
+		RULE 3: IF service_op_payer IS excellent
+				THEN service IS excellent;
+				
+		RULE 4: IF service_op_payer IS NOT very_poor
+				AND service_op_A IS poor
+				THEN service IS poor;
+				
+		RULE 5: IF service_op_payer IS NOT very_poor
+				AND service_op_A IS good
+				THEN service IS good;
+				
+		RULE 6: IF service_op_payer IS NOT very_poor
+				AND service_op_A IS excellent
+				THEN service IS excellent;
+				
+		RULE 7: IF service_op_payer IS NOT very_poor
+				AND service_op_B IS poor
+				THEN service IS poor;
+				
+		RULE 8: IF service_op_payer IS NOT very_poor
+				AND service_op_B IS good
+				THEN service IS good;
+				
+		RULE 9: IF service_op_payer IS NOT very_poor
+				AND service_op_B IS excellent
+				THEN service IS excellent;
+				
+		RULE 10: IF service_op_payer IS NOT very_poor
+				AND service_op_C IS poor
+				THEN service IS poor;
+				
+		RULE 11: IF service_op_payer IS NOT very_poor
+				AND service_op_C IS good
+				THEN service IS good;
+				
+		RULE 12: IF service_op_payer IS NOT very_poor
+				AND service_op_C IS excellent
+				THEN service IS excellent;
+				
+		RULE 13: IF service_op_payer IS NOT very_poor
+				AND service_op_D IS poor
+				THEN service IS poor;
+				
+		RULE 14: IF service_op_payer IS NOT very_poor
+				AND service_op_D IS good
+				THEN service IS good;
+				
+		RULE 15: IF service_op_payer IS NOT very_poor
+				AND service_op_D IS excellent
+				THEN service IS excellent;
+				
+		RULE 16: IF service_op_payer IS NOT very_poor
+				AND service_op_E IS poor
+				THEN service IS poor;
+				
+		RULE 17: IF service_op_payer IS NOT very_poor
+				AND service_op_E IS good
+				THEN service IS good;
+				
+		RULE 18: IF service_op_payer IS NOT very_poor
+				AND service_op_E IS excellent
+				THEN service IS excellent;
+				
+		RULE 19: IF service_op_payer IS NOT very_poor
+				AND service_op_F IS poor
+				THEN service IS poor;
+				
+		RULE 20: IF service_op_payer IS NOT very_poor
+				AND service_op_F IS good
+				THEN service IS good;
+				
+		RULE 21: IF service_op_payer IS NOT very_poor
+				AND service_op_F IS excellent
+				THEN service IS excellent;
+				
+		RULE 22: IF service_op_payer IS NOT very_poor
+				AND service_op_G IS poor
+				THEN service IS poor;
+				
+		RULE 23: IF service_op_payer IS NOT very_poor
+				AND service_op_G IS good
+				THEN service IS good;
+				
+		RULE 24: IF service_op_payer IS NOT very_poor
+				AND service_op_G IS excellent
+				THEN service IS excellent;
+				
+		RULE 25: IF service_op_payer IS NOT very_poor
+				AND service_op_H IS poor
+				THEN service IS poor;
+				
+		RULE 26: IF service_op_payer IS NOT very_poor
+				AND service_op_H IS good
+				THEN service IS good;
+				
+		RULE 27: IF service_op_payer IS NOT very_poor
+				AND service_op_H IS excellent
+				THEN service IS excellent;
+				
+		RULE 28: IF service_op_payer IS NOT very_poor
+				AND service_op_I IS poor
+				THEN service IS poor;
+				
+		RULE 29: IF service_op_payer IS NOT very_poor
+				AND service_op_I IS good
+				THEN service IS good;
+				
+		RULE 30: IF service_op_payer IS NOT very_poor
+				AND service_op_I IS excellent
+				THEN service IS excellent;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK safis_food
+	VAR_INPUT
+		food_op_payer	:	REAL;
+		food_op_A	:	REAL;
+		food_op_B	:	REAL;
+		food_op_C	:	REAL;
+		food_op_D	:	REAL;
+		food_op_E	:	REAL;
+		food_op_F	:	REAL;
+		food_op_G	:	REAL;
+		food_op_H	:	REAL;
+		food_op_I	:	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		food		:	REAL ;
+	END_VAR
+
+	FUZZIFY food_op_payer
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_A
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_B
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_C
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_D
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_E
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_F
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_G
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_H
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+	
+	FUZZIFY food_op_I
+		TERM tasteless := (0,1)(5,1)(10,0);
+		TERM delicious := (6,0)(9,1);
+	END_FUZZIFY
+
+	DEFUZZIFY food
+		TERM tasteless := 1;
+		TERM delicious := 9;
+		METHOD: COGS ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK No2
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 1: IF food_op_payer IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 2: IF food_op_payer IS delicious
+				THEN food IS delicious;
+				
+		RULE 3: IF food_op_payer IS delicious
+				THEN food IS delicious;
+				
+		RULE 4: IF food_op_payer IS NOT tasteless
+				AND food_op_A IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 5: IF food_op_payer IS NOT tasteless
+				AND food_op_A IS delicious
+				THEN food IS delicious;
+				
+		RULE 6: IF food_op_payer IS NOT tasteless
+				AND food_op_B IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 7: IF food_op_payer IS NOT tasteless
+				AND food_op_B IS delicious
+				THEN food IS delicious;
+				
+		RULE 8: IF food_op_payer IS NOT tasteless
+				AND food_op_C IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 9: IF food_op_payer IS NOT tasteless
+				AND food_op_C IS delicious
+				THEN food IS delicious;
+				
+		RULE 10: IF food_op_payer IS NOT tasteless
+				AND food_op_D IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 11: IF food_op_payer IS NOT tasteless
+				AND food_op_D IS delicious
+				THEN food IS delicious;
+				
+		RULE 12: IF food_op_payer IS NOT tasteless
+				AND food_op_E IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 13: IF food_op_payer IS NOT tasteless
+				AND food_op_E IS delicious
+				THEN food IS delicious;
+				
+		RULE 14: IF food_op_payer IS NOT tasteless
+				AND food_op_F IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 15: IF food_op_payer IS NOT tasteless
+				AND food_op_F IS delicious
+				THEN food IS delicious;
+				
+		RULE 16: IF food_op_payer IS NOT tasteless
+				AND food_op_G IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 17: IF food_op_payer IS NOT tasteless
+				AND food_op_G IS delicious
+				THEN food IS delicious;
+				
+		RULE 18: IF food_op_payer IS NOT tasteless
+				AND food_op_H IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 19: IF food_op_payer IS NOT tasteless
+				AND food_op_H IS delicious
+				THEN food IS delicious;
+				
+		RULE 20: IF food_op_payer IS NOT tasteless
+				AND food_op_I IS tasteless
+				THEN food IS tasteless;
+				
+		RULE 21: IF food_op_payer IS NOT tasteless
+				AND food_op_I IS delicious
+				THEN food IS delicious;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK

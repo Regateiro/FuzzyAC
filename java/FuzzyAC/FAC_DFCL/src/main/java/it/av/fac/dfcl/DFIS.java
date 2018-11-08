@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,10 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
 import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
@@ -73,61 +68,7 @@ public class DFIS {
     }
 
     private FIS parse(String dfclStr) throws RecognitionException {
-        StringBuilder fcl = new StringBuilder();
-
-        String functionBlock = "";
-        try (BufferedReader in = new BufferedReader(new StringReader(dfclStr))) {
-            String line;
-            while ((line = in.readLine()) != null) {
-                if (line.contains("FUNCTION_BLOCK")) {
-                    fcl.append(line).append("\n");
-                    Matcher matcher = Pattern.compile("\\s*FUNCTION_BLOCK\\s+(\\w+)\\s*").matcher(line);
-                    if (matcher.matches()) {
-                        functionBlock = matcher.group(1);
-                        fbNameOrder.add(functionBlock);
-                    }
-                } else if (line.contains("EXTERNAL_FUZZIFY")) {
-                    Matcher matcher = Pattern.compile("\\s*EXTERNAL_FUZZIFY\\s+(\\w+)\\s*").matcher(line);
-                    if (matcher.matches()) {
-                        fcl.append(line.replace("EXTERNAL_", "")).append("\n");
-
-                        while (!(line = in.readLine()).contains("END_EXTERNAL_FUZZIFY")) {
-                            if (line.contains("TERM")) {
-                                line = line.replace(";", " := (0, 1) ;");
-                                fcl.append(line).append("\n");
-                            }
-                        }
-                        fcl.append(line.replace("DYNAMIC_", "")).append("\n");
-                    }
-                } else if (line.contains("DYNAMIC_RULER")) {
-                } else if (line.contains("CRISP_INPUT_CONNECTOR")) {
-                    Pattern varPattern = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
-                    while (!(line = in.readLine()).contains("END_CRISP_INPUT_CONNECTOR")) {
-                        Matcher matcher = varPattern.matcher(line);
-                        if (matcher.matches()) {
-                            connectingVars.put(functionBlock, matcher.group(1));
-                        }
-                    }
-                } else if (line.contains("FUZZY_INPUT_CONNECTOR")) {
-                    Pattern varPattern = Pattern.compile("\\s*(\\w+)\\s*;\\s*");
-                    while (!(line = in.readLine()).contains("END_FUZZY_INPUT_CONNECTOR")) {
-                        Matcher matcher = varPattern.matcher(line);
-                        if (matcher.matches()) {
-                            connectingVars.put(functionBlock, matcher.group(1));
-
-                            fcl.append("FUZZIFY ").append(matcher.group(1)).append("\n")
-                                    .append("END_FUZZIFY").append("\n\n");
-                        }
-                    }
-                } else {
-                    fcl.append(line).append("\n");
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(DFIS.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return FIS.createFromString(fcl.toString(), this.verbose);
+        return FIS.createFromString(dfclStr, this.verbose);
     }
 
     public void registerDynamicFunction(DynamicFunction dynFunction) {

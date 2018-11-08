@@ -1,0 +1,48 @@
+FUNCTION_BLOCK AcademicFIS
+
+VAR_INPUT
+	NPublications	:	REAL;
+	Role			:	REAL;
+END_VAR
+
+VAR_OUTPUT
+	Read_Access		:	REAL;
+END_VAR
+	
+FUZZIFY Number_Of_Publications
+	TERM Low := (3, 1)(5, 0);
+	TERM Considerable := (3, 0)(5, 1)(13, 1)(18, 0);
+	TERM High := (10, 0)(15, 1);
+END_FUZZIFY
+
+FUZZIFY Role
+	TERM Anon := 0;
+	TERM User := 1;
+	TERM Admin := 2;
+END_FUZZIFY
+
+DEFUZZIFY Read_Access
+	TERM Denied  := 0;
+	TERM Granted := 1;
+	METHOD: COGS;
+END_DEFUZZIFY
+	
+RULEBLOCK Read_Access
+
+RULE 0: IF (Role IS Anon) THEN Read_Access IS Denied;
+
+RULE 1: IF (Role IS Admin) THEN Read_Access IS Granted;
+
+RULE 2: IF (Role IS User) AND (NPublications IS Low) 
+		THEN Read_Access IS Low;
+		
+RULE 3: IF (Role IS User) AND (NPublications IS Medium) 
+		THEN Read_Access IS Granted;
+		
+RULE 4: IF (Role IS User) AND (NPublications IS High) 
+		THEN Read_Access IS Granted;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
