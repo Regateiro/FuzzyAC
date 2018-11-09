@@ -20,7 +20,11 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import net.sourceforge.jFuzzyLogic.FIS;
 import net.sourceforge.jFuzzyLogic.FunctionBlock;
+import net.sourceforge.jFuzzyLogic.defuzzifier.DefuzzifierCenterOfGravitySingletons;
+import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionSingleton;
+import net.sourceforge.jFuzzyLogic.membership.Value;
 import net.sourceforge.jFuzzyLogic.plot.JFuzzyChart;
+import net.sourceforge.jFuzzyLogic.rule.LinguisticTerm;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 import org.antlr.runtime.RecognitionException;
 
@@ -46,7 +50,7 @@ public class SAFIS {
         }
 
         this.safis = parse(fcl.toString());
-        
+
         fcl = new StringBuilder();
         try (BufferedReader in = new BufferedReader(new FileReader(fisFCL))) {
             String line;
@@ -119,8 +123,64 @@ public class SAFIS {
                 }
             });
         });
-        
+
         // Execute the FIS using the aggregated outputs
+        FunctionBlock fisFB = fis.iterator().next();
+
+        List<Variable> outVariables = new ArrayList<>();
+
+        // Save output variables as input for the next functionblock
+        ret.values().stream().filter((variable) -> (variable.isOutput())).forEach((outVariable) -> {
+            if (debug) {
+                JFuzzyChart.get().chart(outVariable, outVariable.getDefuzzifier(), true);
+            }
+
+            //save the VariableInference output variable to configure the respective AccessControl input.
+            outVariables.add(outVariable);
+
+            //add the crisp value as the input for the next function block
+            fis.setVariable(fisFB.getName(), outVariable.getName(), outVariable.getValue());
+        });
+
+        //for each input variable on the next functionblock that does not have any LT
+        fisFB.getVariables().values().stream().filter((variable) -> variable.isInput() && variable.getLinguisticTerms().isEmpty()).forEach((inVariable) -> {
+            //find the respective previous output variables
+            outVariables.stream().filter((outVariable) -> outVariable.getName().equals(inVariable.getName())).forEach((outVariable) -> {
+                //For each linguistic term in the previous output variables
+                outVariable.getLinguisticTerms().values().stream().forEach((lt) -> {
+                    //Add the linguistic term with x as the common crisp value and y as the membership degree
+                    //This will put all linguistic terms on the same x, which will be the value for the AccessControl input variable
+                    DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
+                    MembershipFunctionSingleton mfunction = new MembershipFunctionSingleton(
+                            new Value(outVariable.getValue()),
+                            new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
+                    );
+                    inVariable.add(new LinguisticTerm(lt.getTermName(), mfunction));
+                });
+            });
+        });
+
+        // Show 
+        if (debug) {
+            JFuzzyChart.get().chart(fisFB);
+        }
+
+        // Evaluate
+        fisFB.evaluate();
+
+        // add the output to the result
+        fisFB.variables().stream().filter((variable) -> (variable.isOutput())).forEach((variable) -> {
+            if (debug) {
+                JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), true);
+            }
+
+            retLock.lock();
+            try {
+                ret.put(variable.getName(), variable);
+            } finally {
+                retLock.unlock();
+            }
+        });
 
         return ret;
     }
@@ -128,7 +188,7 @@ public class SAFIS {
     public FIS getFIS() {
         return this.fis;
     }
-    
+
     public FIS getSAFIS() {
         return this.safis;
     }
