@@ -5,11 +5,13 @@
  */
 package it.av.fac.dfcl;
 
+import it.av.fac.dfcl.factory.FISFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,34 +38,111 @@ public class SAFIS {
 
     private final FIS safis;
     private final FIS fis;
-    private final boolean verbose;
 
-    public SAFIS(File safisFCL, File fisFCL, boolean verbose) throws IOException, RecognitionException {
-        this.verbose = verbose;
-
+    public SAFIS(File fisFCL, boolean verbose) throws IOException, RecognitionException {
         StringBuilder fcl = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new FileReader(safisFCL))) {
-            String line;
-            while ((line = in.readLine()) != null) {
-                fcl.append(line).append(System.getProperty("line.separator"));
-            }
-        }
-
-        this.safis = parse(fcl.toString());
-
-        fcl = new StringBuilder();
+        StringBuilder safcl = new StringBuilder();
         try (BufferedReader in = new BufferedReader(new FileReader(fisFCL))) {
             String line;
+            boolean parsingSAFIS = false;
+            boolean skipBlock = false;
+            final FISFactory factory = new FISFactory();
+            int fisNum = 1;
+
             while ((line = in.readLine()) != null) {
-                fcl.append(line).append(System.getProperty("line.separator"));
+                if (line.startsWith("SOURCE_AGGREGATOR")) {
+                    parsingSAFIS = true;
+                    factory.reset();
+
+                    line = line.trim();
+                    String[] fields = Arrays.asList(line.split("[ ;:=\t]")).parallelStream().filter((field) -> field.length() > 0).toArray(String[]::new);
+                    factory.addOutputVar(fields[1]);
+                } else if (line.startsWith("END_SOURCE_AGGREGATOR")) {
+                    // generate rules
+                    factory.getOutputVars().forEach((outputVar) -> {
+
+                        List<String> terms = factory.getInputVarTerms().values().stream().findAny().get();
+                        terms.forEach((term) -> {
+                            List<String> ruleParts = new ArrayList<>();
+                            
+                            factory.getInputVars().forEach((inputVar) -> {
+                                ruleParts.add(inputVar);
+                                ruleParts.add(term.split("[ ]")[1]);
+                            });
+                            ruleParts.add(outputVar);
+                            ruleParts.add(term.split("[ ]")[1]);
+                            
+                            factory.addRule(outputVar, "OR", ruleParts.toArray(new String[0]));
+                        });
+
+                    });
+
+                    safcl.append(factory.toFCL("safis" + fisNum++));
+                    parsingSAFIS = false;
+                } else if (parsingSAFIS) {
+                    line = line.trim();
+                    String[] fields = Arrays.asList(line.split("[ ;:=(),\t]")).parallelStream().filter((field) -> field.length() > 0).toArray(String[]::new);
+
+                    if (fields.length == 0) {
+                        continue;
+                    }
+
+                    switch (fields[0]) {
+                        case "INPUT":
+                            factory.addInputVar(fields[1], Double.valueOf(fields[2]));
+                            break;
+                        case "IN_TERM":
+                            for (String inputVar : factory.getInputVars()) {
+                                double[] xy = new double[fields.length - 2];
+                                for (int i = 2; i < fields.length; i++) {
+                                    xy[i - 2] = Double.valueOf(fields[i]);
+                                }
+                                factory.addVarTerm(inputVar, fields[1], xy);
+                            }
+                            break;
+                        case "OUT_TERM":
+                            for (String outputVar : factory.getOutputVars()) {
+                                double[] xy = new double[fields.length - 2];
+                                for (int i = 2; i < fields.length; i++) {
+                                    xy[i - 2] = Double.valueOf(fields[i]);
+                                }
+                                factory.addVarTerm(outputVar, fields[1], xy);
+                            }
+                            break;
+                        case "DEFUZZIFY_METHOD":
+                            factory.getOutputVars().stream().forEach((outputVar) -> {
+                                factory.addDeffuzifyMethod(outputVar, fields[1]);
+                            });
+                            break;
+                        case "RULEBLOCK_ACT":
+                            factory.getOutputVars().stream().forEach((outputVar) -> {
+                                factory.addRuleACTMethod(outputVar, fields[1]);
+                            });
+                            break;
+                        case "RULEBLOCK_AND":
+                            factory.getOutputVars().stream().forEach((outputVar) -> {
+                                factory.addRuleANDMethod(outputVar, fields[1]);
+                            });
+                            break;
+                        case "RULEBLOCK_ACCU":
+                            factory.getOutputVars().stream().forEach((outputVar) -> {
+                                factory.addRuleACCUMethod(outputVar, fields[1]);
+                            });
+                    }
+                } else if (line.contains("AGGREGATOR_FUZZIFY") && !skipBlock) {
+                    fcl.append(line.replace("AGGREGATOR_", "")).append(System.lineSeparator());
+                    fcl.append("\tEND_FUZZIFY").append(System.lineSeparator());
+                    skipBlock = true;
+                } else if (line.contains("END_") && skipBlock) {
+                    skipBlock = false;
+                } else if (!skipBlock) {
+                    fcl.append(line).append(System.getProperty("line.separator"));
+                }
             }
+
+            safis = FIS.createFromString(safcl.toString(), verbose);
+            fis = FIS.createFromString(fcl.toString(), verbose);
         }
-
-        this.fis = parse(fcl.toString());
-    }
-
-    private FIS parse(String dfclStr) throws RecognitionException {
-        return FIS.createFromString(dfclStr, this.verbose);
     }
 
     public Collection<String> getInputVariableNameList(FunctionBlock functionBlock) {
@@ -196,12 +275,11 @@ public class SAFIS {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String safisFile = "safis_tipping.fcl";
-        String fis = "tipping.fcl";
+        String fis = "tipping2.fcl";
 
-        switch (safisFile) {
-            case "safis_tipping.fcl": // works
-                vars.put("service_op_payer", Math.floor(Math.random() * 10));
+        switch (fis) {
+            case "tipping2.fcl": // works
+                vars.put("service_op_Host", Math.floor(Math.random() * 10));
                 vars.put("service_op_A", Math.floor(Math.random() * 10));
                 vars.put("service_op_B", Math.floor(Math.random() * 10));
                 vars.put("service_op_C", Math.floor(Math.random() * 10));
@@ -211,7 +289,7 @@ public class SAFIS {
                 vars.put("service_op_G", Math.floor(Math.random() * 10));
                 vars.put("service_op_H", Math.floor(Math.random() * 10));
                 vars.put("service_op_I", Math.floor(Math.random() * 10));
-                vars.put("food_op_payer", Math.floor(Math.random() * 10));
+                vars.put("food_op_Host", Math.floor(Math.random() * 10));
                 vars.put("food_op_A", Math.floor(Math.random() * 10));
                 vars.put("food_op_B", Math.floor(Math.random() * 10));
                 vars.put("food_op_C", Math.floor(Math.random() * 10));
@@ -223,7 +301,7 @@ public class SAFIS {
                 vars.put("food_op_I", Math.floor(Math.random() * 10));
         }
 
-        SAFIS safis = new SAFIS(new File(safisFile), new File(fis), true);
+        SAFIS safis = new SAFIS(new File(fis), true);
         System.out.println(safis.evaluate(vars, false));
     }
 }

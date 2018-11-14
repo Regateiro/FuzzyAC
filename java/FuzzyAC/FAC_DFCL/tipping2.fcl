@@ -1,0 +1,89 @@
+SOURCE_AGGREGATOR food
+	INPUT food_op_Host := 1;
+	INPUT food_op_A	:= 0.5;
+	INPUT food_op_B	:= 0.5;
+	INPUT food_op_C	:= 0.5;
+	INPUT food_op_D	:= 0.5;
+	INPUT food_op_E	:= 0.5;
+	INPUT food_op_F	:= 0.5;
+	INPUT food_op_G	:= 0.5;
+	INPUT food_op_H	:= 0.5;
+	INPUT food_op_I	:= 0.5;
+	
+	IN_TERM tasteless := (0,1)(5,1)(10,0);
+	IN_TERM delicious := (6,0)(9,1);
+		
+	OUT_TERM tasteless := 1;
+	OUT_TERM delicious := 9;
+	DEFUZZIFY_METHOD : COGS;
+	
+	RULEBLOCK_ACT  : MIN;
+	RULEBLOCK_AND  : PROD;
+	RULEBLOCK_ACCU : MAX;
+END_SOURCE_AGGREGATOR
+
+SOURCE_AGGREGATOR service
+	INPUT service_op_Host := 1;
+	INPUT service_op_A	:= 0.5;
+	INPUT service_op_B	:= 0.5;
+	INPUT service_op_C	:= 0.5;
+	INPUT service_op_D	:= 0.5;
+	INPUT service_op_E	:= 0.5;
+	INPUT service_op_F	:= 0.5;
+	INPUT service_op_G	:= 0.5;
+	INPUT service_op_H	:= 0.5;
+	INPUT service_op_I	:= 0.5;
+	
+	IN_TERM poor := (0,1)(6,0);
+	IN_TERM good := (4,0)(6,1)(7,1)(8,0);
+	IN_TERM excellent := (6,0)(9,1);
+		
+	OUT_TERM poor := 1;
+	OUT_TERM good := 6;
+	OUT_TERM excellent := 9;
+	DEFUZZIFY_METHOD : COGS;
+	
+	RULEBLOCK_ACT  : MIN;
+	RULEBLOCK_AND  : PROD;
+	RULEBLOCK_ACCU : MAX;
+END_SOURCE_AGGREGATOR
+
+FUNCTION_BLOCK fis_tip
+	VAR_INPUT
+		service	:	REAL;
+		food	:	REAL;
+	END_VAR
+
+	VAR_OUTPUT
+		tip		:	REAL ;
+	END_VAR
+
+	AGGREGATOR_FUZZIFY service
+	END_AGGREGATOR_FUZZIFY
+
+	AGGREGATOR_FUZZIFY food
+	END_AGGREGATOR_FUZZIFY
+
+	DEFUZZIFY tip
+		TERM low := (0,0)(5,1)(10,0);
+		TERM average := (10,0)(15,1)(20,0);
+		TERM generous := (20,0)(25,1)(30,0);
+		METHOD: COG ;
+	END_DEFUZZIFY
+		
+	RULEBLOCK No1
+		AND:MIN;
+		ACCU:MAX;
+		
+		RULE 1: IF service IS poor 
+				OR food IS tasteless
+				THEN tip IS low;
+				
+		RULE 2: IF service IS good 
+				THEN tip IS average;
+				
+		RULE 3: IF service IS excellent
+				AND food IS delicious
+				THEN tip IS generous;
+	END_RULEBLOCK
+END_FUNCTION_BLOCK
