@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import net.sourceforge.jFuzzyLogic.rule.Variable;
 import org.antlr.runtime.RecognitionException;
 
 /**
+ * Fuzzy Inference System with support for FB chaining and dynamic functions
  *
  * @author Diogo Regateiro <diogoregateiro@ua.pt>
  */
@@ -35,17 +37,11 @@ public class DFIS {
     private final FIS fis;
     private final boolean verbose;
     private final Set<DynamicFunction> dfunctions;
-    private final List<String> fbNameOrder;
+    private final String[] fbNameOrder;
 
-    /**
-     * functionblock, varname of the previous block
-     */
-    private final Map<String, String> connectingVars;
-
-    public DFIS(File dfclFile, boolean verbose) throws IOException, RecognitionException {
+    public DFIS(File dfclFile, String[] fbOrder, boolean verbose) throws IOException, RecognitionException {
         this.dfunctions = new HashSet<>();
-        this.connectingVars = new HashMap<>();
-        this.fbNameOrder = new ArrayList<>();
+        this.fbNameOrder = fbOrder;
         this.verbose = verbose;
 
         StringBuilder dfcl = new StringBuilder();
@@ -59,10 +55,9 @@ public class DFIS {
         this.fis = parse(dfcl.toString());
     }
 
-    public DFIS(String dfclStr, boolean verbose) throws RecognitionException {
+    public DFIS(String dfclStr, String[] fbOrder, boolean verbose) throws RecognitionException {
         this.dfunctions = new HashSet<>();
-        this.connectingVars = new HashMap<>();
-        this.fbNameOrder = new ArrayList<>();
+        this.fbNameOrder = fbOrder;
         this.verbose = verbose;
         this.fis = parse(dfclStr);
     }
@@ -86,7 +81,7 @@ public class DFIS {
      */
     public Collection<String> getInputVariableNameList() {
         Set<String> ret = new HashSet<>();
-        this.fis.getFunctionBlock(this.fbNameOrder.get(0)).variables().stream()
+        this.fis.getFunctionBlock(this.fbNameOrder[0]).variables().stream()
                 .filter((variable) -> variable.isInput())
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
@@ -115,7 +110,7 @@ public class DFIS {
         }
 
         List<FunctionBlock> fbOrder = new ArrayList<>();
-        fbNameOrder.forEach((fbName) -> fbOrder.add(fis.getFunctionBlock(fbName)));
+        Arrays.stream(fbNameOrder).forEach((fbName) -> fbOrder.add(fis.getFunctionBlock(fbName)));
         fbOrder.forEach((fb) -> fb.reset());
 
         for (int i = 0; i < fbOrder.size(); i++) {
@@ -165,11 +160,19 @@ public class DFIS {
                         outVariable.getLinguisticTerms().values().stream().forEach((lt) -> {
                             //Add the linguistic term with x as the common crisp value and y as the membership degree
                             //This will put all linguistic terms on the same x, which will be the value for the AccessControl input variable
-                            DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
-                            MembershipFunctionSingleton mfunction = new MembershipFunctionSingleton(
-                                    new Value(outVariable.getValue()),
-                                    new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
-                            );
+                            MembershipFunctionSingleton mfunction;
+                            if (outVariable.getDefuzzifier().isDiscrete()) {
+                                DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
+                                mfunction = new MembershipFunctionSingleton(
+                                        new Value(outVariable.getValue()),
+                                        new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
+                                );
+                            } else {
+                                mfunction = new MembershipFunctionSingleton(
+                                        new Value(outVariable.getValue()),
+                                        new Value(outVariable.getMembership(lt.getTermName()))
+                                );
+                            }
                             inVariable.add(new LinguisticTerm(lt.getTermName(), mfunction));
                         });
                     });

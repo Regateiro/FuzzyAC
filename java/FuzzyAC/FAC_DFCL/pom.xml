@@ -19,5 +19,10 @@
             <artifactId>jFuzzyLogic</artifactId>
             <version>1.2.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20171018</version>
+        </dependency>
     </dependencies>
 </project>

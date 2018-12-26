@@ -9,6 +9,7 @@ import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
 import it.av.fac.decision.util.handlers.ValidatorHandler;
 import it.av.fac.dfcl.DFIS;
 import it.av.fac.dfcl.DynamicFunction;
+import it.av.fac.optimization.TermInfluence;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -30,10 +31,15 @@ public class BDFIS {
     protected final DFIS dfis;
 
     public BDFIS(String fcl, boolean inlineFcl) throws RecognitionException, IOException {
+        String[] fbOrder = new String[] {
+            FB_VARIABLE_INFERENCE_PHASE_NAME, 
+            FB_ACCESS_CONTROL_PHASE_NAME
+        };
+        
         if (inlineFcl) {
-            this.dfis = new DFIS(fcl, false);
+            this.dfis = new DFIS(fcl, fbOrder, false);
         } else {
-            this.dfis = new DFIS(new File(fcl), false);
+            this.dfis = new DFIS(new File(fcl), fbOrder, false);
         }
     }
     
@@ -60,10 +66,11 @@ public class BDFIS {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String testFile = "academic.dfcl";
+        String testFile = "academic.fcl";
 
         switch (testFile) {
             case "academic.dfcl": // works
+            case "academic.fcl": // works
                 vars.put("Number_Of_Publications", 12.0);
                 vars.put("Number_Of_Citations", 50.0);
         }
@@ -72,9 +79,9 @@ public class BDFIS {
         System.out.println(bdfis.evaluate(vars, true));
 
         AbstractFuzzyAnalyser ofanal = new OBDFISAuditor(bdfis);
-        AbstractFuzzyAnalyser sfanal = new OBDFISAuditor(bdfis);
+        AbstractFuzzyAnalyser sfanal = new SBDFISAuditor(bdfis);
 
-        String[] permissions = new String[]{"Write"};
+        String[] permissions = new String[]{"Read"};
 
         ValidatorHandler handler = new ValidatorHandler();
         for (String permission : permissions) {

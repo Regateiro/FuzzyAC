@@ -25,5 +25,6 @@
         <module>FAC_Enforcement</module>
         <module>FAC_DFCL</module>
         <module>FAC_MLEngine</module>
+        <module>../../../SAFCL</module>
     </modules>
 </project>

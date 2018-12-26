@@ -7,6 +7,7 @@ package it.av.fac.dfcl.factory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,11 @@ public class FISFactory {
         this.fuzzify_blocks = new HashMap<>();
         this.defuzzify_blocks = new HashMap<>();
         this.rule_blocks = new HashMap<>();
+    }
+
+    public void addInputVar(String varName) {
+        fuzzify_blocks.putIfAbsent(varName, new ArrayList<>());
+        var_weights.put(varName, 1.0);
     }
 
     public void addInputVar(String varName, double ymax) {
@@ -54,7 +60,7 @@ public class FISFactory {
         } else {
             for (int i = 0; i < xy.length; i += 2) {
                 termStr.append("(").append(xy[i]).append(",")
-                        .append(Math.min(var_weights.get(varName), xy[i + 1])).append(")");
+                        .append(Math.min(var_weights.getOrDefault(varName, 1.0), xy[i + 1])).append(")");
             }
         }
         termStr.append(";");
@@ -68,10 +74,17 @@ public class FISFactory {
         }
     }
 
+    public Set<String> getVars() {
+        Set<String> ret = new HashSet<>();
+        ret.addAll(fuzzify_blocks.keySet());
+        ret.addAll(defuzzify_blocks.keySet());
+        return ret;
+    }
+
     public Set<String> getInputVars() {
         return fuzzify_blocks.keySet();
     }
-    
+
     public Map<String, List<String>> getInputVarTerms() {
         return fuzzify_blocks;
     }

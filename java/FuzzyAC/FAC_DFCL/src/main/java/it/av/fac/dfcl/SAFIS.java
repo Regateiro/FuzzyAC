@@ -8,8 +8,11 @@ package it.av.fac.dfcl;
 import it.av.fac.dfcl.factory.FISFactory;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,14 +67,14 @@ public class SAFIS {
                         List<String> terms = factory.getInputVarTerms().values().stream().findAny().get();
                         terms.forEach((term) -> {
                             List<String> ruleParts = new ArrayList<>();
-                            
+
                             factory.getInputVars().forEach((inputVar) -> {
                                 ruleParts.add(inputVar);
                                 ruleParts.add(term.split("[ ]")[1]);
                             });
                             ruleParts.add(outputVar);
                             ruleParts.add(term.split("[ ]")[1]);
-                            
+
                             factory.addRule(outputVar, "OR", ruleParts.toArray(new String[0]));
                         });
 
@@ -91,22 +94,13 @@ public class SAFIS {
                         case "INPUT":
                             factory.addInputVar(fields[1], Double.valueOf(fields[2]));
                             break;
-                        case "IN_TERM":
-                            for (String inputVar : factory.getInputVars()) {
+                        case "TERM":
+                            for (String var : factory.getVars()) {
                                 double[] xy = new double[fields.length - 2];
                                 for (int i = 2; i < fields.length; i++) {
                                     xy[i - 2] = Double.valueOf(fields[i]);
                                 }
-                                factory.addVarTerm(inputVar, fields[1], xy);
-                            }
-                            break;
-                        case "OUT_TERM":
-                            for (String outputVar : factory.getOutputVars()) {
-                                double[] xy = new double[fields.length - 2];
-                                for (int i = 2; i < fields.length; i++) {
-                                    xy[i - 2] = Double.valueOf(fields[i]);
-                                }
-                                factory.addVarTerm(outputVar, fields[1], xy);
+                                factory.addVarTerm(var, fields[1], xy);
                             }
                             break;
                         case "DEFUZZIFY_METHOD":
@@ -181,18 +175,14 @@ public class SAFIS {
             });
 
             // Show 
-            if (debug) {
-                JFuzzyChart.get().chart(currFIS);
-            }
+            JFuzzyChart.get().chart(currFIS.variables().stream().findAny().get(), debug);
 
             // Evaluate
             currFIS.evaluate();
 
             // add the output to the result
             currFIS.variables().stream().filter((variable) -> (variable.isOutput())).forEach((variable) -> {
-                if (debug) {
-                    JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), true);
-                }
+                JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), debug);
 
                 retLock.lock();
                 try {
@@ -210,9 +200,7 @@ public class SAFIS {
 
         // Save output variables as input for the next functionblock
         ret.values().stream().filter((variable) -> (variable.isOutput())).forEach((outVariable) -> {
-            if (debug) {
-                JFuzzyChart.get().chart(outVariable, outVariable.getDefuzzifier(), true);
-            }
+            JFuzzyChart.get().chart(outVariable, outVariable.getDefuzzifier(), debug);
 
             //save the VariableInference output variable to configure the respective AccessControl input.
             outVariables.add(outVariable);
@@ -229,11 +217,19 @@ public class SAFIS {
                 outVariable.getLinguisticTerms().values().stream().forEach((lt) -> {
                     //Add the linguistic term with x as the common crisp value and y as the membership degree
                     //This will put all linguistic terms on the same x, which will be the value for the AccessControl input variable
-                    DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
-                    MembershipFunctionSingleton mfunction = new MembershipFunctionSingleton(
-                            new Value(outVariable.getValue()),
-                            new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
-                    );
+                    MembershipFunctionSingleton mfunction;
+                    if (outVariable.getDefuzzifier().isDiscrete()) {
+                        DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) outVariable.getDefuzzifier();
+                        mfunction = new MembershipFunctionSingleton(
+                                new Value(outVariable.getValue()),
+                                new Value(defuzzifier.getDiscreteValue(lt.getMembershipFunction().getParameter(0)))
+                        );
+                    } else {
+                        mfunction = new MembershipFunctionSingleton(
+                                new Value(outVariable.getValue()),
+                                new Value(outVariable.getMembership(lt.getTermName()))
+                        );
+                    }
                     inVariable.add(new LinguisticTerm(lt.getTermName(), mfunction));
                 });
             });
@@ -249,9 +245,7 @@ public class SAFIS {
 
         // add the output to the result
         fisFB.variables().stream().filter((variable) -> (variable.isOutput())).forEach((variable) -> {
-            if (debug) {
-                JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), true);
-            }
+            JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), debug);
 
             retLock.lock();
             try {
@@ -275,33 +269,21 @@ public class SAFIS {
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
 
-        String fis = "tipping2.fcl";
-
-        switch (fis) {
-            case "tipping2.fcl": // works
-                vars.put("service_op_Host", Math.floor(Math.random() * 10));
-                vars.put("service_op_A", Math.floor(Math.random() * 10));
-                vars.put("service_op_B", Math.floor(Math.random() * 10));
-                vars.put("service_op_C", Math.floor(Math.random() * 10));
-                vars.put("service_op_D", Math.floor(Math.random() * 10));
-                vars.put("service_op_E", Math.floor(Math.random() * 10));
-                vars.put("service_op_F", Math.floor(Math.random() * 10));
-                vars.put("service_op_G", Math.floor(Math.random() * 10));
-                vars.put("service_op_H", Math.floor(Math.random() * 10));
-                vars.put("service_op_I", Math.floor(Math.random() * 10));
-                vars.put("food_op_Host", Math.floor(Math.random() * 10));
-                vars.put("food_op_A", Math.floor(Math.random() * 10));
-                vars.put("food_op_B", Math.floor(Math.random() * 10));
-                vars.put("food_op_C", Math.floor(Math.random() * 10));
-                vars.put("food_op_D", Math.floor(Math.random() * 10));
-                vars.put("food_op_E", Math.floor(Math.random() * 10));
-                vars.put("food_op_F", Math.floor(Math.random() * 10));
-                vars.put("food_op_G", Math.floor(Math.random() * 10));
-                vars.put("food_op_H", Math.floor(Math.random() * 10));
-                vars.put("food_op_I", Math.floor(Math.random() * 10));
+        String fisPath = args[0];
+        String inputPath = args[1];
+        
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(inputPath)), Charset.forName("UTF-8")))) {
+            String line;
+            while((line = in.readLine()) != null) {
+                String[] fields = line.split("[ =]");
+                vars.put(fields[0], Double.parseDouble(fields[1]));
+            }
+        } catch (NumberFormatException | IndexOutOfBoundsException ex) {
+            System.err.println("Error: Malformed input file.");
+            System.exit(1);
         }
 
-        SAFIS safis = new SAFIS(new File(fis), true);
-        System.out.println(safis.evaluate(vars, false));
+        SAFIS safis = new SAFIS(new File(fisPath), true);
+        System.out.println(safis.evaluate(vars, true));
     }
 }
