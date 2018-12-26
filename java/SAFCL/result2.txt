@@ -1,0 +1,18 @@
+{service=service : 
+	Defuzzifier : CenterOfGravity
+	Latest defuzzified value: 5.319778795788212
+	Term: excellent	0.0	PieceWiseLinear : (6.0, 0.0) , (9.0, 1.0) ;
+	Term: poor	0.11337020070196469	PieceWiseLinear : (0.0, 1.0) , (6.0, 0.0) ;
+	Term: good	0.6598893978941058	PieceWiseLinear : (4.0, 0.0) , (6.0, 1.0) , (7.0, 1.0) , (8.0, 0.0) ;
+, tip=tip : 
+	Defuzzifier : CenterOfGravity
+	Latest defuzzified value: 9.700064831041281
+	Term: average	0.0	PieceWiseLinear : (10.0, 0.0) , (15.0, 1.0) , (20.0, 0.0) ;
+	Term: low	0.05998703379174375	PieceWiseLinear : (0.0, 0.0) , (5.0, 1.0) , (10.0, 0.0) ;
+	Term: generous	0.0	PieceWiseLinear : (20.0, 0.0) , (25.0, 1.0) , (30.0, 0.0) ;
+, food=food : 
+	Defuzzifier : CenterOfGravity
+	Latest defuzzified value: 5.264641029616901
+	Term: tasteless	0.9470717940766198	PieceWiseLinear : (0.0, 1.0) , (5.0, 1.0) , (10.0, 0.0) ;
+	Term: delicious	0.0	PieceWiseLinear : (6.0, 0.0) , (9.0, 1.0) ;
+}
