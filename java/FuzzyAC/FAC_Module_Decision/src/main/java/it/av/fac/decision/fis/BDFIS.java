@@ -9,7 +9,6 @@ import it.av.fac.decision.util.decision.AlphaCutDecisionMaker;
 import it.av.fac.decision.util.handlers.ValidatorHandler;
 import it.av.fac.dfcl.DFIS;
 import it.av.fac.dfcl.DynamicFunction;
-import it.av.fac.optimization.TermInfluence;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -42,7 +41,7 @@ public class BDFIS {
             this.dfis = new DFIS(new File(fcl), fbOrder, false);
         }
     }
-    
+
     public void registerDynamicFunction(DynamicFunction dynFunction) {
         this.dfis.registerDynamicFunction(dynFunction);
     }
