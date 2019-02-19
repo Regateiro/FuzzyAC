@@ -10,10 +10,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,12 +35,8 @@ import org.antlr.runtime.RecognitionException;
 public class BDFIS {
 
     private final FIS fis;
-    private final boolean verbose;
-    private final String[] fbNameOrder = new String[]{"VariableInference", "AccessControl"};
 
-    public BDFIS(File dfclFile, boolean verbose) throws IOException, RecognitionException {
-        this.verbose = verbose;
-
+    public BDFIS(File dfclFile) throws IOException, RecognitionException {
         StringBuilder dfcl = new StringBuilder();
         try (BufferedReader in = new BufferedReader(new FileReader(dfclFile))) {
             String line;
@@ -52,26 +48,12 @@ public class BDFIS {
         this.fis = parse(dfcl.toString());
     }
 
-    public BDFIS(String dfclStr, boolean verbose) throws RecognitionException {
-        this.verbose = verbose;
+    public BDFIS(String dfclStr) throws RecognitionException {
         this.fis = parse(dfclStr);
     }
 
     private FIS parse(String dfclStr) throws RecognitionException {
-        return FIS.createFromString(dfclStr, this.verbose);
-    }
-
-    /**
-     * Returns the input variables of the first function block.
-     *
-     * @return
-     */
-    public Collection<String> getInputVariableNameList() {
-        Set<String> ret = new HashSet<>();
-        this.fis.getFunctionBlock(this.fbNameOrder[0]).variables().stream()
-                .filter((variable) -> variable.isInput())
-                .forEach((variable) -> ret.add(variable.getName()));
-        return ret;
+        return FIS.createFromString(dfclStr, true);
     }
 
     public Collection<String> getInputVariableNameList(FunctionBlock functionBlock) {
@@ -82,7 +64,64 @@ public class BDFIS {
         return ret;
     }
 
-    public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean debug) {
+    public Collection<String> getOutputVariableNameList(FunctionBlock functionBlock) {
+        Set<String> ret = new HashSet<>();
+        functionBlock.variables().stream()
+                .filter((variable) -> variable.isOutput())
+                .forEach((variable) -> ret.add(variable.getName()));
+        return ret;
+    }
+
+    private List<FunctionBlock> getFBOrder(Set<String> inVarNames) {
+        List<FunctionBlock> fbOrder = new ArrayList<>();
+        Set<String> availableVars = new HashSet<>(inVarNames);
+
+        // fb skipped flag, used to determine when an fb is not added to the list so the list has to be reiterated.
+        boolean fbSkipped;
+        do {
+            // set the fb skipped flag to false.
+            fbSkipped = false;
+            int fbCount = fbOrder.size();
+
+            // iterate over the list of function blocks
+            Iterator<FunctionBlock> itr = fis.iterator();
+            while (itr.hasNext()) {
+                FunctionBlock fb = itr.next();
+
+                // if the order list already contains the function block, continue to the next
+                if (!fbOrder.contains(fb)) {
+                    // otherwise, check if the input variables available are enough to run the function block
+                    if (availableVars.containsAll(getInputVariableNameList(fb))) {
+                        // if so, then it can be executed at this point, add it to the order list and its outputs to the list of available input variables
+                        availableVars.addAll(getOutputVariableNameList(fb));
+                        fbOrder.add(fb);
+                    } else {
+                        // if the available input variables do not cover all the fb inputs, skip it.
+                        fbSkipped = true;
+                    }
+                }
+            }
+
+            // if a function block was skipped and the fbOrder was not added to, then there is input variable missing.
+            if (fbSkipped && fbCount == fbOrder.size()) {
+                System.err.println("It was not possible to build a function block dependency order, one or more input variables cannot be resolved.");
+                System.err.println("Check if all input variables were either provided an input or calculated by a fis, and that there are no cyclic dependencies.");
+                System.err.println("List of function blocks with missing inputs:");
+                itr = fis.iterator();
+                while (itr.hasNext()) {
+                    FunctionBlock fb = itr.next();
+                    if (!fbOrder.contains(fb)) {
+                        System.err.println(" -> " + fb.getName());
+                    }
+                }
+                System.exit(2);
+            }
+        } while (fbSkipped);
+
+        return fbOrder;
+    }
+
+    public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean verbose, boolean chart) {
         Map<String, Variable> ret = new HashMap<>();
 
         // Error while loading?
@@ -92,13 +131,15 @@ public class BDFIS {
         }
 
         // Print ruleSet
-        if (debug) {
+        if (verbose) {
+            System.out.println("********* PARSE *********");
             System.out.println(fis);
+            System.out.println("\n********* INPUT *********");
+            System.out.println(inVariables);
+            System.out.println("\n******** RESULTS ********");
         }
 
-        List<FunctionBlock> fbOrder = new ArrayList<>();
-        Arrays.stream(fbNameOrder).forEach((fbName) -> fbOrder.add(fis.getFunctionBlock(fbName)));
-        fbOrder.forEach((fb) -> fb.reset());
+        List<FunctionBlock> fbOrder = getFBOrder(inVariables.keySet());
 
         for (int i = 0; i < fbOrder.size(); i++) {
             FunctionBlock currFB = fbOrder.get(i);
@@ -109,7 +150,7 @@ public class BDFIS {
             });
 
             // Show 
-            if (debug) {
+            if (chart) {
                 JFuzzyChart.get().chart(currFB);
             }
 
@@ -123,7 +164,7 @@ public class BDFIS {
 
                 // Save output variables as input for the next functionblock
                 currFB.variables().stream().filter((variable) -> (variable.isOutput())).forEach((outVariable) -> {
-                    if (debug) {
+                    if (chart) {
                         JFuzzyChart.get().chart(outVariable, outVariable.getDefuzzifier(), true);
                     }
 
@@ -162,7 +203,7 @@ public class BDFIS {
             } else {
                 // If the current function block is the last one, add the output variables to the result
                 currFB.variables().stream().filter((variable) -> (variable.isOutput())).forEach((variable) -> {
-                    if (debug) {
+                    if (chart) {
                         JFuzzyChart.get().chart(variable, variable.getDefuzzifier(), true);
                     }
 
@@ -180,12 +221,29 @@ public class BDFIS {
 
     public static void main(String[] args) throws Exception {
         Map<String, Double> vars = new HashMap<>();
+        String fcl = null;
+        boolean verbose = false;
+        boolean chart = false;
 
-        String testFile = "academic.fcl";
-        vars.put("Number_Of_Publications", 12.0);
-        vars.put("Number_Of_Citations", 50.0);
+        for (String arg : args) {
+            String[] fields = arg.split("[=]");
+            if (fields[0].toLowerCase().endsWith(".fcl")) {
+                fcl = fields[0];
+            } else if(fields[0].equalsIgnoreCase("verbose")) {
+                verbose = true;
+            } else if(fields[0].equalsIgnoreCase("chart")) {
+                chart = true;
+            } else {
+                vars.put(fields[0], Double.parseDouble(fields[1]));
+            }
+        }
 
-        BDFIS bdfis = new BDFIS(new File(testFile), false);
-        System.out.println(bdfis.evaluate(vars, true));
+        if (fcl == null) {
+            System.err.println("Usage: BDFIS <path/to/file.fcl> <varname>=<value> [verbose] [chart]");
+            System.exit(1);
+        }
+        
+        BDFIS bdfis = new BDFIS(new File(fcl));
+        System.out.println(bdfis.evaluate(vars, verbose, chart));
     }
 }
