@@ -121,6 +121,36 @@ public class BDFIS {
         return fbOrder;
     }
 
+    public void printFB(FunctionBlock fb) {
+        System.out.println(" - BLOCK: " + fb.getName());
+        fb.variables().stream()
+                .filter((variable) -> variable.isInput())
+                .forEach((variable) -> {
+                    System.out.println(" |");
+                    System.out.println(String.format(" |-- INPUT: %s (%f)", variable.getName(), variable.getValue()));
+                    variable.getLinguisticTerms().values().forEach((term) -> {
+                        System.out.println(String.format(" | |-- TERM: %s (%f)", term.getTermName(), variable.getMembership(term.getTermName())));
+                    });
+                });
+
+        fb.variables().stream()
+                .filter((variable) -> variable.isOutput())
+                .forEach((variable) -> {
+                    System.out.println(" |");
+                    System.out.println(String.format(" |-- OUTPUT: %s (%f)", variable.getName(), variable.getLatestDefuzzifiedValue()));
+                    variable.getLinguisticTerms().values().forEach((term) -> {
+                        if (variable.getDefuzzifier().isDiscrete()) {
+                            DefuzzifierCenterOfGravitySingletons defuzzifier = (DefuzzifierCenterOfGravitySingletons) variable.getDefuzzifier();
+                            System.out.println(String.format(" | |-- TERM: %s (%f)", term.getTermName(), defuzzifier.getDiscreteValue(term.getMembershipFunction().getParameter(0))));
+                        } else {
+                            System.out.println(String.format(" | |-- TERM: %s (%f)", term.getTermName(), variable.getMembership(term.getTermName())));
+                        }
+                    });
+                });
+
+        System.out.println();
+    }
+
     public Map<String, Variable> evaluate(Map<String, Double> inVariables, boolean verbose, boolean chart) {
         Map<String, Variable> ret = new HashMap<>();
 
@@ -130,13 +160,12 @@ public class BDFIS {
             return null;
         }
 
-        // Print ruleSet
         if (verbose) {
             System.out.println("********* PARSE *********");
             System.out.println(fis);
             System.out.println("\n********* INPUT *********");
             System.out.println(inVariables);
-            System.out.println("\n******** RESULTS ********");
+            System.out.println("\n******* INFERENCE *******");
         }
 
         List<FunctionBlock> fbOrder = getFBOrder(inVariables.keySet());
@@ -156,6 +185,10 @@ public class BDFIS {
 
             // Evaluate
             currFB.evaluate();
+
+            if (verbose) {
+                printFB(currFB);
+            }
 
             // If there is another function block after this one
             if (i < fbOrder.size() - 1) {
@@ -229,9 +262,9 @@ public class BDFIS {
             String[] fields = arg.split("[=]");
             if (fields[0].toLowerCase().endsWith(".fcl")) {
                 fcl = fields[0];
-            } else if(fields[0].equalsIgnoreCase("verbose")) {
+            } else if (fields[0].equalsIgnoreCase("verbose")) {
                 verbose = true;
-            } else if(fields[0].equalsIgnoreCase("chart")) {
+            } else if (fields[0].equalsIgnoreCase("chart")) {
                 chart = true;
             } else {
                 vars.put(fields[0], Double.parseDouble(fields[1]));
@@ -242,8 +275,14 @@ public class BDFIS {
             System.err.println("Usage: BDFIS <path/to/file.fcl> <varname>=<value> [verbose] [chart]");
             System.exit(1);
         }
-        
+
         BDFIS bdfis = new BDFIS(new File(fcl));
-        System.out.println(bdfis.evaluate(vars, verbose, chart));
+        Map<String, Variable> result = bdfis.evaluate(vars, verbose, chart);
+
+        System.out.println("******** RESULTS ********");
+        result.keySet().forEach((permission) -> {
+            boolean granted = result.get(permission).getLatestDefuzzifiedValue() >= 0.5;
+            System.out.println(String.format("[%s] permission is %s.", permission, (granted ? "GRANTED" : "DENIED")));
+        });
     }
 }
