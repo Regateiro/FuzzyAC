@@ -10,4 +10,4 @@ The permutate option makes the auditor check every input variable order permutat
 
 The validate option forces the auditor to also audit the FCL file using a brute-force algorithm and compare the results to validate the optimized algorithm.
 
-The saveDecisions option will make the auditor save the individual access control decisions for each input variable value combination into files, named <fclFileName>_<permission>.txt.
+The saveDecisions option will make the auditor save the individual access control decisions for each input variable value combination into files, named \<fclFileName\>_\<permission\>.txt.
