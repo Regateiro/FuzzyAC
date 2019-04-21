@@ -59,9 +59,9 @@ public class PolicyManager {
         PolicyManager pman = new PolicyManager();
         System.out.print("Overriding policies... ");
         pman.insertPolicy("PUBLIC", null);
-        pman.insertPolicy("ACADEMIC", System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\academic.fcl");
-        pman.insertPolicy("ADMINISTRATIVE", System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\administrative.fcl");
-        pman.insertPolicy("BUSINESS", System.getProperty("user.home") + "\\Documents\\NetBeansProjects\\FuzzyAC\\java\\FuzzyAC\\FAC_Module_Decision\\business.fcl");
+        pman.insertPolicy("ACADEMIC", args[0] + "academic.fcl");
+        pman.insertPolicy("ADMINISTRATIVE", args[0] + "administrative.fcl");
+        pman.insertPolicy("BUSINESS", args[0] + "business.fcl");
         System.out.println("DONE!");
     }
 }

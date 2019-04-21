@@ -10,9 +10,12 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import it.av.fac.driver.APIClient;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -45,7 +48,17 @@ public class WikipediaSource {
     public void parse() {
         try {
             System.out.println("Skipping " + SKIP + " documents...");
-            this.parser.parse(new File(XMLFilePath), new PageHandler((Page page) -> {
+            
+            InputStream XMLFileStream;
+            if(this.XMLFilePath.endsWith("gz")) {
+                XMLFileStream = new GZIPInputStream(new FileInputStream(new File(XMLFilePath)));
+            } else if(this.XMLFilePath.endsWith(".xml")) {
+                XMLFileStream = new FileInputStream(new File(XMLFilePath));
+            } else {
+                throw new IllegalArgumentException("File path must be a xml or a gzip compressed xml file.");
+            }
+            
+            this.parser.parse(XMLFileStream, new PageHandler((Page page) -> {
                 if (!page.getTitle().matches("^(File:|Wikipedia:|Category:|Draft:|Portal:|Template:).*$")) {
                     if (SKIP == 0) {
                         String parsedPage = WikiParser.parseText(page).toString();
@@ -62,7 +75,7 @@ public class WikipediaSource {
     }
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException {
-        WikipediaSource src = new WikipediaSource("F:\\articles.xml");
+        WikipediaSource src = new WikipediaSource(args[0]);
         src.parse();
     }
 }
