@@ -8,6 +8,14 @@
     </parent>
     <artifactId>FAC_Module_Decision</artifactId>
     <packaging>jar</packaging>
+    
+    <repositories>
+        <repository>
+            <id>fac-maven</id>
+            <url>https://github.com/Regateiro/FuzzyAC/raw/master/maven</url>
+        </repository>
+    </repositories>
+    
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -15,7 +23,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.jfuzzylogic</groupId>
+            <groupId>pcingola.jFuzzyLogic</groupId>
             <artifactId>jFuzzyLogic</artifactId>
             <version>1.2.1</version>
         </dependency>
