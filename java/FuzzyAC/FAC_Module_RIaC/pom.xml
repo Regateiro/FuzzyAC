@@ -14,7 +14,7 @@
             <artifactId>FAC_Messaging</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
             <version>3.7.0</version>
@@ -30,7 +30,7 @@
             <groupId>nz.ac.waikato.cms.weka</groupId>
             <artifactId>weka-dev</artifactId>
             <version>3.9.1</version>
-        </dependency>
+        </dependency-->
     </dependencies>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
