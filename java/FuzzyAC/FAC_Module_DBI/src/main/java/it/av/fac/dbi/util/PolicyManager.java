@@ -57,11 +57,10 @@ public class PolicyManager {
 
     public static void main(String[] args) throws IOException {
         PolicyManager pman = new PolicyManager();
-        System.out.print("Overriding policies... ");
-        pman.insertPolicy("PUBLIC", null);
-        pman.insertPolicy("ACADEMIC", args[0] + "academic.fcl");
-        pman.insertPolicy("ADMINISTRATIVE", args[0] + "administrative.fcl");
-        pman.insertPolicy("BUSINESS", args[0] + "business.fcl");
-        System.out.println("DONE!");
+        System.out.println("Upserting PUBLIC policy: " + pman.insertPolicy("PUBLIC", null).getStatus());
+        System.out.println("Upserting ACADEMIC policy: " + pman.insertPolicy("ACADEMIC", args[0] + "academic.fcl").getStatus());
+        System.out.println("Upserting ADMINISTRATIVE policy: " + pman.insertPolicy("ADMINISTRATIVE", args[0] + "administrative.fcl").getStatus());
+        System.out.println("Upserting BUSINESS policy: " + pman.insertPolicy("BUSINESS", args[0] + "business.fcl").getStatus());
+        pman.client.close();
     }
 }
