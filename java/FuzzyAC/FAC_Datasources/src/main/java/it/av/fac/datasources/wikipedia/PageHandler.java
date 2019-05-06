@@ -92,7 +92,7 @@ public class PageHandler extends DefaultHandler {
                 idx = text.indexOf("[[Category:", endIdx);
             }
         } catch (IndexOutOfBoundsException ex) {
-            System.err.println("Error... skipping.");
+            //System.err.println("Error... skipping.");
         }
 
         return categories;
