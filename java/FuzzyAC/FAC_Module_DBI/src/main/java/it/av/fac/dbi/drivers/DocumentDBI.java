@@ -13,9 +13,7 @@ import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.text;
 import static com.mongodb.client.model.Updates.set;
-import it.av.fac.dbi.util.DBIConfig;
 import it.av.fac.messaging.client.BDFISReply;
-import it.av.fac.messaging.client.ReplyStatus;
 import it.av.fac.messaging.client.interfaces.IReply;
 import java.io.Closeable;
 import java.io.FileInputStream;
@@ -50,7 +48,7 @@ public class DocumentDBI implements Closeable {
     
     private DocumentDBI() throws IOException {
         Properties msgProperties = new Properties();
-        msgProperties.load(new FileInputStream(DBIConfig.PROPERTIES_FILE));
+        msgProperties.load(new FileInputStream("dbi.properties"));
         
         String addr = msgProperties.getProperty(PROVIDER + ".addr", "127.0.0.1");
         int port = Integer.valueOf(msgProperties.getProperty(PROVIDER + ".port", "27017"));
