@@ -7,7 +7,6 @@ package it.av.fac.messaging.rabbitmq;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import it.av.fac.messaging.util.MessagingConfig;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,12 +25,11 @@ public class RabbitMQConnectionWrapper implements Closeable {
 
     private RabbitMQConnectionWrapper() throws FileNotFoundException, IOException, TimeoutException {
         Properties msgProperties = new Properties();
-        msgProperties.load(new FileInputStream(MessagingConfig.PROPERTIES_FILE));
 
         String addr = msgProperties.getProperty("provider.addr", "127.0.0.1");
         int port = Integer.valueOf(msgProperties.getProperty("provider.port", "5672"));
-        String username = msgProperties.getProperty("provider.auth.user", "guest");
-        String password = msgProperties.getProperty("provider.auth.pass", "guest");
+        String username = msgProperties.getProperty("provider.auth.user", "facuser");
+        String password = msgProperties.getProperty("provider.auth.pass", "facsecret");
         
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(addr);
