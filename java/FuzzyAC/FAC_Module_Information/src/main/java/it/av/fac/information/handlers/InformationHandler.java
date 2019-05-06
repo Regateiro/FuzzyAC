@@ -106,8 +106,9 @@ public class InformationHandler implements IServerHandler<byte[], String> {
                 logger.info("Registering user.");
                 IRequest checkRequest = new BDFISRequest(null, user.getInt("userid"), RequestType.GetSubjectInfo);
                 IReply subjectInfo = requestSubjectInfo(checkRequest);
+                long tokenExpirationTS = new JSONObject(subjectInfo.getData().get(0)).getJSONObject("token_expires").getLong("$numberLong");
 
-                if (subjectInfo.getData().isEmpty() || new Date().after(new Date(new JSONObject(subjectInfo.getData().get(0)).getLong("token_expires")))) {
+                if (subjectInfo.getData().isEmpty() || new Date().after(new Date(tokenExpirationTS))) {
                     user.put("_id", userid);
                     user.put("token", token);
                     user.put("token_expires", System.currentTimeMillis() + (1000 * 60 * 60 * 24));
