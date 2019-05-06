@@ -113,12 +113,17 @@ public class WikiHandler {
     public String registerUser(String userName) {
         StringBuilder html = new StringBuilder("<html>").append("<body>");
 
-        String token;
-        if ((token = connector.registerUser(userName)) != null) {
-            connector.getLogger().info("Registered user " + userName + " with token " + token);
+        String userData;
+        if ((userData = connector.registerUser(userName)) != null) {
+            JSONObject jUserData = new JSONObject(userData);
+            
+            connector.getLogger().info("Registered user " + userName + " with data " + userData);
             html.append("<h1>")
                     .append("The user was registered successfully!")
-                    .append("</h1><p>User info: ").append(token).append("</p>");
+                    .append("</h1><p>User info: ").append(userData).append("</p>")
+                    .append("<p><a href=\"http://localhost:8080/FAC_Webserver/WikiAPI/Portugal?token=")
+                    .append(jUserData.getString("token"))
+                    .append("\">Start using the system!</a></p>");
         } else {
             connector.getLogger().error("Could not register user " + userName);
             html.append("<h1>")
