@@ -39,13 +39,12 @@ public class InformationHandler implements IServerHandler<byte[], String> {
 
     private final SynchronousQueue<IReply> queue = new SynchronousQueue<>();
     private final RabbitMQClient conn;
-    private final SimpleDateFormat fromWikiDF, fromMongoDBDF, toWikiDF;
+    private final SimpleDateFormat fromWikiDF, toWikiDF;
     private final FACLogger logger;
 
     public InformationHandler(FACLogger logger) throws Exception {
         this.fromWikiDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         this.toWikiDF = new SimpleDateFormat("yyyyMMddHHmmss");
-        this.fromMongoDBDF = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
         this.logger = logger;
         this.conn = new RabbitMQClient(RabbitMQConnectionWrapper.getInstance(),
                 RabbitMQConstants.QUEUE_DBI_RESPONSE,
@@ -108,10 +107,10 @@ public class InformationHandler implements IServerHandler<byte[], String> {
                 IRequest checkRequest = new BDFISRequest(null, user.getInt("userid"), RequestType.GetSubjectInfo);
                 IReply subjectInfo = requestSubjectInfo(checkRequest);
 
-                if (subjectInfo.getData().isEmpty() || new Date().after(fromMongoDBDF.parse(new JSONObject(subjectInfo.getData().get(0)).getString("token_expires")))) {
+                if (subjectInfo.getData().isEmpty() || new Date().after(new Date(new JSONObject(subjectInfo.getData().get(0)).getLong("token_expires")))) {
                     user.put("_id", userid);
                     user.put("token", token);
-                    user.put("token_expires", new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)));
+                    user.put("token_expires", System.currentTimeMillis() + (1000 * 60 * 60 * 24));
                     user.put("attributes", new JSONObject());
                     user.remove("userid");
                     request.setResource(user.toString());
@@ -124,7 +123,7 @@ public class InformationHandler implements IServerHandler<byte[], String> {
                 } else {
                     reply.addData(new JSONObject(subjectInfo.getData().get(0)).toString());
                 }
-            } catch (IOException | InterruptedException | ParseException | JSONException ex) {
+            } catch (IOException | InterruptedException | JSONException ex) {
                 logger.error(ex.getMessage());
                 reply = new BDFISReply(ReplyStatus.ERROR, ex.getMessage());
             }
@@ -177,10 +176,10 @@ public class InformationHandler implements IServerHandler<byte[], String> {
             if (!reply.getData().isEmpty()) {
                 JSONObject contrib = new JSONObject(reply.getData().get(0));
                 continueCode = String.format("%s|%d",
-                        this.toWikiDF.format(fromMongoDBDF.parse(contrib.getString("timestamp"))),
+                        this.toWikiDF.format(new Date(contrib.getLong("timestamp"))),
                         contrib.getInt("_id"));
             }
-        } catch (IOException | InterruptedException | ParseException | JSONException ex) {
+        } catch (IOException | InterruptedException | JSONException ex) {
             logger.error(ex.getMessage());
         }
 
