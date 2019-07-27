@@ -1,9 +1,9 @@
 FUNCTION_BLOCK VariableInference
 
 VAR_INPUT
-	Number_Of_Publications		:	REAL; (* RANGE(0 ..) *) 
-	Number_Of_Citations			:	REAL; (* RANGE(0 ..) *) 
-	Days_Since_Last_Publication	:	REAL; (* RANGE(0 ..) *) 
+	Number_Of_Publications	:	REAL; (* RANGE(0 ..) *) 
+	Number_Of_Citations	:	REAL; (* RANGE(0 ..) *) 
+	avgDBP			:	REAL; (* RANGE(0 ..) *) 
 END_VAR
 
 VAR_OUTPUT
@@ -23,7 +23,7 @@ FUZZIFY Number_Of_Citations
 	TERM High := (30, 0) (100, 1) ;
 END_FUZZIFY
 
-FUZZIFY Days_Since_Last_Publication
+FUZZIFY avgDBP
 	TERM Low := (0, 1) (60, 1) (90, 0) ;
 	TERM Considerable := (75, 0) (100, 1) (150, 1) (210, 0) ;
 	TERM High := (180, 0) (360, 1) ;
@@ -51,15 +51,15 @@ RULEBLOCK Expertise
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
-RULE 1: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS Considerable) THEN Expertise IS High;
-RULE 2: IF (Number_Of_Publications IS Low) AND (Number_Of_Citations IS High) THEN Expertise IS Very_High;
-RULE 3: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
+RULE 0: IF (Number_Of_Publications IS Low)          AND (Number_Of_Citations IS Low)          THEN Expertise IS Low;
+RULE 1: IF (Number_Of_Publications IS Low)          AND (Number_Of_Citations IS Considerable) THEN Expertise IS High;
+RULE 2: IF (Number_Of_Publications IS Low)          AND (Number_Of_Citations IS High)         THEN Expertise IS Very_High;
+RULE 3: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS Low)          THEN Expertise IS Low;
 RULE 4: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS Considerable) THEN Expertise IS Medium;
-RULE 5: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS High) THEN Expertise IS High;
-RULE 6: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS Low) THEN Expertise IS Low;
-RULE 7: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS Considerable) THEN Expertise IS Medium;
-RULE 8: IF (Number_Of_Publications IS High) AND (Number_Of_Citations IS High) THEN Expertise IS Very_High;
+RULE 5: IF (Number_Of_Publications IS Considerable) AND (Number_Of_Citations IS High)         THEN Expertise IS High;
+RULE 6: IF (Number_Of_Publications IS High)         AND (Number_Of_Citations IS Low)          THEN Expertise IS Low;
+RULE 7: IF (Number_Of_Publications IS High)         AND (Number_Of_Citations IS Considerable) THEN Expertise IS Medium;
+RULE 8: IF (Number_Of_Publications IS High)         AND (Number_Of_Citations IS High)         THEN Expertise IS Very_High;
 
 END_RULEBLOCK
 
@@ -68,15 +68,15 @@ RULEBLOCK Activity
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Days_Since_Last_Publication IS Low) AND (Number_Of_Publications IS Low) THEN Activity IS Medium;
-RULE 1: IF (Days_Since_Last_Publication IS Low) AND (Number_Of_Publications IS Considerable) THEN Activity IS High;
-RULE 2: IF (Days_Since_Last_Publication IS Low) AND (Number_Of_Publications IS High) THEN Activity IS Very_High;
-RULE 3: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS Low) THEN Activity IS Low;
-RULE 4: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS Considerable) THEN Activity IS Medium;
-RULE 5: IF (Days_Since_Last_Publication IS Considerable) AND (Number_Of_Publications IS High) THEN Activity IS High;
-RULE 6: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS Low) THEN Activity IS Very_Low;
-RULE 7: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS Considerable) THEN Activity IS Low;
-RULE 8: IF (Days_Since_Last_Publication IS High) AND (Number_Of_Publications IS High) THEN Activity IS Low;
+RULE 0: IF (avgDBP IS Low)          AND (Number_Of_Publications IS Low)          THEN Activity IS Medium;
+RULE 1: IF (avgDBP IS Low)          AND (Number_Of_Publications IS Considerable) THEN Activity IS High;
+RULE 2: IF (avgDBP IS Low)          AND (Number_Of_Publications IS High)         THEN Activity IS Very_High;
+RULE 3: IF (avgDBP IS Considerable) AND (Number_Of_Publications IS Low)          THEN Activity IS Low;
+RULE 4: IF (avgDBP IS Considerable) AND (Number_Of_Publications IS Considerable) THEN Activity IS Medium;
+RULE 5: IF (avgDBP IS Considerable) AND (Number_Of_Publications IS High)         THEN Activity IS High;
+RULE 6: IF (avgDBP IS High)         AND (Number_Of_Publications IS Low)          THEN Activity IS Very_Low;
+RULE 7: IF (avgDBP IS High)         AND (Number_Of_Publications IS Considerable) THEN Activity IS Low;
+RULE 8: IF (avgDBP IS High)         AND (Number_Of_Publications IS High)         THEN Activity IS Low;
 
 END_RULEBLOCK
 
@@ -117,21 +117,21 @@ RULEBLOCK Read
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Expertise IS Low) THEN Read IS Deny;
-RULE 1: IF (Expertise IS Medium) AND (Activity IS Very_Low) THEN Read IS Deny;
-RULE 2: IF (Expertise IS Medium) AND (Activity IS Low) THEN Read IS Deny;
-RULE 3: IF (Expertise IS Medium) AND (Activity IS Medium) THEN Read IS Grant;
-RULE 4: IF (Expertise IS Medium) AND (Activity IS High) THEN Read IS Grant;
-RULE 5: IF (Expertise IS Medium) AND (Activity IS Very_High) THEN Read IS Grant;
-RULE 6: IF (Expertise IS High) AND (Activity IS Very_Low) THEN Read IS Deny;
-RULE 7: IF (Expertise IS High) AND (Activity IS Low) THEN Read IS Grant;
-RULE 8: IF (Expertise IS High) AND (Activity IS Medium) THEN Read IS Grant;
-RULE 9: IF (Expertise IS High) AND (Activity IS High) THEN Read IS Grant;
-RULE 10: IF (Expertise IS High) AND (Activity IS Very_High) THEN Read IS Grant;
-RULE 11: IF (Expertise IS Very_High) AND (Activity IS Very_Low) THEN Read IS Grant;
-RULE 12: IF (Expertise IS Very_High) AND (Activity IS Low) THEN Read IS Grant;
-RULE 13: IF (Expertise IS Very_High) AND (Activity IS Medium) THEN Read IS Grant;
-RULE 14: IF (Expertise IS Very_High) AND (Activity IS High) THEN Read IS Grant;
+RULE  0: IF (Expertise IS Low)                                   THEN Read IS Deny;
+RULE  1: IF (Expertise IS Medium)    AND (Activity IS Very_Low)  THEN Read IS Deny;
+RULE  2: IF (Expertise IS Medium)    AND (Activity IS Low)       THEN Read IS Deny;
+RULE  3: IF (Expertise IS Medium)    AND (Activity IS Medium)    THEN Read IS Grant;
+RULE  4: IF (Expertise IS Medium)    AND (Activity IS High)      THEN Read IS Grant;
+RULE  5: IF (Expertise IS Medium)    AND (Activity IS Very_High) THEN Read IS Grant;
+RULE  6: IF (Expertise IS High)      AND (Activity IS Very_Low)  THEN Read IS Deny;
+RULE  7: IF (Expertise IS High)      AND (Activity IS Low)       THEN Read IS Grant;
+RULE  8: IF (Expertise IS High)      AND (Activity IS Medium)    THEN Read IS Grant;
+RULE  9: IF (Expertise IS High)      AND (Activity IS High)      THEN Read IS Grant;
+RULE 10: IF (Expertise IS High)      AND (Activity IS Very_High) THEN Read IS Grant;
+RULE 11: IF (Expertise IS Very_High) AND (Activity IS Very_Low)  THEN Read IS Grant;
+RULE 12: IF (Expertise IS Very_High) AND (Activity IS Low)       THEN Read IS Grant;
+RULE 13: IF (Expertise IS Very_High) AND (Activity IS Medium)    THEN Read IS Grant;
+RULE 14: IF (Expertise IS Very_High) AND (Activity IS High)      THEN Read IS Grant;
 RULE 15: IF (Expertise IS Very_High) AND (Activity IS Very_High) THEN Read IS Grant;
 
 END_RULEBLOCK
@@ -140,17 +140,17 @@ RULEBLOCK Write
 
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Expertise IS Low) THEN Write IS Deny;
-RULE 1: IF (Expertise IS Medium) THEN Write IS Deny;
-RULE 2: IF (Expertise IS High) AND (Activity IS Very_Low) THEN Write IS Deny;
-RULE 3: IF (Expertise IS High) AND (Activity IS Low) THEN Write IS Deny;
-RULE 4: IF (Expertise IS High) AND (Activity IS Medium) THEN Write IS Deny;
-RULE 5: IF (Expertise IS High) AND (Activity IS High) THEN Write IS Grant;
-RULE 6: IF (Expertise IS High) AND (Activity IS Very_High) THEN Write IS Grant;
-RULE 7: IF (Expertise IS Very_High) AND (Activity IS Very_Low) THEN Write IS Deny;
-RULE 8: IF (Expertise IS Very_High) AND (Activity IS Low) THEN Write IS Deny;
-RULE 9: IF (Expertise IS Very_High) AND (Activity IS Medium) THEN Write IS Grant;
-RULE 10: IF (Expertise IS Very_High) AND (Activity IS High) THEN Write IS Grant;
+RULE  0: IF (Expertise IS Low)                                   THEN Write IS Deny;
+RULE  1: IF (Expertise IS Medium)                                THEN Write IS Deny;
+RULE  2: IF (Expertise IS High)      AND (Activity IS Very_Low)  THEN Write IS Deny;
+RULE  3: IF (Expertise IS High)      AND (Activity IS Low)       THEN Write IS Deny;
+RULE  4: IF (Expertise IS High)      AND (Activity IS Medium)    THEN Write IS Deny;
+RULE  5: IF (Expertise IS High)      AND (Activity IS High)      THEN Write IS Grant;
+RULE  6: IF (Expertise IS High)      AND (Activity IS Very_High) THEN Write IS Grant;
+RULE  7: IF (Expertise IS Very_High) AND (Activity IS Very_Low)  THEN Write IS Deny;
+RULE  8: IF (Expertise IS Very_High) AND (Activity IS Low)       THEN Write IS Deny;
+RULE  9: IF (Expertise IS Very_High) AND (Activity IS Medium)    THEN Write IS Grant;
+RULE 10: IF (Expertise IS Very_High) AND (Activity IS High)      THEN Write IS Grant;
 RULE 11: IF (Expertise IS Very_High) AND (Activity IS Very_High) THEN Write IS Grant;
 
 END_RULEBLOCK
