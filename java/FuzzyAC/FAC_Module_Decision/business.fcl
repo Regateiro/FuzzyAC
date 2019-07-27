@@ -1,49 +1,55 @@
 FUNCTION_BLOCK VariableInference
 
 VAR_INPUT
-	Years_Partened					:	REAL; (* RANGE(0 ..) *) 
-	Number_Of_Projects_Funded		:	REAL; (* RANGE(0 ..) *) 
+	Time_Partened	:	REAL; (* RANGE(0 ..) *) 
+	Partner_Level	:	REAL; (* RANGE(0 ..) *) 
+	avgCPH		:	REAL; (* RANGE(0 ..) *) 
 END_VAR
 
 VAR_OUTPUT
-	Partnership_Value	:	REAL;
+	Cost	:	REAL;
 END_VAR
 	
-FUZZIFY Years_Partened
-	TERM Few := (3, 1) (10, 0) ;
-	TERM Considerable := (3, 0) (10, 1) (15, 1) (25, 0) ;
-	TERM A_Lot := (10, 0) (20, 1) ;
+FUZZIFY Time_Partened
+	TERM Acquaintance := (0, 1) (60, 0) ;
+	TERM Friend := (25, 0) (45, 1) (180, 1) (360, 0) ;
+	TERM Best_Friend := (170, 0) (200, 1) ;
 END_FUZZIFY
 
-FUZZIFY Number_Of_Projects_Funded
-	TERM Few := (3, 1) (10, 0) ;
-	TERM Considerable := (3, 0) (10, 1) (15, 1) (25, 0) ;
-	TERM A_Lot := (10, 0) (20, 1) ;
+FUZZIFY Partner_Level
+	TERM Free := 1 ;
+	TERM Silver := 2 ;
+	TERM Gold := 3 ;
 END_FUZZIFY
 
-DEFUZZIFY Partnership_Value
-	TERM Very_Low := 1 ;
-	TERM Low := 2 ;
-	TERM Medium := 3 ;
-	TERM High := 4 ;
-	TERM Very_High := 5 ;
+FUZZIFY avgCPH
+	TERM Low := (0, 1) (900, 0) ;
+	TERM High := (800, 0) (1000, 1) ;
+END_FUZZIFY
+
+DEFUZZIFY Cost
+	TERM Low := 1 ;
+	TERM Normal := 2 ;
+	TERM High := 3 ;
+	TERM Very_High := 4 ;
 	METHOD: COGS ;
 END_DEFUZZIFY
 	
-RULEBLOCK Partnership_Value
+RULEBLOCK Cost
 
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Years_Partened IS Few) AND (Number_Of_Projects_Funded IS Few)  THEN Partnership_Value IS Very_Low;
-RULE 1: IF (Years_Partened IS Few) AND (Number_Of_Projects_Funded IS Considerable)  THEN Partnership_Value IS Medium;
-RULE 2: IF (Years_Partened IS Few) AND (Number_Of_Projects_Funded IS A_Lot) THEN Partnership_Value IS High;
-RULE 3: IF (Years_Partened IS Considerable) AND (Number_Of_Projects_Funded IS Few) THEN Partnership_Value IS Low;
-RULE 4: IF (Years_Partened IS Considerable) AND (Number_Of_Projects_Funded IS Considerable) THEN Partnership_Value IS Medium;
-RULE 5: IF (Years_Partened IS Considerable) AND (Number_Of_Projects_Funded IS A_Lot)  THEN Partnership_Value IS Very_High;
-RULE 6: IF (Years_Partened IS A_Lot) AND (Number_Of_Projects_Funded IS Few)  THEN Partnership_Value IS Low;
-RULE 7: IF (Years_Partened IS A_Lot) AND (Number_Of_Projects_Funded IS Considerable) THEN Partnership_Value IS High;
-RULE 8: IF (Years_Partened IS A_Lot) AND (Number_Of_Projects_Funded IS A_Lot) THEN Partnership_Value IS Very_High;
+RULE 0: IF                                                                   (avgCPH IS Low)  THEN Cost IS Low;
+RULE 1: IF (Time_Partened IS Acquaintance) AND (Partner_Level IS Free)   AND (avgCPH IS High) THEN Cost IS Very_High;
+RULE 2: IF (Time_Partened IS Acquaintance) AND (Partner_Level IS Silver) AND (avgCPH IS High) THEN Cost IS High;
+RULE 3: IF (Time_Partened IS Acquaintance) AND (Partner_Level IS Gold)   AND (avgCPH IS High) THEN Cost IS Normal;
+RULE 4: IF (Time_Partened IS Friend)       AND (Partner_Level IS Free)   AND (avgCPH IS High) THEN Cost IS Very_High;
+RULE 5: IF (Time_Partened IS Friend)       AND (Partner_Level IS Silver) AND (avgCPH IS High) THEN Cost IS Normal;
+RULE 6: IF (Time_Partened IS Friend)       AND (Partner_Level IS Gold)   AND (avgCPH IS High) THEN Cost IS Normal;
+RULE 7: IF (Time_Partened IS Best_Friend)  AND (Partner_Level IS Free)   AND (avgCPH IS High) THEN Cost IS High;
+RULE 8: IF (Time_Partened IS Best_Friend)  AND (Partner_Level IS Silver) AND (avgCPH IS High) THEN Cost IS Normal;
+RULE 9: IF (Time_Partened IS Best_Friend)  AND (Partner_Level IS Gold)   AND (avgCPH IS High) THEN Cost IS Low;
 
 END_RULEBLOCK
 
@@ -52,7 +58,7 @@ END_FUNCTION_BLOCK
 FUNCTION_BLOCK AccessControl
 
 VAR_INPUT
-	Partnership_Value	:	REAL; (* RANGE(0 ..) *) 
+	Cost	:	REAL; (* RANGE(0 ..) *) 
 END_VAR
 
 VAR_OUTPUT
@@ -60,7 +66,7 @@ VAR_OUTPUT
 	Write	: 	REAL;
 END_VAR
 	
-FUZZIFY Partnership_Value
+FUZZIFY Cost
 END_FUZZIFY
 
 DEFUZZIFY Read
@@ -80,11 +86,10 @@ RULEBLOCK Read
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 1: IF (Partnership_Value IS Very_Low) THEN Read IS Grant;
-RULE 2: IF (Partnership_Value IS Low) THEN Read IS Grant;
-RULE 3: IF (Partnership_Value IS Medium) THEN Read IS Grant;
-RULE 4: IF (Partnership_Value IS High) THEN Read IS Grant;
-RULE 5: IF (Partnership_Value IS Very_High) THEN Read IS Grant;
+RULE 2: IF (Cost IS Low)       THEN Read IS Grant;
+RULE 3: IF (Cost IS Medium)    THEN Read IS Grant;
+RULE 4: IF (Cost IS High)      THEN Read IS Grant;
+RULE 5: IF (Cost IS Very_High) THEN Read IS Grant;
 
 END_RULEBLOCK
 
@@ -92,11 +97,10 @@ RULEBLOCK Write
 
 AND:MIN;
 ACCU:MAX;
-RULE 1: IF (Partnership_Value IS Very_Low) THEN Read IS Deny;
-RULE 2: IF (Partnership_Value IS Low) THEN Read IS Deny;
-RULE 3: IF (Partnership_Value IS Medium) THEN Read IS Deny;
-RULE 4: IF (Partnership_Value IS High) THEN Read IS Grant;
-RULE 5: IF (Partnership_Value IS Very_High) THEN Read IS Grant;
+RULE 2: IF (Cost IS Low)       THEN Read IS Deny;
+RULE 3: IF (Cost IS Medium)    THEN Read IS Deny;
+RULE 4: IF (Cost IS High)      THEN Read IS Grant;
+RULE 5: IF (Cost IS Very_High) THEN Read IS Grant;
 
 END_RULEBLOCK
 
