@@ -36,7 +36,7 @@ public class BDFIS {
 
     private final FIS fis;
 
-    public BDFIS(File dfclFile) throws IOException, RecognitionException {
+    public BDFIS(File dfclFile) throws IOException {
         StringBuilder dfcl = new StringBuilder();
         try (BufferedReader in = new BufferedReader(new FileReader(dfclFile))) {
             String line;
@@ -48,15 +48,19 @@ public class BDFIS {
         this.fis = parse(dfcl.toString());
     }
 
-    public BDFIS(String dfclStr) throws RecognitionException {
+    public BDFIS(String dfclStr) {
         this.fis = parse(dfclStr);
     }
 
-    private FIS parse(String dfclStr) throws RecognitionException {
-        return FIS.createFromString(dfclStr, true);
+    private FIS parse(String dfclStr) {
+        try {
+            return FIS.createFromString(dfclStr, true);
+        } catch (RecognitionException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
-    public Collection<String> getInputVariableNameList(FunctionBlock functionBlock) {
+    private Collection<String> getInputVariableNameList(FunctionBlock functionBlock) {
         Set<String> ret = new HashSet<>();
         functionBlock.variables().stream()
                 .filter((variable) -> variable.isInput())
@@ -64,12 +68,16 @@ public class BDFIS {
         return ret;
     }
 
-    public Collection<String> getOutputVariableNameList(FunctionBlock functionBlock) {
+    private Collection<String> getOutputVariableNameList(FunctionBlock functionBlock) {
         Set<String> ret = new HashSet<>();
         functionBlock.variables().stream()
                 .filter((variable) -> variable.isOutput())
                 .forEach((variable) -> ret.add(variable.getName()));
         return ret;
+    }
+    
+    public Collection<String> getOutputVariableNameList() {
+        return getOutputVariableNameList(fis.getFunctionBlock("AccessControl"));
     }
 
     private List<FunctionBlock> getFBOrder(Set<String> inVarNames) {
