@@ -1,8 +1,8 @@
 FUNCTION_BLOCK VariableInference
 
 VAR_INPUT
-	Role				:	REAL; (* RANGE(0 ..) *) 
-	Years_Of_Service	:	REAL; (* RANGE(0 ..) *) 
+	Role			:	REAL; (* RANGE(0 ..) *) 
+	Past_Incidents		:	REAL; (* RANGE(0 ..) *) 
 END_VAR
 
 VAR_OUTPUT
@@ -11,15 +11,14 @@ END_VAR
 	
 FUZZIFY Role
 	TERM None := 1 ;
-	TERM Receptionist := 2 ;
+	TERM Researcher := 2 ;
 	TERM Administrator := 3 ;
-	TERM CEO := 4 ;
 END_FUZZIFY
 
-FUZZIFY Years_Of_Service
-	TERM Few := (3, 1) (10, 0) ;
-	TERM Considerable := (3, 0) (10, 1) (15, 1) (25, 0) ;
-	TERM A_Lot := (10, 0) (20, 1) ;
+FUZZIFY Past_Incidents
+	TERM None := 0 ;
+	TERM A_Few := (0, 0) (2, 1) (4, 0) ;
+	TERM A_Lot := (3, 0) (5, 1) ;
 END_FUZZIFY
 
 DEFUZZIFY Trust
@@ -34,11 +33,10 @@ RULEBLOCK Trust
 ACT:MIN;
 AND:MIN;
 ACCU:MAX;
-RULE 0: IF (Role IS None) OR (Role IS Receptionist) THEN Trust IS Low;
-RULE 1: IF (Role IS CEO) THEN Trust IS High;
-RULE 2: IF (Role IS Administrator) AND (Years_Of_Service IS Few) THEN Trust IS Low;
-RULE 3: IF (Role IS Administrator) AND (Years_Of_Service IS Considerable) THEN Trust IS Medium;
-RULE 4: IF (Role IS Administrator) AND (Years_Of_Service IS A_Lot) THEN Trust IS High;
+RULE 0: IF (Role IS None)             OR  (Role IS Researcher)      THEN Trust IS Low;
+RULE 4: IF (Role IS Administrator)    AND (Past_Incidents IS A_Lot) THEN Trust IS Low;
+RULE 5: IF (Role IS Administrator)    AND (Past_Incidents IS A_Few) THEN Trust IS Medium;
+RULE 6: IF (Role IS Administrator)    AND (Past_Incidents IS None)  THEN Trust IS High;
 
 END_RULEBLOCK
 
