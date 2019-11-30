@@ -51,7 +51,12 @@
         <repository>
             <id>neuroph.sourceforge.net</id>
             <url>http://neuroph.sourceforge.net/maven2/</url>
-        </repository>     
+        </repository>   
+        <repository>
+            <id>twitter</id>
+            <name>Twitter's repository</name>
+            <url>https://maven.twttr.com/</url>
+        </repository>
     </repositories>
     <dependencies>  
         <dependency>
