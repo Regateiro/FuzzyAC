@@ -1,0 +1,8 @@
+it/av/fac/mlengine/evaluators/FACML_Evaluator.class
+it/av/fac/mlengine/test/UnsupervisedNeurophTest.class
+it/av/fac/mlengine/trainers/FACML_Trainer.class
+it/av/fac/mlengine/test/RandomForest.class
+it/av/fac/mlengine/test/NeurophUtil.class
+it/av/fac/mlengine/test/BayesTest.class
+it/av/fac/mlengine/trainers/NoHistoryTrainer.class
+it/av/fac/mlengine/test/SupervisedNeurophTest.class

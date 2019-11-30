@@ -52,6 +52,11 @@
             <id>neuroph.sourceforge.net</id>
             <url>http://neuroph.sourceforge.net/maven2/</url>
         </repository>   
+        <repository>
+            <id>project</id>
+            <name>>Local project repository</name>
+            <url>file:///${basedir}/../../../maven</url>
+        </repository>
     </repositories>
     <dependencies>  
         <dependency>
@@ -93,7 +98,7 @@
         <dependency>
             <groupId>com.twitter.common</groupId>
             <artifactId>quantity</artifactId>
-            <version>0.0.98</version>
+            <version>0.0.31</version>
         </dependency>
     </dependencies>
 </project>

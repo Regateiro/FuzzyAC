@@ -35,3 +35,5 @@ hs_err_pid*
 !/java/FuzzyAC/FAC_FLEngine/src/main/resources/neuroph-core-2.94.jar
 !/java/FuzzyAC/FAC_FLEngine/src/main/resources/neuroph-core-2.94-javadoc.jar
 !/java/FuzzyAC/FAC_FLEngine/src/main/resources/neuroph-core-2.94-sources.jar
+/java/BDFIS/build/
+/java/BDFIS/dist/

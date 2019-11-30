@@ -1,0 +1,11 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sun Apr 21 14:24:54 WEST 2019
+https\://repo.maven.apache.org/maven2/.lastUpdated=1555853090162
+http\://sanity.github.com/maven-repo/repository/.error=
+http\://neuroph.sourceforge.net/maven2/.error=
+https\://jitpack.io/.error=
+http\://sanity.github.com/maven-repo/repository/.lastUpdated=1555853056248
+http\://neuroph.sourceforge.net/maven2/.lastUpdated=1555853076746
+https\://repo.maven.apache.org/maven2/.error=
+https\://jitpack.io/.lastUpdated=1555853052468
+http\://maven.twttr.com/.lastUpdated=1555853094976

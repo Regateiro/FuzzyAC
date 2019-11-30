@@ -1,0 +1,8 @@
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/evaluators/FACML_Evaluator.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/trainers/NoHistoryTrainer.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/test/BayesTest.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/test/UnsupervisedNeurophTest.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/test/RandomForest.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/trainers/FACML_Trainer.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/test/NeurophUtil.java
+/home/regateiro/NetBeansProjects/FuzzyAC/java/FuzzyAC/FAC_MLEngine/src/main/java/it/av/fac/mlengine/test/SupervisedNeurophTest.java
