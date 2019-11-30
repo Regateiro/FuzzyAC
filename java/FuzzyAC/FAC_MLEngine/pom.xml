@@ -52,11 +52,6 @@
             <id>neuroph.sourceforge.net</id>
             <url>http://neuroph.sourceforge.net/maven2/</url>
         </repository>   
-        <repository>
-            <id>twitter</id>
-            <name>Twitter's repository</name>
-            <url>https://maven.twttr.com/</url>
-        </repository>
     </repositories>
     <dependencies>  
         <dependency>
@@ -94,6 +89,11 @@
             <artifactId>nd4j-backends</artifactId>
             <version>0.9.1</version>
             <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>com.twitter.common</groupId>
+            <artifactId>quantity</artifactId>
+            <version>0.0.98</version>
         </dependency>
     </dependencies>
 </project>
