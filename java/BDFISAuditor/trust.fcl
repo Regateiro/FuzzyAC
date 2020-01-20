@@ -1,0 +1,139 @@
+FUNCTION_BLOCK VariableInference
+
+VAR_INPUT
+	EX	:	REAL; (* RANGE(-100 .. 100) *) 
+	KN	:	REAL; (* RANGE(-100 .. 100) *) 
+	RC	:	REAL; (* RANGE(-100 .. 100) *) 
+END_VAR
+
+VAR_OUTPUT
+	Trust	:	REAL;
+END_VAR
+	
+FUZZIFY EX
+	TERM Bad := (-50, 1) (-10, 0);
+	TERM Average := (-25, 0) (-10, 1) (25, 1) (50, 0);
+	TERM Good := (25, 0) (50, 1);
+END_FUZZIFY
+
+FUZZIFY KN
+	TERM Insufficient := (-50, 1) (-10, 0);
+	TERM Less := (-25, 0) (-10, 1) (25, 1) (50, 0);
+	TERM Complete := (25, 0) (50, 1);
+END_FUZZIFY
+
+FUZZIFY RC
+	TERM Negative := (-50, 1) (-10, 0);
+	TERM Neutral := (-25, 0) (-10, 1) (25, 1) (50, 0);
+	TERM High := (25, 0) (50, 1);
+END_FUZZIFY
+
+DEFUZZIFY Trust
+	TERM Low := (-50, 1) (-10, 0);
+	TERM Average := (-25, 0) (-10, 1) (25, 1) (50, 0);
+	TERM High := (25, 0) (50, 1);
+	METHOD: COG ;
+END_DEFUZZIFY
+	
+RULEBLOCK Trust
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE  0: IF (EX IS Bad)     AND (KN IS Insufficient) AND (RC IS Negative) THEN Trust IS Low;
+RULE  1: IF (EX IS Bad)     AND (KN IS Insufficient) AND (RC IS Neutral)  THEN Trust IS Low;
+RULE  2: IF (EX IS Bad)     AND (KN IS Insufficient) AND (RC IS High)     THEN Trust IS Low;
+RULE  3: IF (EX IS Bad)     AND (KN IS Less)         AND (RC IS Negative) THEN Trust IS Low;
+RULE  4: IF (EX IS Bad)     AND (KN IS Less)         AND (RC IS Neutral)  THEN Trust IS Low;
+RULE  5: IF (EX IS Bad)     AND (KN IS Less)         AND (RC IS High)     THEN Trust IS Low;
+RULE  6: IF (EX IS Bad)     AND (KN IS Complete)     AND (RC IS Negative) THEN Trust IS Low;
+RULE  7: IF (EX IS Bad)     AND (KN IS Complete)     AND (RC IS Neutral)  THEN Trust IS Low;
+RULE  8: IF (EX IS Bad)     AND (KN IS Complete)     AND (RC IS High)     THEN Trust IS Average;
+RULE  9: IF (EX IS Average) AND (KN IS Insufficient) AND (RC IS Negative) THEN Trust IS Low;
+RULE 10: IF (EX IS Average) AND (KN IS Insufficient) AND (RC IS Neutral)  THEN Trust IS Low;
+RULE 11: IF (EX IS Average) AND (KN IS Insufficient) AND (RC IS High)     THEN Trust IS Average;
+RULE 12: IF (EX IS Average) AND (KN IS Less)         AND (RC IS Negative) THEN Trust IS Low;
+RULE 13: IF (EX IS Average) AND (KN IS Less)         AND (RC IS Neutral)  THEN Trust IS Low;
+RULE 14: IF (EX IS Average) AND (KN IS Less)         AND (RC IS High)     THEN Trust IS Average;
+RULE 15: IF (EX IS Average) AND (KN IS Complete)     AND (RC IS Negative) THEN Trust IS Low;
+RULE 16: IF (EX IS Average) AND (KN IS Complete)     AND (RC IS Neutral)  THEN Trust IS Average;
+RULE 17: IF (EX IS Average) AND (KN IS Complete)     AND (RC IS High)     THEN Trust IS High;
+RULE 18: IF (EX IS Good)    AND (KN IS Insufficient) AND (RC IS Negative) THEN Trust IS Low;
+RULE 19: IF (EX IS Good)    AND (KN IS Insufficient) AND (RC IS Neutral)  THEN Trust IS Average;
+RULE 20: IF (EX IS Good)    AND (KN IS Insufficient) AND (RC IS High)     THEN Trust IS Average;
+RULE 21: IF (EX IS Good)    AND (KN IS Less)         AND (RC IS Negative) THEN Trust IS Low;
+RULE 22: IF (EX IS Good)    AND (KN IS Less)         AND (RC IS Neutral)  THEN Trust IS Average;
+RULE 23: IF (EX IS Good)    AND (KN IS Less)         AND (RC IS High)     THEN Trust IS High;
+RULE 24: IF (EX IS Good)    AND (KN IS Complete)     AND (RC IS Negative) THEN Trust IS Average;
+RULE 25: IF (EX IS Good)    AND (KN IS Complete)     AND (RC IS Neutral)  THEN Trust IS High;
+RULE 26: IF (EX IS Good)    AND (KN IS Complete)     AND (RC IS High)     THEN Trust IS High;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK AccessControl
+
+VAR_INPUT
+	Trust	:	REAL; (* RANGE(0 ..) *) 
+END_VAR
+
+VAR_OUTPUT
+	Read	:	REAL;
+	Write	: 	REAL;
+	Delete	: 	REAL;
+END_VAR
+	
+FUZZIFY Trust
+END_FUZZIFY
+
+DEFUZZIFY Read
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY Write
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY Delete
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+	
+RULEBLOCK Read
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Trust IS Low) THEN Read IS Grant;
+RULE 1: IF (Trust IS Average) THEN Read IS Grant;
+RULE 2: IF (Trust IS High) THEN Read IS Grant;
+
+END_RULEBLOCK
+
+RULEBLOCK Write
+
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Trust IS Low) THEN Write IS Deny;
+RULE 1: IF (Trust IS Average) THEN Write IS Grant;
+RULE 2: IF (Trust IS High) THEN Write IS Grant;
+
+END_RULEBLOCK
+
+RULEBLOCK Delete
+
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (Trust IS Low) THEN Delete IS Deny;
+RULE 1: IF (Trust IS Average) THEN Delete IS Deny;
+RULE 2: IF (Trust IS High) THEN Delete IS Grant;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
