@@ -6,7 +6,6 @@
 package it.av.fac.decision.util.variables;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -72,7 +71,7 @@ public class RangeValue {
 
     @Override
     public String toString() {
-        return String.format("(%d-%d; %d [%s])", min, max, currVal, contribution);
+        return String.format("([%d, %d]: %d {%s})", min, max, currVal, contribution);
     }
 
     public void invertDirection() {
@@ -113,7 +112,11 @@ public class RangeValue {
                     contribution = Contribution.UNKNOWN;
             }
         } else {
-            contribution = Contribution.UNKNOWN;
+            if (slopeType == SlopeType.FLAT) {
+                contribution = Contribution.NONE;
+            } else {
+                contribution = Contribution.UNKNOWN;
+            }
         }
     }
 
@@ -176,14 +179,14 @@ public class RangeValue {
     }
 
     public Contribution getContribution() {
-        if(this.direction == -1) {
-            if(this.contribution == Contribution.GRANT) {
+        if (this.direction == -1) {
+            if (this.contribution == Contribution.GRANT) {
                 return Contribution.DENY;
-            } else if(this.contribution == Contribution.DENY) {
+            } else if (this.contribution == Contribution.DENY) {
                 return Contribution.GRANT;
             }
         }
-        
+
         return contribution;
     }
 
@@ -191,7 +194,7 @@ public class RangeValue {
         this.currVal = min;
         this.direction = 1;
     }
-    
+
     void setToMax() {
         this.currVal = max;
         this.direction = -1;

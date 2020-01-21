@@ -278,6 +278,7 @@ public class BDFIS {
         boolean save = false;
         boolean validate = false;
         boolean permutate = false;
+        boolean verbose = false;
 
         for (String arg : args) {
             String[] fields = arg.split("[=]");
@@ -289,13 +290,15 @@ public class BDFIS {
                 validate = true;
             } else if (fields[0].equalsIgnoreCase("saveDecisions")) {
                 save = true;
+            } else if (fields[0].equalsIgnoreCase("verbose")) {
+                verbose = true;
             } else if (fields[0].equalsIgnoreCase("permissions")) {
                 permissions = fields[1].split("[,]");
             }
         }
 
         if (fcl == null || permissions == null) {
-            System.err.println("Usage: BDFISAuditor <path/to/file.fcl> permissions=p1[,p2,...] [permutate] [validate] [saveDecisions]");
+            System.err.println("Usage: BDFISAuditor <path/to/file.fcl> permissions=p1[,p2,...] [permutate] [validate] [saveDecisions] [verbose]");
             System.exit(1);
         }
 
@@ -304,14 +307,14 @@ public class BDFIS {
 
         if (permutate) {
             for (List<String> varOrder : getPermutations(bdfis.getInputVariableNameList(FB_VARIABLE_INFERENCE_PHASE_NAME))) {
-                validate(bdfis, varOrder, permissions, validate, save, fclName);
+                validate(bdfis, varOrder, permissions, validate, save, verbose, fclName);
             }
         } else {
-            validate(bdfis, null, permissions, validate, save, fclName);
+            validate(bdfis, null, permissions, validate, save, verbose, fclName);
         }
     }
 
-    public static void validate(BDFIS bdfis, List<String> varOrder, String[] permissions, boolean validate, boolean save, String fclName) throws FileNotFoundException {
+    public static void validate(BDFIS bdfis, List<String> varOrder, String[] permissions, boolean validate, boolean save, boolean verbose, String fclName) throws FileNotFoundException {
         AbstractFuzzyAnalyser ofanal = new OBDFISAuditor(bdfis);
         AbstractFuzzyAnalyser sfanal = new SBDFISAuditor(bdfis);
 
@@ -325,13 +328,13 @@ public class BDFIS {
                 if (varOrder != null) {
                     ofanal.setVariableOrdering(varOrder);
                 }
-                ofanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, false);
+                ofanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
 
                 handler.enableValidation();
 
                 if (validate) {
                     sfanal.setVariableOrdering(ofanal.getVariableOrdering());
-                    sfanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, false);
+                    sfanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
                 }
 
                 System.out.println("Permission: " + permission);
