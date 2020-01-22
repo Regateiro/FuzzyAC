@@ -16,7 +16,6 @@ import java.util.Map;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 import it.av.fac.decision.util.handlers.IResultHandler;
-import java.util.Arrays;
 
 /**
  *
@@ -144,9 +143,8 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
                     Collections.reverse(newResults);
 
-                    //if the lastChangeContribution is not NONE, then update the decision where it does not match the contribution.
                     if (this.lastChangeContribution == Contribution.GRANT || this.lastChangeContribution == Contribution.DENY) {
-                        //reevaluate decisions that do not match the last change contribution
+                        // allows to check if we're not on the first NONE contribution result
                         boolean onNones = false;
                         for (int idx = 0; idx < newResults.size(); idx++) {
                             DecisionResult result = newResults.get(idx);
@@ -163,6 +161,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
                                 onNones = false;
                             }
 
+                            //if the lastChangeContribution is not NONE, then update the decision where it does not match the contribution.
                             if (evaluate && !result.getDecision().matchesContribution(this.lastChangeContribution)) {
                                 result.setDecision(evaluateDecision(result.getVariables()).getDecision());
                             }
@@ -248,7 +247,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = this.decisionMaker.makeDecision(evaluation.get(this.permissionToAnalyse));
-        return new DecisionResult(decision, variablesToEvaluate, this.lastChangeVarIdx, this.lastChangeContribution);
+        return new DecisionResult(decision, variablesToEvaluate, this.lastChangeContribution);
     }
 
     /**
@@ -265,7 +264,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
 
-        return new DecisionResult(decision, variableMap, this.lastChangeVarIdx, this.lastChangeContribution);
+        return new DecisionResult(decision, variableMap, this.lastChangeContribution);
     }
 
     /**
