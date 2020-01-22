@@ -16,7 +16,6 @@ import java.util.Map;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 import it.av.fac.decision.util.handlers.IResultHandler;
-import java.util.Arrays;
 
 /**
  *
@@ -248,7 +247,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = this.decisionMaker.makeDecision(evaluation.get(this.permissionToAnalyse));
-        return new DecisionResult(decision, variablesToEvaluate, this.lastChangeVarIdx, this.lastChangeContribution);
+        return new DecisionResult(decision, variablesToEvaluate, this.lastChangeContribution);
     }
 
     /**
@@ -265,7 +264,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
 
-        return new DecisionResult(decision, variableMap, this.lastChangeVarIdx, this.lastChangeContribution);
+        return new DecisionResult(decision, variableMap, this.lastChangeContribution);
     }
 
     /**
