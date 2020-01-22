@@ -5,6 +5,7 @@
  */
 package it.av.fac.decision.util.decision;
 
+import it.av.fac.decision.util.variables.Contribution;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -15,16 +16,32 @@ import java.util.Objects;
  */
 public class DecisionResult {
 
-    private final Decision decision;
+    private Decision decision;
     private final Map<String, Double> variables;
+    private final int changedVarIdx;
 
     public DecisionResult(Decision decision, Map<String, Double> variables) {
         this.decision = decision;
         this.variables = variables;
+        this.changedVarIdx = -1;
+    }
+
+    public DecisionResult(Decision decision, Map<String, Double> variables, int changedVarIdx) {
+        this.decision = decision;
+        this.variables = variables;
+        this.changedVarIdx = changedVarIdx;
     }
 
     public Decision getDecision() {
         return decision;
+    }
+    
+    public void setDecision(Decision decision) {
+        this.decision = decision;
+    }
+
+    public int getChangedVarIdx() {
+        return changedVarIdx;
     }
 
     public Map<String, Double> getVariables() {
@@ -41,7 +58,7 @@ public class DecisionResult {
     }
 
     public DecisionResult copy() {
-        return new DecisionResult(decision, new HashMap<>(variables));
+        return new DecisionResult(decision, new HashMap<>(variables), this.changedVarIdx);
     }
 
     @Override

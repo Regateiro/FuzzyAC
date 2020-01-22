@@ -25,6 +25,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
     private Contribution lastChangeContribution;
+    private int lastChangeVarIdx;
     private final List<List<DecisionResult>> variableOutputs;
     private final Map<Integer, Integer> lastPassCount;
 
@@ -34,6 +35,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         this.lastChangeContribution = Contribution.UNKNOWN;
         this.variableOutputs = new ArrayList<>();
         this.lastPassCount = new HashMap<>();
+        this.lastChangeVarIdx = 0;
         this.vda.analyse();
     }
 
@@ -139,17 +141,30 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
                     newResults.parallelStream().forEach((result) -> {
                         result.getVariables().put(variableMap.get(varIdx).getVarName(), (double) variableMap.get(varIdx).getCurrentValue());
                     });
-
+                    
                     //if the lastChangeContribution is not NONE, then update the decision where it does not match the contribution.
                     if (this.lastChangeContribution == Contribution.GRANT || this.lastChangeContribution == Contribution.DENY) {
                         //reevaluate decisions that do not match the last change contribution
                         for (int idx = 0; idx < newResults.size(); idx++) {
                             DecisionResult result = newResults.get(idx);
-                            if (!result.getDecision().matchesContribution(this.lastChangeContribution)) {
-                                newResults.remove(idx);
-                                newResults.add(idx, evaluateDecision(result.getVariables()));
+                            
+//                            boolean evaluate = true;
+//                            if (idx != 0) {
+//                                DecisionResult prevResult = newResults.get(idx - 1);
+//                                if (result.getlastChangeContribution() == Contribution.NONE) {
+//                                    result.setDecision(prevResult.getDecision());
+//                                    evaluate = false;
+//                                } else if (result.getlastChangeContribution() == this.lastChangeContribution && prevResult.getDecision() == (this.lastChangeContribution == Contribution.GRANT ? Decision.Granted : Decision.Denied)) {
+//                                    result.setDecision(prevResult.getDecision());
+//                                    evaluate = false;
+//                                }
+//                            }
+                            
+                            if (/*evaluate && */!result.getDecision().matchesContribution(this.lastChangeContribution)) {
+                                result.setDecision(evaluateDecision(result.getVariables()).getDecision());
                             }
                         }
+
                     }
 
                     //update the results count so only the newly added results will be copied if the contribution remains NONE
@@ -199,6 +214,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
                 //save the last variable updated contribution
                 this.lastChangeContribution = variableMap.get(varIdx).getContribution();
+                this.lastChangeVarIdx = varIdx;
             } while (true);
         } else {
             //Edge case where there are no more variables.
@@ -230,8 +246,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = this.decisionMaker.makeDecision(evaluation.get(this.permissionToAnalyse));
-
-        return new DecisionResult(decision, variablesToEvaluate);
+        return new DecisionResult(decision, variablesToEvaluate, this.lastChangeVarIdx);
     }
 
     /**
@@ -248,7 +263,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
 
-        return new DecisionResult(decision, variableMap);
+        return new DecisionResult(decision, variableMap, this.lastChangeVarIdx);
     }
 
     /**
@@ -409,5 +424,6 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         this.lastPassCount.clear();
         this.variableOutputs.clear();
         this.lastChangeContribution = Contribution.UNKNOWN;
+        this.lastChangeVarIdx = 0;
     }
 }

@@ -54,6 +54,7 @@ public class ValidatorHandler implements IResultHandler {
                 try {
                     DecisionResult other = queuedResults.remove();
                     if (!other.equals(result)) {
+                        System.out.println(other + " != " + result);
                         validationResult = false;
                     }
                 } catch (NoSuchElementException ex) {

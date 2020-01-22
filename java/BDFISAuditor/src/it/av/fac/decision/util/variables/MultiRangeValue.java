@@ -116,11 +116,11 @@ public class MultiRangeValue {
         return getCurrentValue() == this.ranges.get(this.ranges.size() - 1).getMax();
     }
     
-    public double getRangeSize() {
+    public int getRangeSize() {
         AtomicInteger ret = new AtomicInteger();
         ranges.parallelStream().forEach((range) -> {
-            ret.addAndGet(range.getMax() - range.getMin() + 1);
+            ret.addAndGet(range.getMax() - range.getMin());
         });
-        return ret.get();
+        return ret.get() + 1;
     }
 }
