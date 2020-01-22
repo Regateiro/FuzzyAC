@@ -320,6 +320,8 @@ public class BDFIS {
 
         for (String permission : permissions) {
             try (ValidatorHandler handler = new ValidatorHandler()) {
+                System.out.println("Permission: " + permission);
+                
                 if (save) {
                     handler.setOutputFile(String.format("%s_%s.txt", fclName, permission));
                 }
@@ -328,16 +330,18 @@ public class BDFIS {
                 if (varOrder != null) {
                     ofanal.setVariableOrdering(varOrder);
                 }
+                
                 ofanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
-
+                System.out.println();
+                
                 handler.enableValidation();
 
                 if (validate) {
                     sfanal.setVariableOrdering(ofanal.getVariableOrdering());
                     sfanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
+                    System.out.println();
                 }
 
-                System.out.println("Permission: " + permission);
                 System.out.println(" --> Permutation: " + ofanal.getVariableOrdering());
                 if (validate) {
                     System.out.println(" --> Validation:  " + (handler.wasValidationSuccessul() ? "OK!" : "KO!"));
