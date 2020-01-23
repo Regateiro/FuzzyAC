@@ -53,7 +53,6 @@ public class ValidatorHandler implements IResultHandler {
             if (validate) {
                 try {
                     DecisionResult other = queuedResults.remove();
-                    System.out.print(String.format(" --> Validating... %09d results left.\r", queuedResults.size()));
                     if (!other.equals(result)) {
                         validationResult = false;
                     }
@@ -62,7 +61,6 @@ public class ValidatorHandler implements IResultHandler {
                 }
             } else {
                 queuedResults.add(result);
-                System.out.print(String.format(" --> Analysing... %09d results.\r", queuedResults.size()));
                 if (out != null) {
                     out.println(result);
                 }

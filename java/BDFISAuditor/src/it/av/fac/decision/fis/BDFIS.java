@@ -44,7 +44,7 @@ public class BDFIS {
 
     public BDFIS(File dfclFile) throws IOException, RecognitionException {
         StringBuilder dfcl = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new FileReader(dfclFile))) {
+        try ( BufferedReader in = new BufferedReader(new FileReader(dfclFile))) {
             String line;
             while ((line = in.readLine()) != null) {
                 dfcl.append(line).append(System.getProperty("line.separator"));
@@ -319,9 +319,9 @@ public class BDFIS {
         AbstractFuzzyAnalyser sfanal = new SBDFISAuditor(bdfis);
 
         for (String permission : permissions) {
-            try (ValidatorHandler handler = new ValidatorHandler()) {
+            try ( ValidatorHandler handler = new ValidatorHandler()) {
                 System.out.println("Permission: " + permission);
-                
+
                 if (save) {
                     handler.setOutputFile(String.format("%s_%s.txt", fclName, permission));
                 }
@@ -330,25 +330,31 @@ public class BDFIS {
                 if (varOrder != null) {
                     ofanal.setVariableOrdering(varOrder);
                 }
-                
+
+                System.out.print(" --> Analysing...  ");
+                long time = System.nanoTime();
                 ofanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
-                System.out.println();
-                
+                time = System.nanoTime() - time;
+                System.out.println("finished in " + (time / 1000000) + "ms.");
+
                 handler.enableValidation();
 
                 if (validate) {
                     sfanal.setVariableOrdering(ofanal.getVariableOrdering());
+                    System.out.print(" --> Validating... ");
+                    time = System.nanoTime();
                     sfanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
-                    System.out.println();
+                    time = System.nanoTime() - time;
+                    System.out.println("finished in " + (time / 1000000) + "ms.");
                 }
 
-                System.out.println(" --> Permutation: " + ofanal.getVariableOrdering());
                 if (validate) {
-                    System.out.println(" --> Validation:  " + (handler.wasValidationSuccessul() ? "OK!" : "KO!"));
+                    System.out.println(" --> Validation:   " + (handler.wasValidationSuccessul() ? "OK!" : "KO!"));
                 }
-                System.out.println(" --> #Evl-Calls:  " + ofanal.getNumberOfEvaluations());
+                System.out.println(" --> Permutation:  " + ofanal.getVariableOrdering());
+                System.out.println(" --> #Evl-Calls:   " + ofanal.getNumberOfEvaluations());
                 if (validate) {
-                    System.out.println(" --> #Max-Calls:  " + sfanal.getNumberOfEvaluations());
+                    System.out.println(" --> #Max-Calls:   " + sfanal.getNumberOfEvaluations());
                 }
                 System.out.println();
             }

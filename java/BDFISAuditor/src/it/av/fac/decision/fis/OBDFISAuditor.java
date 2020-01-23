@@ -25,7 +25,6 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
     private final VariableDependenceAnalyser vda;
     private Contribution lastChangeContribution;
-    private int lastChangeVarIdx;
     private final List<List<DecisionResult>> variableOutputs;
     private final Map<Integer, Integer> lastPassCount;
 
@@ -35,7 +34,6 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         this.lastChangeContribution = Contribution.UNKNOWN;
         this.variableOutputs = new ArrayList<>();
         this.lastPassCount = new HashMap<>();
-        this.lastChangeVarIdx = 0;
         this.vda.analyse();
     }
 
@@ -215,7 +213,6 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
 
                 //save the last variable updated contribution
                 this.lastChangeContribution = variableMap.get(varIdx).getContribution();
-                this.lastChangeVarIdx = varIdx;
             } while (true);
         } else {
             //Edge case where there are no more variables.
@@ -425,6 +422,5 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         this.lastPassCount.clear();
         this.variableOutputs.clear();
         this.lastChangeContribution = Contribution.UNKNOWN;
-        this.lastChangeVarIdx = 0;
     }
 }
