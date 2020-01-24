@@ -89,10 +89,6 @@ public class SBDFISAuditor extends AbstractFuzzyAnalyser {
             variableMap.add(new MultiRangeValue(Arrays.asList(new RangeValue(varName, (int) minXValue(varName), (int) maxXValue(varName)))));
         }
 
-        if (verbose) {
-            System.out.println(variableMap);
-        }
-
         // recursive function call
         findEdgeIntegerConditionsRec(variableMap, 0);
     }

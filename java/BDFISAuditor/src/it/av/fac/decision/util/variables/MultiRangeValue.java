@@ -62,6 +62,25 @@ public class MultiRangeValue {
         return ranges.get(idx).getContribution();
     }
 
+    public Contribution getContribution(double x, int direction) {
+        if (direction > 0) {
+            for (int i = 0; i < ranges.size(); i++) {
+                RangeValue range = ranges.get(i);
+                if (range.getMin() <= x && range.getMax() >= x) {
+                    return range.getContribution();
+                }
+            }
+        } else {
+            for (int i = ranges.size() - 1; i >= 0; i--) {
+                RangeValue range = ranges.get(i);
+                if (range.getMin() <= x && range.getMax() >= x) {
+                    return range.getContribution();
+                }
+            }
+        }
+        throw new IllegalArgumentException("Value outside of domain range.");
+    }
+
     public Contribution getNextValueContribution() {
         if (ranges.get(idx).isOnTheEdge() && idx + direction >= 0 && idx + direction < ranges.size()) {
             return ranges.get(idx + direction).getContribution();
@@ -69,15 +88,15 @@ public class MultiRangeValue {
 
         return ranges.get(idx).getContribution();
     }
-    
+
     public int getContributionRangeSize(Contribution contrib) {
         AtomicInteger ret = new AtomicInteger();
         ranges.parallelStream().forEach((range) -> {
             if (range.getContribution() == contrib) {
-                ret.addAndGet(range.getMax() - range.getMin() + 1);
+                ret.addAndGet(range.getMax() - range.getMin());
             }
         });
-        return ret.get();
+        return ret.get() + 1;
     }
 
     @Override
@@ -99,11 +118,11 @@ public class MultiRangeValue {
         this.direction = -1;
         this.ranges.parallelStream().forEach((range) -> range.setToMax());
     }
-    
+
     public double getMin() {
         return this.ranges.get(0).getMin();
     }
-    
+
     public double getMax() {
         return this.ranges.get(this.ranges.size() - 1).getMax();
     }
@@ -111,11 +130,11 @@ public class MultiRangeValue {
     public boolean isSetToMin() {
         return getCurrentValue() == this.ranges.get(0).getMin();
     }
-    
+
     public boolean isSetToMax() {
         return getCurrentValue() == this.ranges.get(this.ranges.size() - 1).getMax();
     }
-    
+
     public int getRangeSize() {
         AtomicInteger ret = new AtomicInteger();
         ranges.parallelStream().forEach((range) -> {

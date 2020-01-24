@@ -1,0 +1,169 @@
+FUNCTION_BLOCK VariableInference
+
+VAR_INPUT
+	a	:	REAL; (* RANGE(0 .. 100) *) 
+	s	:	REAL; (* RANGE(0 .. 100) *) 
+	p	:	REAL; (* RANGE(0 .. 100) *) 
+END_VAR
+
+VAR_OUTPUT
+	r	:	REAL;
+END_VAR
+	
+FUZZIFY a
+	TERM L := (0, 1) (30, 1) (40, 0);
+	TERM M := (35, 0) (50, 1) (70, 0);
+	TERM H := (60, 0) (75, 1) (90, 1) (100, 1);
+END_FUZZIFY
+
+FUZZIFY s
+	TERM NS := (0, 1) (15, 1) (35, 0);
+	TERM S := (20, 0) (35, 1) (50, 0);
+	TERM HS := (45, 0) (60, 1) (90, 1) (100, 1);
+END_FUZZIFY
+
+FUZZIFY p
+	TERM L := (0, 1) (30, 1) (40, 0);
+	TERM M := (30, 0) (50, 1) (70, 0);
+	TERM H := (60, 0) (70, 1) (90, 1) (100, 1);
+END_FUZZIFY
+
+DEFUZZIFY r
+	TERM N := 16;
+	TERM L := 20;
+	TERM M := 40;
+	TERM H := 60;
+	TERM UH := 85;
+	METHOD: COGS ;
+END_DEFUZZIFY
+	
+RULEBLOCK r
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE  0: IF (a IS L)  AND (s IS NS) AND (p IS L)  THEN r IS N;
+RULE  1: IF (a IS M)  AND (s IS NS) AND (p IS L)  THEN r IS N;
+RULE  2: IF (a IS H)  AND (s IS NS) AND (p IS L)  THEN r IS N;
+RULE  3: IF (a IS L)  AND (s IS S)  AND (p IS L)  THEN r IS L;
+RULE  4: IF (a IS M)  AND (s IS S)  AND (p IS L)  THEN r IS L;
+RULE  5: IF (a IS H)  AND (s IS S)  AND (p IS L)  THEN r IS L;
+RULE  6: IF (a IS L)  AND (s IS HS) AND (p IS L)  THEN r IS M;
+RULE  7: IF (a IS M)  AND (s IS HS) AND (p IS L)  THEN r IS M;
+RULE  8: IF (a IS H)  AND (s IS HS) AND (p IS L)  THEN r IS M;
+RULE  9: IF (a IS L)  AND (s IS NS) AND (p IS M)  THEN r IS N;
+RULE 10: IF (a IS M)  AND (s IS NS) AND (p IS M)  THEN r IS N;
+RULE 11: IF (a IS H)  AND (s IS NS) AND (p IS M)  THEN r IS L;
+RULE 12: IF (a IS L)  AND (s IS S)  AND (p IS M)  THEN r IS M;
+RULE 13: IF (a IS M)  AND (s IS S)  AND (p IS M)  THEN r IS M;
+RULE 14: IF (a IS H)  AND (s IS S)  AND (p IS M)  THEN r IS H;
+RULE 15: IF (a IS L)  AND (s IS HS) AND (p IS M)  THEN r IS H;
+RULE 16: IF (a IS M)  AND (s IS HS) AND (p IS M)  THEN r IS UH;
+RULE 17: IF (a IS H)  AND (s IS HS) AND (p IS M)  THEN r IS UH;
+RULE 18: IF (a IS L)  AND (s IS NS) AND (p IS H)  THEN r IS L;
+RULE 19: IF (a IS M)  AND (s IS NS) AND (p IS H)  THEN r IS M;
+RULE 20: IF (a IS H)  AND (s IS NS) AND (p IS H)  THEN r IS H;
+RULE 21: IF (a IS L)  AND (s IS S)  AND (p IS H)  THEN r IS UH;
+RULE 22: IF (a IS M)  AND (s IS S)  AND (p IS H)  THEN r IS UH;
+RULE 23: IF (a IS H)  AND (s IS S)  AND (p IS H)  THEN r IS UH;
+RULE 24: IF (a IS L)  AND (s IS HS) AND (p IS H)  THEN r IS UH;
+RULE 25: IF (a IS M)  AND (s IS HS) AND (p IS H)  THEN r IS UH;
+RULE 26: IF (a IS H)  AND (s IS HS) AND (p IS H)  THEN r IS UH;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK AccessControl
+
+VAR_INPUT
+	r	:	REAL; (* RANGE(0 ..) *) 
+END_VAR
+
+VAR_OUTPUT
+	p1	:	REAL;
+	p2	: 	REAL;
+	p3	: 	REAL;
+	p4	: 	REAL;
+END_VAR
+	
+FUZZIFY r
+END_FUZZIFY
+
+DEFUZZIFY p1
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY p2
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY p3
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+
+DEFUZZIFY p4
+	TERM Deny := 0 ;
+	TERM Grant := 1 ;
+	METHOD: COGS ;
+END_DEFUZZIFY
+	
+RULEBLOCK p1
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (r IS N)  THEN p1 IS Grant;
+RULE 1: IF (r IS L)  THEN p1 IS Grant;
+RULE 2: IF (r IS M)  THEN p1 IS Grant;
+RULE 3: IF (r IS H)  THEN p1 IS Grant;
+RULE 4: IF (r IS UH) THEN p1 IS Deny;
+
+END_RULEBLOCK
+
+RULEBLOCK p2
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (r IS N)  THEN p2 IS Grant;
+RULE 1: IF (r IS L)  THEN p2 IS Grant;
+RULE 2: IF (r IS M)  THEN p2 IS Grant;
+RULE 3: IF (r IS H)  THEN p2 IS Deny;
+RULE 4: IF (r IS UH) THEN p2 IS Deny;
+
+END_RULEBLOCK
+
+RULEBLOCK p3
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (r IS N)  THEN p3 IS Grant;
+RULE 1: IF (r IS L)  THEN p3 IS Grant;
+RULE 2: IF (r IS M)  THEN p3 IS Deny;
+RULE 3: IF (r IS H)  THEN p3 IS Deny;
+RULE 4: IF (r IS UH) THEN p3 IS Deny;
+
+END_RULEBLOCK
+
+RULEBLOCK p4
+
+ACT:MIN;
+AND:MIN;
+ACCU:MAX;
+RULE 0: IF (r IS N)  THEN p4 IS Grant;
+RULE 1: IF (r IS L)  THEN p4 IS Deny;
+RULE 2: IF (r IS M)  THEN p4 IS Deny;
+RULE 3: IF (r IS H)  THEN p4 IS Deny;
+RULE 4: IF (r IS UH) THEN p4 IS Deny;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK

@@ -331,21 +331,19 @@ public class BDFIS {
                     ofanal.setVariableOrdering(varOrder);
                 }
 
-                System.out.print(" --> Analysing...  ");
                 long time = System.nanoTime();
                 ofanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
                 time = System.nanoTime() - time;
-                System.out.println("finished in " + (time / 1000000) + "ms.");
+                System.out.println("Analysis finished in " + (time / 1000000) + "ms.");
 
                 handler.enableValidation();
 
                 if (validate) {
                     sfanal.setVariableOrdering(ofanal.getVariableOrdering());
-                    System.out.print(" --> Validating... ");
                     time = System.nanoTime();
                     sfanal.analyse(permission, new AlphaCutDecisionMaker(0.5), handler, verbose);
                     time = System.nanoTime() - time;
-                    System.out.println("finished in " + (time / 1000000) + "ms.");
+                    System.out.println("Validation finished in " + (time / 1000000) + "ms.");
                 }
 
                 if (validate) {

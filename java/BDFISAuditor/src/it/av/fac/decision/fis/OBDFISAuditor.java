@@ -16,6 +16,7 @@ import java.util.Map;
 import net.sourceforge.jFuzzyLogic.membership.MembershipFunctionPieceWiseLinear;
 import net.sourceforge.jFuzzyLogic.rule.Variable;
 import it.av.fac.decision.util.handlers.IResultHandler;
+import java.util.Objects;
 
 /**
  *
@@ -127,12 +128,9 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
                     //update the previous results changing only this variable value
                     List<DecisionResult> newResults = new ArrayList<>();
 
-                    //filter only to the results added on the last time the recursive function was called and make a copy of them
                     variableOutputs.get(varIdx)
                             .subList(lastPassCount.get(varIdx), variableOutputs.get(varIdx).size())
                             .stream().forEachOrdered((result) -> newResults.add(result.copy()));
-
-                    newResults.get(0).setLastChangedContribution(lastChangeContribution);
 
                     //update the copy values for this variable to the current value
                     newResults.parallelStream().forEach((result) -> {
@@ -147,9 +145,9 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
                         boolean onNones = false;
                         for (int idx = 0; idx < newResults.size(); idx++) {
                             DecisionResult result = newResults.get(idx);
-
+                            
                             boolean evaluate = true;
-                            if (result.getLastChangedContribution() == Contribution.NONE) {
+                            if (getChangedContribution(variableMap, newResults, idx) == Contribution.NONE) {
                                 if (onNones) {
                                     result.setDecision(newResults.get(idx - 1).getDecision());
                                     evaluate = false;
@@ -237,14 +235,14 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         variableMap.stream().forEach((var) -> {
             variablesToEvaluate.put(var.getVarName(), (double) var.getCurrentValue());
         });
-
+        
         //Evaluates the result using the current variable values.
         Map<String, Variable> evaluation = bdfis.evaluate(variablesToEvaluate, false, false);
         this.numberOfEvaluations++;
 
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = this.decisionMaker.makeDecision(evaluation.get(this.permissionToAnalyse));
-        return new DecisionResult(decision, variablesToEvaluate, this.lastChangeContribution);
+        return new DecisionResult(decision, variablesToEvaluate);
     }
 
     /**
@@ -261,7 +259,7 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         //Adds the variables that resulted on the provided alphaCut
         Decision decision = decisionMaker.makeDecision(evaluation.get(permissionToAnalyse));
 
-        return new DecisionResult(decision, variableMap, this.lastChangeContribution);
+        return new DecisionResult(decision, variableMap);
     }
 
     /**
@@ -422,5 +420,40 @@ public class OBDFISAuditor extends AbstractFuzzyAnalyser {
         this.lastPassCount.clear();
         this.variableOutputs.clear();
         this.lastChangeContribution = Contribution.UNKNOWN;
+    }
+
+    private Contribution getChangedContribution(List<MultiRangeValue> variableMap, List<DecisionResult> results, int idx) {
+        if (idx == 0) {
+            return Contribution.UNKNOWN;
+        }
+
+        DecisionResult result = results.get(idx);
+        DecisionResult prevResult = results.get(idx - 1);
+
+        String varName = getChangedVar(prevResult, result);
+        int direction = getChangeDirection(prevResult, result, varName);
+
+        for (int i = 0; i < variableMap.size(); i++) {
+            if (variableMap.get(i).getVarName().equals(varName)) {
+                return variableMap.get(i).getContribution(result.getVariables().get(varName), direction);
+            }
+        }
+        throw new RuntimeException("getChangedContribution exception.");
+    }
+
+    private String getChangedVar(DecisionResult prevResult, DecisionResult result) {
+        for (String varName : prevResult.getVariables().keySet()) {
+            if (!Objects.equals(prevResult.getVariables().get(varName), result.getVariables().get(varName))) {
+                return varName;
+            }
+        }
+        throw new RuntimeException("getChangedVar exception");
+    }
+
+    private int getChangeDirection(DecisionResult prevResult, DecisionResult result, String varName) {
+        if (prevResult.getVariables().get(varName) < result.getVariables().get(varName)) {
+            return 1;
+        }
+        return -1;
     }
 }

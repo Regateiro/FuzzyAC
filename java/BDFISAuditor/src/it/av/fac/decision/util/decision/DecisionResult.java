@@ -18,18 +18,10 @@ public class DecisionResult {
 
     private Decision decision;
     private final Map<String, Double> variables;
-    private Contribution lastChangedContribution;
 
     public DecisionResult(Decision decision, Map<String, Double> variables) {
         this.decision = decision;
         this.variables = variables;
-        this.lastChangedContribution = Contribution.UNKNOWN;
-    }
-
-    public DecisionResult(Decision decision, Map<String, Double> variables, Contribution lastChangedContribution) {
-        this.decision = decision;
-        this.variables = variables;
-        this.lastChangedContribution = lastChangedContribution;
     }
 
     public Decision getDecision() {
@@ -38,14 +30,6 @@ public class DecisionResult {
     
     public void setDecision(Decision decision) {
         this.decision = decision;
-    }
-
-    public Contribution getLastChangedContribution() {
-        return lastChangedContribution;
-    }
-
-    public void setLastChangedContribution(Contribution lastChangedContribution) {
-        this.lastChangedContribution = lastChangedContribution;
     }
 
     public Map<String, Double> getVariables() {
@@ -62,7 +46,7 @@ public class DecisionResult {
     }
 
     public DecisionResult copy() {
-        return new DecisionResult(decision, new HashMap<>(variables), this.lastChangedContribution);
+        return new DecisionResult(decision, new HashMap<>(variables));
     }
 
     @Override

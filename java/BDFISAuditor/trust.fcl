@@ -29,10 +29,10 @@ FUZZIFY RC
 END_FUZZIFY
 
 DEFUZZIFY Trust
-	TERM Low := (-50, 1) (-10, 0);
-	TERM Average := (-25, 0) (-10, 1) (25, 1) (50, 0);
-	TERM High := (25, 0) (50, 1);
-	METHOD: COG ;
+	TERM Low := -30;
+	TERM Average := 10;
+	TERM High := 37;
+	METHOD: COGS ;
 END_DEFUZZIFY
 	
 RULEBLOCK Trust
