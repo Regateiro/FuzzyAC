@@ -1,4 +1,0 @@
-language: java
-sudo: false
-before_script: cd java/FuzzyAC
-script: mvn clean verify
